@@ -50,6 +50,7 @@ export const postJson = async <TResponse>(
 
   return json as TResponse;
 };
+
 export const safeDecodeSlug = (value: string): string => {
   if (!value) return value;
   if (!value.includes("%")) return value;
@@ -156,8 +157,13 @@ export const formatDate = (date: string) =>
 
 export const ORDER_STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
   [OrderStatus.NEW]: [
+    OrderStatus.PENDING_PAYMENT,
     OrderStatus.READY,
     OrderStatus.DONE,
+    OrderStatus.CANCELED,
+  ],
+  [OrderStatus.PENDING_PAYMENT]: [
+    OrderStatus.READY,
     OrderStatus.CANCELED,
   ],
   [OrderStatus.READY]: [OrderStatus.DONE, OrderStatus.CANCELED],

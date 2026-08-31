@@ -11,7 +11,7 @@ import { AutoScrollRow, BackButton } from "@/components/shared/wrappers";
 export default async function ProductPageLayout({
   product,
 }: {
-  product: ProductSinglePage & { glbModel?: { url?: string } | null };
+  product: ProductSinglePage & { glbModel?: any };
 }) {
   const t = await getTranslations("product");
 
@@ -25,7 +25,7 @@ export default async function ProductPageLayout({
         </div>
         <div className="h-full w-full basis-full lg:basis-1/2">
           <div className="min-h-[32rem] w-full">
-            <Gallery gallery={product.gallery || []} glbModel={product.glbModel} />
+            <Gallery gallery={product.gallery || []} glbModel={product.glbModel as any} />
           </div>
         </div>
       </div>

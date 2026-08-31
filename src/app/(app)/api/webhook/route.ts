@@ -40,22 +40,48 @@ export async function POST(req: Request) {
     const match = merchantOrderId.match(/cart-(\d+)-/);
     if (match) {
       const cart = await payload.findByID({ collection: "carts", id: match[1], depth: 3 });
-      if (cart) expectedAmountCents = cart.items.reduce((sum: number, item: any) => {
-        const product = typeof item.product === "object" ? item.product : null;
-        const variant = typeof item.variant === "object" ? item.variant : null;
-        const unitPrice = variant?.priceInUSD ?? product?.priceInUSD ?? 0;
-        return sum + Math.round(unitPrice * 100) * Number(item.quantity ?? 0);
-      }, 0);
+      if (cart) {
+        const items = cart.items || [];
+        expectedAmountCents = items.reduce((sum: number, item: any) => {
+          const product = typeof item.product === "object" ? item.product : null;
+          const variant = typeof item.variant === "object" ? item.variant : null;
+          const unitPrice = variant?.priceInUSD ?? product?.priceInUSD ?? 0;
+          return sum + Math.round(unitPrice * 100) * Number(item.quantity ?? 0);
+        }, 0);
+      }
     }
   }
 
   if (expectedAmountCents !== null && amount_cents !== expectedAmountCents) {
-    await payload.create({ collection: CollectionName.integrationEvents, data: { provider: "paymob", eventId: String(eventId), eventType: "transaction", resourceId: String(order?.id ?? ""), status: IntegrationEventStatus.FAILED, error: `Amount mismatch`, processedAt: new Date().toISOString() }, overrideAccess: true });
+    await payload.create({
+      collection: CollectionName.integrationEvents,
+      data: {
+        provider: "paymob",
+        eventId: String(eventId),
+        eventType: "transaction",
+        resourceId: String(order?.id ?? ""),
+        status: IntegrationEventStatus.FAILED,
+        error: "Amount mismatch",
+        processedAt: new Date().toISOString(),
+      },
+      overrideAccess: true,
+    } as any);
     return NextResponse.json({ message: "Amount mismatch" }, { status: 400 });
   }
 
   try {
-    await payload.create({ collection: CollectionName.integrationEvents, data: { provider: "paymob", eventId: String(eventId), eventType: "transaction", resourceId: String(order?.id ?? ""), status: success ? IntegrationEventStatus.PROCESSED : IntegrationEventStatus.FAILED, processedAt: new Date().toISOString() }, overrideAccess: true });
+    await payload.create({
+      collection: CollectionName.integrationEvents,
+      data: {
+        provider: "paymob",
+        eventId: String(eventId),
+        eventType: "transaction",
+        resourceId: String(order?.id ?? ""),
+        status: success ? IntegrationEventStatus.PROCESSED : IntegrationEventStatus.FAILED,
+        processedAt: new Date().toISOString(),
+      },
+      overrideAccess: true,
+    } as any);
   } catch (e: any) {
     return NextResponse.json({ message: "Already processed" });
   }
@@ -65,15 +91,26 @@ export async function POST(req: Request) {
     if (match) {
       const cart = await payload.findByID({ collection: "carts", id: match[1], depth: 3 });
       if (cart) {
-        const orderItems = cart.items.map((item: any) => {
+        const cartItems = cart.items || [];
+        const orderItems = cartItems.map((item: any) => {
           const product = typeof item.product === "object" ? item.product : null;
           const variant = typeof item.variant === "object" ? item.variant : null;
           const unitPrice = variant?.priceInUSD ?? product?.priceInUSD ?? 0;
           const quantity = Number(item.quantity ?? 0);
           return { product: product?.id, title: product?.title ?? "Product", quantity, unitPrice, lineTotal: unitPrice * quantity };
         });
-        await payload.create({ collection: "orders", data: { cart: match[1], items: orderItems, amount: cart.subtotal, status: "new" }, overrideAccess: true });
-        await decrementInventoryForItems({ payload } as any, cart.items);
+
+        await (payload.create as any)({
+          collection: "orders",
+          data: {
+            items: orderItems,
+            amount: cart.subtotal ?? 0,
+            status: "new",
+          },
+          overrideAccess: true,
+        });
+
+        await decrementInventoryForItems({ payload } as any, cartItems);
       }
     }
   }

@@ -1,3 +1,4 @@
+// src/app/(app)/account/orders/page.tsx
 import { getTranslations } from "next-intl/server";
 import { getPayload } from "payload";
 import configPromise from "@payload-config";
@@ -6,11 +7,14 @@ import jwt from "jsonwebtoken";
 
 export default async function AccountOrdersPage() {
   const t = await getTranslations("checkout.page");
-  const token = cookies().get("payload-token")?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("payload-token")?.value;
   if (!token) return <div>Please login</div>;
 
   const payload = await getPayload({ config: configPromise });
-  const decoded = jwt.verify(token, process.env.PAYLOAD_SECRET || "") as { id: string };
+  const decoded = jwt.verify(token, process.env.PAYLOAD_SECRET || "") as {
+    id: string;
+  };
   const userId = decoded.id;
 
   const orders = await payload.find({
@@ -26,7 +30,7 @@ export default async function AccountOrdersPage() {
         <p>No orders yet</p>
       ) : (
         <div className="space-y-4">
-          {orders.docs.map((order) => (
+          {orders.docs.map((order: any) => (
             <div key={order.id} className="border rounded-lg p-4">
               <p>Order #{order.id}</p>
               <p>Status: {order.status}</p>

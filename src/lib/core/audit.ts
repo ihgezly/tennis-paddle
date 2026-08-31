@@ -13,6 +13,7 @@ type AuditInput = {
 export async function logAudit(req: PayloadRequest, input: AuditInput) {
   try {
     const ip = req.headers?.get?.("x-forwarded-for") as string | null;
+
     await req.payload.create({
       collection: CollectionName.auditLogs,
       data: {
@@ -21,8 +22,8 @@ export async function logAudit(req: PayloadRequest, input: AuditInput) {
         action: input.action,
         entity: input.entity,
         entityId: input.entityId,
-        before: (input.before ?? null) as object,
-        after: (input.after ?? null) as object,
+        before: input.before ? (JSON.parse(JSON.stringify(input.before)) as any) : null,
+        after: input.after ? (JSON.parse(JSON.stringify(input.after)) as any) : null,
         requestId: input.requestId,
         ip,
       },

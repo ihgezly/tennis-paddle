@@ -10,7 +10,7 @@
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "OrderStatus".
  */
-export type OrderStatus = ('new' | 'ready' | 'done' | 'canceled' | 'refunded') | null;
+export type OrderStatus = ('new' | 'pending_payment' | 'ready' | 'done' | 'canceled' | 'refunded') | null;
 /**
  * Supported timezones in IANA format.
  *
@@ -75,7 +75,14 @@ export interface Config {
     users: User;
     category: Category;
     media: Media;
+    media3d: Media3D;
     reviews: Review;
+    'condition-types': ConditionType;
+    'condition-grades': ConditionGrade;
+    'sell-requests': SellRequest;
+    'audit-logs': AuditLog;
+    'integration-events': IntegrationEvent;
+    'return-requests': ReturnRequest;
     addresses: Address;
     variants: Variant;
     variantTypes: VariantType;
@@ -102,7 +109,14 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     category: CategorySelect<false> | CategorySelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    media3d: Media3DSelect<false> | Media3DSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
+    'condition-types': ConditionTypesSelect<false> | ConditionTypesSelect<true>;
+    'condition-grades': ConditionGradesSelect<false> | ConditionGradesSelect<true>;
+    'sell-requests': SellRequestsSelect<false> | SellRequestsSelect<true>;
+    'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
+    'integration-events': IntegrationEventsSelect<false> | IntegrationEventsSelect<true>;
+    'return-requests': ReturnRequestsSelect<false> | ReturnRequestsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
     variants: VariantsSelect<false> | VariantsSelect<true>;
     variantTypes: VariantTypesSelect<false> | VariantTypesSelect<true>;
@@ -257,6 +271,25 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media3d".
+ */
+export interface Media3D {
+  id: number;
+  alt: string;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "reviews".
  */
 export interface Review {
@@ -295,7 +328,7 @@ export interface Product {
   priceInUSDEnabled?: boolean | null;
   priceInUSD?: number | null;
   /**
-   * Original price before discount (optional). Shown as a strikethrough price when set.
+   * Original price before discount (optional).
    */
   originalPriceInUSD?: number | null;
   description: {
@@ -332,6 +365,20 @@ export interface Product {
     hasNextPage?: boolean;
     totalDocs?: number;
   };
+  /**
+   * New or used. Determines whether a grade + notes are required.
+   */
+  conditionType?: (number | null) | ConditionType;
+  conditionGrade?: (number | null) | ConditionGrade;
+  /**
+   * Required for used products — describe wear, defects, etc.
+   */
+  conditionNotes?: string | null;
+  inspectionStatus?: ('draft' | 'pending_inspection' | 'inspected' | 'approved' | 'rejected') | null;
+  /**
+   * Optional. Only .glb files are accepted (max 20MB).
+   */
+  glbModel?: (number | null) | Media3D;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -394,6 +441,179 @@ export interface Variant {
   createdAt: string;
   deletedAt?: string | null;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "condition-types".
+ */
+export interface ConditionType {
+  id: number;
+  code: 'new' | 'used';
+  nameEn: string;
+  nameAr: string;
+  /**
+   * If checked, condition grade and notes are required.
+   */
+  requiresGrade?: boolean | null;
+  isActive?: boolean | null;
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "condition-grades".
+ */
+export interface ConditionGrade {
+  id: number;
+  conditionType: number | ConditionType;
+  code: 'like_new' | 'excellent' | 'good' | 'fair';
+  nameEn: string;
+  nameAr: string;
+  sortOrder?: number | null;
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sell-requests".
+ */
+export interface SellRequest {
+  id: number;
+  customer: number | User;
+  title: string;
+  category: number | Category;
+  brand?: string | null;
+  description: string;
+  conditionType: number | ConditionType;
+  conditionGrade?: (number | null) | ConditionGrade;
+  /**
+   * Set by the customer.
+   */
+  askingPrice: number;
+  /**
+   * Set by admin during review.
+   */
+  offeredPrice?: number | null;
+  acceptedPrice?: number | null;
+  currencyCode?: ('EGP' | 'USD') | null;
+  /**
+   * At least 5 photos required.
+   */
+  images: {
+    image: number | Media;
+    id?: string | null;
+  }[];
+  status:
+    | 'pending'
+    | 'under_review'
+    | 'contacted'
+    | 'offer_sent'
+    | 'accepted'
+    | 'rejected'
+    | 'item_received'
+    | 'inspecting'
+    | 'accepted_for_resale'
+    | 'listed'
+    | 'cancelled';
+  adminNotes?: string | null;
+  resultingProduct?: (number | null) | Product;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-logs".
+ */
+export interface AuditLog {
+  id: number;
+  actor?: (number | null) | User;
+  actorEmail?: string | null;
+  action: string;
+  entity: string;
+  entityId: string;
+  before?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  after?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  requestId?: string | null;
+  ip?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "integration-events".
+ */
+export interface IntegrationEvent {
+  id: number;
+  provider: string;
+  eventId: string;
+  eventType?: string | null;
+  resourceId?: string | null;
+  payloadHash?: string | null;
+  status?: ('received' | 'processed' | 'failed') | null;
+  processedAt?: string | null;
+  error?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "return-requests".
+ */
+export interface ReturnRequest {
+  id: number;
+  customer: number | User;
+  order: number | Order;
+  items: {
+    product: number | Product;
+    quantity: number;
+    id?: string | null;
+  }[];
+  reason: string;
+  status?: ('requested' | 'approved' | 'rejected' | 'item_received' | 'inspecting' | 'refunded' | 'restocked') | null;
+  adminNotes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  customer: number | User;
+  status?: OrderStatus;
+  amount?: number | null;
+  name: string;
+  phone: string;
+  email: string;
+  items: {
+    product: number | Product;
+    title: string;
+    quantity: number;
+    unitPrice: number;
+    lineTotal: number;
+    id?: string | null;
+  }[];
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -481,29 +701,6 @@ export interface Cart {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "orders".
- */
-export interface Order {
-  id: number;
-  customer?: (number | null) | User;
-  status?: OrderStatus;
-  amount?: number | null;
-  name: string;
-  phone: string;
-  email: string;
-  items: {
-    product: number | Product;
-    title: string;
-    quantity: number;
-    unitPrice: number;
-    lineTotal: number;
-    id?: string | null;
-  }[];
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "transactions".
  */
 export interface Transaction {
@@ -576,8 +773,36 @@ export interface PayloadLockedDocument {
         value: number | Media;
       } | null)
     | ({
+        relationTo: 'media3d';
+        value: number | Media3D;
+      } | null)
+    | ({
         relationTo: 'reviews';
         value: number | Review;
+      } | null)
+    | ({
+        relationTo: 'condition-types';
+        value: number | ConditionType;
+      } | null)
+    | ({
+        relationTo: 'condition-grades';
+        value: number | ConditionGrade;
+      } | null)
+    | ({
+        relationTo: 'sell-requests';
+        value: number | SellRequest;
+      } | null)
+    | ({
+        relationTo: 'audit-logs';
+        value: number | AuditLog;
+      } | null)
+    | ({
+        relationTo: 'integration-events';
+        value: number | IntegrationEvent;
+      } | null)
+    | ({
+        relationTo: 'return-requests';
+        value: number | ReturnRequest;
       } | null)
     | ({
         relationTo: 'addresses';
@@ -718,6 +943,24 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media3d_select".
+ */
+export interface Media3DSelect<T extends boolean = true> {
+  alt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "reviews_select".
  */
 export interface ReviewsSelect<T extends boolean = true> {
@@ -727,6 +970,115 @@ export interface ReviewsSelect<T extends boolean = true> {
   title?: T;
   body?: T;
   rating?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "condition-types_select".
+ */
+export interface ConditionTypesSelect<T extends boolean = true> {
+  code?: T;
+  nameEn?: T;
+  nameAr?: T;
+  requiresGrade?: T;
+  isActive?: T;
+  sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "condition-grades_select".
+ */
+export interface ConditionGradesSelect<T extends boolean = true> {
+  conditionType?: T;
+  code?: T;
+  nameEn?: T;
+  nameAr?: T;
+  sortOrder?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sell-requests_select".
+ */
+export interface SellRequestsSelect<T extends boolean = true> {
+  customer?: T;
+  title?: T;
+  category?: T;
+  brand?: T;
+  description?: T;
+  conditionType?: T;
+  conditionGrade?: T;
+  askingPrice?: T;
+  offeredPrice?: T;
+  acceptedPrice?: T;
+  currencyCode?: T;
+  images?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
+  status?: T;
+  adminNotes?: T;
+  resultingProduct?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-logs_select".
+ */
+export interface AuditLogsSelect<T extends boolean = true> {
+  actor?: T;
+  actorEmail?: T;
+  action?: T;
+  entity?: T;
+  entityId?: T;
+  before?: T;
+  after?: T;
+  requestId?: T;
+  ip?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "integration-events_select".
+ */
+export interface IntegrationEventsSelect<T extends boolean = true> {
+  provider?: T;
+  eventId?: T;
+  eventType?: T;
+  resourceId?: T;
+  payloadHash?: T;
+  status?: T;
+  processedAt?: T;
+  error?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "return-requests_select".
+ */
+export interface ReturnRequestsSelect<T extends boolean = true> {
+  customer?: T;
+  order?: T;
+  items?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        id?: T;
+      };
+  reason?: T;
+  status?: T;
+  adminNotes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -825,6 +1177,11 @@ export interface ProductsSelect<T extends boolean = true> {
         id?: T;
       };
   reviews?: T;
+  conditionType?: T;
+  conditionGrade?: T;
+  conditionNotes?: T;
+  inspectionStatus?: T;
+  glbModel?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
