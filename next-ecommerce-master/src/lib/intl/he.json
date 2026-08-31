@@ -1,170 +1,156 @@
 {
   "review_form": {
-    "open_button": "כתיבת ביקורת",
-    "title": "הוספת ביקורת",
-    "subtitle": "שתפו את החוויה שלכם מהמוצר",
-    "close_button": "סגירה",
-    "cancel_button": "ביטול",
-    "submit_button": "שליחת ביקורת",
-    "submit_sending": "שולח...",
-    "close_aria": "סגירת הדיאלוג",
-    "toast_success": "תודה! הביקורת שלך נוספה.",
-    "toast_failed": "שליחת הביקורת נכשלה",
+    "open_button": "اكتب تقييم",
+    "title": "إضافة تقييم",
+    "subtitle": "شارك تجربتك مع هذا المنتج",
+    "close_button": "إغلاق",
+    "cancel_button": "إلغاء",
+    "submit_button": "إرسال التقييم",
+    "submit_sending": "جارٍ الإرسال...",
+    "close_aria": "إغلاق الحوار",
+    "toast_success": "شكراً! تمت إضافة تقييمك.",
+    "toast_failed": "فشل إرسال التقييم",
     "validation": {
-      "too_short": "{field} קצר מדי (מינימום {min})",
-      "too_long": "{field} ארוך מדי (מקסימום {max})"
+      "too_short": "{field} قصير جداً (الحد الأدنى {min})",
+      "too_long": "{field} طويل جداً (الحد الأقصى {max})"
     },
     "fields": {
-      "authorName": { "label": "שם", "required": "חובה" },
-      "authorEmail": {
-        "label": "אימייל (אופציונלי)",
-        "invalid": "אימייל לא תקין"
-      },
-      "title": { "label": "כותרת", "required": "חובה" },
-      "rating": { "label": "דירוג", "aria": "דרג {value} מתוך 5" },
-      "body": { "label": "ביקורת", "required": "חובה" }
+      "authorName": { "label": "الاسم", "required": "مطلوب" },
+      "authorEmail": { "label": "البريد الإلكتروني (اختياري)", "invalid": "بريد إلكتروني غير صالح" },
+      "title": { "label": "العنوان", "required": "مطلوب" },
+      "rating": { "label": "التقييم", "aria": "قيّم {value} من 5" },
+      "body": { "label": "التقييم", "required": "مطلوب" }
     }
   },
-
   "order_notifier": {
-    "whatsappAdmin": "📦 הזמנה חדשה התקבלה ← ",
+    "whatsappAdmin": "📦 طلب جديد ← ",
     "email": {
-      "subjectPrefix": "אישור הזמנה - מס'",
-      "greeting": "שלום",
-      "confirmation": "הזמנתך התקבלה בהצלחה.",
-      "total": "סה\"כ לתשלום:",
-      "orderNumber": "מספר הזמנה:",
-      "thanks": "תודה שקנית אצלנו 💚",
+      "subjectPrefix": "تأكيد الطلب - رقم",
+      "greeting": "مرحباً",
+      "confirmation": "تم استلام طلبك بنجاح.",
+      "total": "الإجمالي للدفع:",
+      "orderNumber": "رقم الطلب:",
+      "thanks": "شكراً لتسوقك معنا 💚",
       "headers": {
-        "image": "תמונה",
-        "product": "מוצר",
-        "quantity": "כמות",
-        "price": "מחיר",
-        "total": "סה\"כ"
+        "image": "الصورة",
+        "product": "المنتج",
+        "quantity": "الكمية",
+        "price": "السعر",
+        "total": "الإجمالي"
       }
     }
   },
   "product": {
-    "not_found": "לא נמצאו מוצרים.",
-    "relatedProducts": "מוצרים קשורים",
-    "customer_reviews": "ביקורות לקוחות",
-
+    "not_found": "لا توجد منتجات.",
+    "relatedProducts": "منتجات ذات صلة",
+    "customer_reviews": "تقييمات العملاء",
     "stock": {
-      "onlyLeft": "נשארו רק {count} במלאי",
-      "inStock": "במלאי",
-      "outOfStock": "אזל מהמלאי"
+      "onlyLeft": "متبقي {count} فقط في المخزون",
+      "inStock": "متوفر",
+      "outOfStock": "غير متوفر"
     },
     "addToCart": {
-      "share": "שתף",
-      "shareNotSupported": "שיתוף אינו נתמך במכשיר זה.",
-      "button": "הוספה לסל",
-      "selectVariant": "אנא בחר דגם.",
-      "added": "המוצר נוסף לסל."
+      "share": "مشاركة",
+      "shareNotSupported": "المشاركة غير مدعومة على هذا الجهاز.",
+      "button": "أضف إلى السلة",
+      "selectVariant": "الرجاء اختيار النوع.",
+      "added": "تمت إضافة المنتج إلى السلة."
     },
     "gallery": {
-      "previous": "תמונה קודמת",
-      "next": "תמונה הבאה",
-      "select_image": "בחר תמונה"
+      "previous": "الصورة السابقة",
+      "next": "الصورة التالية",
+      "select_image": "اختر صورة"
     }
   },
-
   "general": {
-    "back": "חזרה",
-    "products": "מוצרים",
-    "search": "חיפוש...",
-    "noMatch": "לא נמצאו מוצרים",
-    "clear": "ניקוי חיפוש",
-    "faq": "שאלות ותשובות",
-
-    "toggle_theme": "שינוי מצב תצוגה",
-    "categories": "קטגוריות",
-    "category_all": "כל המוצרים",
-    "pageNotFound": "העמוד שחיפשת לא נמצא.",
-    "goHome": "חזרה לדף הבית",
-    "somethingWentWrongTitle": "אירעה שגיאה",
-    "somethingWentWrongDescription": "אירעה תקלה בחנות. ייתכן שמדובר בבעיה זמנית. אנא נסה שוב.",
-    "tryAgain": "נסה שוב"
+    "back": "رجوع",
+    "products": "المنتجات",
+    "search": "بحث...",
+    "noMatch": "لا توجد منتجات مطابقة",
+    "clear": "مسح البحث",
+    "faq": "الأسئلة الشائعة",
+    "toggle_theme": "تبديل المظهر",
+    "categories": "الأقسام",
+    "category_all": "كل المنتجات",
+    "pageNotFound": "الصفحة غير موجودة.",
+    "goHome": "الذهاب للرئيسية",
+    "somethingWentWrongTitle": "حدث خطأ",
+    "somethingWentWrongDescription": "حدثت مشكلة في المتجر. قد تكون مؤقتة. حاول مرة أخرى.",
+    "tryAgain": "حاول مرة أخرى"
   },
   "cart": {
-    "title": "הסל שלי",
-    "description": "נהלו את הסל שלכם כאן, הוסיפו פריטים לצפייה בסה\"כ.",
-    "emptyTitle": "הסל שלך ריק.",
-    "total": "סה\"כ",
-    "checkout": "המשך לתשלום"
+    "title": "سلة التسوق",
+    "description": "أدر سلة التسوق هنا، أضف عناصر لعرض الإجمالي.",
+    "emptyTitle": "سلتك فارغة.",
+    "total": "الإجمالي",
+    "checkout": "إتمام الشراء"
   },
   "checkout": {
     "page": {
-      "emptyCart": "הסל שלך ריק.",
-      "continueShopping": "להמשיך בקניות?",
-      "title": "תשלום",
-      "orderReceived": "ההזמנה התקבלה.",
-      "orderId": "מספר הזמנה: {id}",
-      "backToShop": "חזרה לחנות",
-      "yourCart": "הסל שלך",
-      "total": "סה\"כ"
+      "emptyCart": "سلتك فارغة.",
+      "continueShopping": "مواصلة التسوق؟",
+      "title": "إتمام الشراء",
+      "orderReceived": "تم استلام الطلب.",
+      "orderId": "رقم الطلب: {id}",
+      "backToShop": "العودة للمتجر",
+      "yourCart": "سلتك",
+      "total": "الإجمالي"
     },
     "fields": {
-      "name": {
-        "label": "שם",
-        "required": "שם הוא שדה חובה."
-      },
-      "phone": {
-        "label": "טלפון",
-        "required": "טלפון הוא שדה חובה.",
-        "invalid": "מספר הטלפון אינו תקין."
-      },
-      "email": {
-        "label": "אימייל",
-        "required": "אימייל הוא שדה חובה.",
-        "invalid": "כתובת האימייל אינה תקינה."
-      }
+      "name": { "label": "الاسم", "required": "الاسم مطلوب." },
+      "phone": { "label": "الهاتف", "required": "الهاتف مطلوب.", "invalid": "رقم الهاتف غير صالح." },
+      "email": { "label": "البريد الإلكتروني", "required": "البريد مطلوب.", "invalid": "البريد غير صالح." }
     },
     "submit": {
-      "sending": "שולח...",
-      "sendOrder": "שלח הזמנה",
-      "success": "ההזמנה נשלחה",
-      "failed": "ההזמנה נכשלה"
+      "sending": "جارٍ الإرسال...",
+      "sendOrder": "إرسال الطلب",
+      "success": "تم إرسال الطلب",
+      "failed": "فشل الطلب"
     }
   },
   "admin": {
     "orderStatus": {
-      "updateSuccess": "סטטוס ההזמנה עודכן",
-      "updateError": "עדכון סטטוס ההזמנה נכשל",
-      "title": "סטטוס",
-      "statusUpdate": "עדכן סטטוס",
+      "title": "الحالة",
+      "statusUpdate": "تحديث الحالة",
+      "updateSuccess": "تم تحديث حالة الطلب",
+      "updateError": "فشل تحديث حالة الطلب",
       "values": {
-        "new": "חדש",
-        "ready": "מוכן",
-        "done": "בוצע",
-        "canceled": "בוטל",
-        "refunded": "זוכה"
+        "new": "جديد",
+        "ready": "جاهز",
+        "done": "مكتمل",
+        "canceled": "ملغي",
+        "refunded": "مسترجع"
       }
     },
     "cacheControl": {
-      "title": "ניהול מטמון (Cache)",
-      "description": "לאחר שינויים משמעותיים (פוטר, מוצרים, קטגוריות), לחצו על רענון.",
-      "readMore": "קרא עוד...",
-      "hideDetails": "הסתר פרטים",
-      "revalidate": "רענן מטמון",
-      "revalidating": "מרענן...",
-      "success": "המטמון רוענן בהצלחה.",
+      "title": "إدارة الكاش",
+      "description": "بعد التغييرات الكبيرة (الفوتر، المنتجات، الأقسام)، اضغط على تحديث.",
+      "readMore": "اقرأ المزيد...",
+      "hideDetails": "إخفاء التفاصيل",
+      "revalidate": "تحديث الكاش",
+      "revalidating": "جارٍ التحديث...",
+      "success": "تم تحديث الكاش بنجاح.",
       "details": {
-        "footer": "הגדרות פוטר או דף הבית השתנו",
-        "products": "נוספו מוצרים רבים",
-        "category": "שם קטגוריה שונה או סדר השתנה",
-        "finish": "סיימו את העריכות ← ואז רעננו פעם אחת."
+        "footer": "تغيرت إعدادات الفوتر أو الرئيسية",
+        "products": "أُضيفت منتجات كثيرة",
+        "category": "تم تغيير اسم قسم أو ترتيبه",
+        "finish": "أنهِ التعديلات ثم حدّث مرة واحدة."
       }
     }
   },
   "accessibility": {
-    "title": "כלי נגישות",
-    "contrast": "ניגודיות גבוהה",
-    "grayscale": "גווני אפור",
-    "underline": "קו תחתון לקישורים",
-    "zoomIn": "הגדלת טקסט",
-    "zoomOut": "הקטנת טקסט",
-    "invert": "היפוך צבעים",
-    "readableFont": "גופן קריא",
-    "reset": "איפוס"
+    "title": "أدوات الوصول",
+    "contrast": "تباين عالٍ",
+    "grayscale": "تدرج رمادي",
+    "underline": "تسطير الروابط",
+    "zoomIn": "زيادة حجم النص",
+    "zoomOut": "تقليل حجم النص",
+    "invert": "عكس الألوان",
+    "readableFont": "خط قابل للقراءة",
+    "reset": "إعادة تعيين"
+  },
+  "sell": {
+    "title": "بيع معداتك",
+    "description": "اعرض معداتك للبيع وسنتواصل معك"
   }
 }

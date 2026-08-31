@@ -22,6 +22,13 @@ import {
   Category,
   Users,
   Reviews,
+  ConditionType,
+  ConditionGrade,
+  SellRequest,
+  AuditLog,
+  IntegrationEvent,
+  ReturnRequest,
+  Media3D,
 } from "@/lib/collections";
 import appConfig from "@/lib/core/config";
 import { plugins } from "@/lib/providers/plugins";
@@ -31,30 +38,27 @@ export default buildConfig({
     user: Users.slug,
     livePreview: {
       breakpoints: [
-        {
-          label: "Mobile",
-          name: "mobile",
-          width: 375,
-          height: 667,
-        },
-        {
-          label: "Tablet",
-          name: "tablet",
-          width: 768,
-          height: 1024,
-        },
-        {
-          label: "Desktop",
-          name: "desktop",
-          width: 1440,
-          height: 900,
-        },
+        { label: "Mobile", name: "mobile", width: 375, height: 667 },
+        { label: "Tablet", name: "tablet", width: 768, height: 1024 },
+        { label: "Desktop", name: "desktop", width: 1440, height: 900 },
       ],
     },
   },
   globals: [SiteSettings],
 
-  collections: [Users, Category, Media, Reviews],
+  collections: [
+    Users,
+    Category,
+    Media,
+    Media3D,
+    Reviews,
+    ConditionType,
+    ConditionGrade,
+    SellRequest,
+    AuditLog,
+    IntegrationEvent,
+    ReturnRequest,
+  ],
   db: postgresAdapter({
     pool: {
       connectionString: appConfig.DATABASE_URL,
@@ -68,9 +72,7 @@ export default buildConfig({
         ItalicFeature(),
         OrderedListFeature(),
         UnorderedListFeature(),
-        LinkFeature({
-          enabledCollections: [],
-        }),
+        LinkFeature({ enabledCollections: [] }),
         IndentFeature(),
         EXPERIMENTAL_TableFeature(),
       ];
@@ -79,7 +81,7 @@ export default buildConfig({
   email: appConfig.SEND_EMAIL_WHATSAPP
     ? nodemailerAdapter({
         defaultFromAddress: appConfig.EMAIL_FROM_ADDRESS,
-        defaultFromName: "My Store",
+        defaultFromName: appConfig.SITE_NAME,
         transportOptions: {
           host: appConfig.EMAIL_SMTP_HOST,
           port: Number(appConfig.EMAIL_SMTP_PORT || 587),

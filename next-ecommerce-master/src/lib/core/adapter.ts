@@ -11,6 +11,7 @@ export const getCartQuantity = (
   if (!cart?.items?.length) return undefined;
   return cart.items.reduce((sum, it) => sum + Number(it?.quantity ?? 0), 0);
 };
+
 const getCartItemData = (item: CartItem) => {
   const product = item.product as Product;
   if (!product) return null;
@@ -27,6 +28,7 @@ const getCartItemData = (item: CartItem) => {
     price,
   };
 };
+
 type CartRow = {
   item: CartItem;
   data: NonNullable<ReturnType<typeof getCartItemData>>;
@@ -41,13 +43,19 @@ export const buildCartRows = (cart: Cart | null | undefined): CartRow[] => {
     return acc;
   }, []);
 };
+
 type PurchaseOption =
   ProductPurchaseSectionData["variants"][number]["options"][number];
 
 export const buildProductPurchaseSectionData = (
   product: Product,
   combined: CombinedVariantData,
-): ProductPurchaseSectionData => {
+): ProductPurchaseSectionData & {
+  conditionType?: Product["conditionType"];
+  conditionGrade?: Product["conditionGrade"];
+  conditionNotes?: Product["conditionNotes"];
+  glbModel?: Product["glbModel"];
+} => {
   const base_ans = {
     id: product.id,
     inventory: product.inventory!,
@@ -55,7 +63,12 @@ export const buildProductPurchaseSectionData = (
     originalPrice: product.originalPriceInUSD ?? undefined,
     variants: [],
     priceRange: { min: 0, max: 0 },
+    conditionType: product.conditionType ?? null,
+    conditionGrade: product.conditionGrade ?? null,
+    conditionNotes: product.conditionNotes ?? null,
+    glbModel: product.glbModel ?? null,
   };
+
   if (!combined) {
     return base_ans;
   }

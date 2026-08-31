@@ -14,12 +14,33 @@ import { cn, createUrl } from "@/lib/core/util";
 export default function ProductPurchaseSectionClient({
   product,
 }: {
-  product: ProductPurchaseSectionData;
+  product: ProductPurchaseSectionData & {
+    conditionType?: { code: string; nameAr?: string; nameEn?: string } | null;
+    conditionGrade?: { code: string; nameAr?: string; nameEn?: string } | null;
+    conditionNotes?: string | null;
+    glbModel?: { url?: string } | null;
+  };
 }) {
   const hasVariants = product.variants.length > 0;
 
   return (
     <>
+      {product.conditionType ? (
+        <div className="flex flex-col gap-2 py-2">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-green-100 text-green-800 px-3 py-1 text-sm font-medium">
+              {product.conditionType.nameAr || product.conditionType.nameEn || product.conditionType.code}
+              {product.conditionGrade
+                ? ` - ${product.conditionGrade.nameAr || product.conditionGrade.nameEn || product.conditionGrade.code}`
+                : ""}
+            </span>
+          </div>
+          {product.conditionNotes ? (
+            <p className="text-sm text-muted-foreground">{product.conditionNotes}</p>
+          ) : null}
+        </div>
+      ) : null}
+
       {hasVariants ? (
         <div className="flex flex-col gap-6 border-b pb-2">
           <VariantSelector product={product} />
@@ -33,9 +54,21 @@ export default function ProductPurchaseSectionClient({
       <div className="flex items-center justify-center pb-2">
         <AddToCart product={product} />
       </div>
+
+      {product.glbModel?.url ? (
+        <div className="flex justify-center pb-4">
+          <Button
+            variant="outline"
+            onClick={() => window.open(product.glbModel!.url!, "_blank")}
+          >
+            عرض ثلاثي الأبعاد
+          </Button>
+        </div>
+      ) : null}
     </>
   );
 }
+
 const VariantSelector = ({
   product,
 }: {

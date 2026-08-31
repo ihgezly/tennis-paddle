@@ -169,6 +169,10 @@ export default class Api extends BaseApi {
               categories: true,
               priceInUSD: true,
               originalPriceInUSD: true,
+              conditionType: true,
+              conditionGrade: true,
+              conditionNotes: true,
+              glbModel: true,
             },
             expect: "docs",
             tag: AppConst.CACHE_TAG_BOOTSTRAP,
@@ -228,6 +232,10 @@ export default class Api extends BaseApi {
         faqs: true,
         reviews: true,
         enableVariants: true,
+        conditionType: true,
+        conditionGrade: true,
+        conditionNotes: true,
+        glbModel: true,
       },
     );
 
@@ -270,6 +278,10 @@ export default class Api extends BaseApi {
       relatedProducts,
       reviews: product.reviews?.docs as Review[],
       purchase_section: buildProductPurchaseSectionData(product, combined),
+      conditionType: product.conditionType ?? null,
+      conditionGrade: product.conditionGrade ?? null,
+      conditionNotes: product.conditionNotes ?? null,
+      glbModel: product.glbModel ?? null,
     };
   }
 

@@ -1,3 +1,4 @@
+// seed/index.ts
 // @ts-nocheck
 import { resolve, basename, join } from "node:path";
 import { readFile, rm } from "node:fs/promises";
@@ -236,6 +237,54 @@ export default class SeedService {
     );
   }
 
+  async seedConditions() {
+    this.payload.logger.info("seedConditions:start");
+
+    const newType = await this.payload.create({
+      collection: "condition-types",
+      data: {
+        code: "new",
+        nameEn: "New",
+        nameAr: "جديد",
+        requiresGrade: false,
+        isActive: true,
+        sortOrder: 0,
+      },
+    });
+
+    const usedType = await this.payload.create({
+      collection: "condition-types",
+      data: {
+        code: "used",
+        nameEn: "Used",
+        nameAr: "مستعمل",
+        requiresGrade: true,
+        isActive: true,
+        sortOrder: 1,
+      },
+    });
+
+    const grades = [
+      { code: "like_new", nameEn: "Like New", nameAr: "كالجديد", sortOrder: 0 },
+      { code: "excellent", nameEn: "Excellent", nameAr: "ممتاز", sortOrder: 1 },
+      { code: "good", nameEn: "Good", nameAr: "جيد", sortOrder: 2 },
+      { code: "fair", nameEn: "Fair", nameAr: "مقبول", sortOrder: 3 },
+    ];
+
+    for (const g of grades) {
+      await this.payload.create({
+        collection: "condition-grades",
+        data: {
+          ...g,
+          conditionType: usedType.id,
+          isActive: true,
+        },
+      });
+    }
+
+    this.payload.logger.info("seedConditions:done");
+  }
+
   async seedProducts() {
     this.payload.logger.info("seedProducts:start");
 
@@ -334,6 +383,7 @@ export default class SeedService {
 
     this.payload.logger.info("seedProducts:done");
   }
+
   async addRelatedProducts() {
     this.payload.logger.info("addRelatedProducts:start");
 
@@ -428,7 +478,7 @@ export default class SeedService {
     }
 
     await this.createUser();
-
+    await this.seedConditions();
     await this.seedSiteSettings();
     await this.seedCategories();
     await this.createVariantSetup();

@@ -12,10 +12,16 @@ export const Users: CollectionConfig = {
   },
   auth: true,
   access: {
+    // أي مستخدم مسجل دخول يقدر يشوف بياناته
     read: ({ req: { user } }) => Boolean(user),
-    create: () => false,
+    // السماح للعامة بإنشاء حساب (عميل) من الواجهة
+    create: () => true,
     delete: () => false,
-    update: isAdmin,
+    update: ({ req: { user } }) => {
+      if (!user) return false;
+      // المستخدم يعدل بياناته فقط، والأدمن يعدل أي مستخدم
+      return isAdmin({ req: { user } as any }) || { id: { equals: user.id } };
+    },
     admin: isAdmin,
   },
   fields: [
@@ -23,7 +29,8 @@ export const Users: CollectionConfig = {
       name: "roles",
       type: "select",
       hasMany: true,
-      defaultValue: ["admin"],
+      // عند التسجيل من الواجهة، يجب أن يحصل العميل على دور customer تلقائياً
+      defaultValue: ["customer"],
       options: [
         { label: "admin", value: "admin" },
         { label: "customer", value: "customer" },

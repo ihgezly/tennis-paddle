@@ -32,8 +32,17 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
     },
 
     access: {
-      ...adminOnlyAccess,
-      create: () => true,
+      // العملاء يشاهدون طلباتهم فقط، والأدمن يشاهد الكل
+      read: ({ req: { user } }) => {
+        if (!user) return false;
+        if (isAdmin({ req: { user } as any })) return true;
+        return { customer: { equals: user.id } };
+      },
+      // لا يُسمح بإنشاء طلب مباشرة من الواجهة؛ الدفع الإلكتروني هو المسؤول
+      create: () => false,
+      update: isAdmin,
+      delete: isAdmin,
+      admin: isAdmin,
     },
 
     fields: [
@@ -48,14 +57,11 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
           if (f?.name === "customer")
             return {
               ...f,
-              required: false,
+              required: true,
               admin: {
                 ...(f.admin || {}),
                 position: "sidebar",
-                hidden: true,
-                condition: () => false,
                 readOnly: true,
-                disabled: true,
               },
             };
 
@@ -67,9 +73,7 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
               admin: {
                 ...(f.admin || {}),
                 position: "sidebar",
-                hidden: true,
                 readOnly: true,
-                disabled: true,
               },
             };
 

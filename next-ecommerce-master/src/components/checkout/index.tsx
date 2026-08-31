@@ -12,7 +12,7 @@ import { Button } from "@/components/ui";
 export default function CheckoutClient() {
   const t = useTranslations("checkout.page");
   const { cart, clearCart } = useCart();
-  const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
+  const [paymentIframeUrl, setPaymentIframeUrl] = useState<string | null>(null);
 
   const cartIsEmpty = !cart?.items?.length;
 
@@ -21,14 +21,14 @@ export default function CheckoutClient() {
     return typeof id === "number" ? id : undefined;
   }, [cart]);
 
-  if (cartIsEmpty && !successOrderId) {
+  if (cartIsEmpty && !paymentIframeUrl) {
     return (
       <div className="py-12 flex flex-col items-center text-center text-foreground">
         <p className="text-lg font-medium">{t("emptyCart")}</p>
 
         <Link
           href="/"
-          className="mt-4  underline underline-offset-4 hover:opacity-80"
+          className="mt-4 underline underline-offset-4 hover:opacity-80"
         >
           {t("continueShopping")}
         </Link>
@@ -36,24 +36,27 @@ export default function CheckoutClient() {
     );
   }
 
-  return successOrderId ? (
-    <div className="flex justify-center w-full my-8">
-      <div className="rounded-lg p-6 w-full max-w-md text-center">
-        <p className="font-medium">{t("orderReceived")}</p>
-        <p className="text-sm opacity-80 mt-1">
-          {t("orderId", { id: successOrderId })}
-        </p>
-        <Button className="mt-4" variant="outline">
-          <Link href="/">{t("backToShop")}</Link>
-        </Button>
+  if (paymentIframeUrl) {
+    return (
+      <div className="w-full max-w-3xl mx-auto my-8">
+        <CheckoutSummary />
+        <div className="mt-8">
+          <iframe
+            src={paymentIframeUrl}
+            className="w-full h-[600px] border rounded-md"
+            allow="payment"
+          />
+        </div>
       </div>
-    </div>
-  ) : (
+    );
+  }
+
+  return (
     <div className="flex flex-col md:flex-row justify-center items-start w-full max-w-5xl mx-auto gap-6 my-8">
       <CheckoutForm
         cartId={cartId}
         clearCart={clearCart}
-        onSuccess={(orderId) => setSuccessOrderId(orderId)}
+        onSuccess={(iframeUrl) => setPaymentIframeUrl(iframeUrl)}
       />
 
       <CheckoutSummary />
