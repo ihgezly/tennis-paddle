@@ -1,4 +1,3 @@
-// src/lib/core/types/types.ts
 import type {
   Cart,
   Order,
@@ -24,6 +23,9 @@ export enum CollectionName {
   integrationEvents = "integration-events",
   media3d = "media3d",
   returnRequests = "return-requests",
+  payments = "payments",
+  inventoryReservations = "inventory-reservations",
+  inventoryMovements = "inventory-movements",
 }
 
 export enum OrderStatus {
@@ -32,6 +34,17 @@ export enum OrderStatus {
   READY = "ready",
   DONE = "done",
   CANCELED = "canceled",
+  REFUNDED = "refunded",
+}
+
+export enum PaymentStatus {
+  PENDING = "pending",
+  INITIATING = "initiating",
+  AUTHORIZED = "authorized",
+  PAID = "paid",
+  FAILED = "failed",
+  CANCELLED = "cancelled",
+  EXPIRED = "expired",
   REFUNDED = "refunded",
 }
 
@@ -146,6 +159,7 @@ export const isValidReturnStatusTransition = (
 
 export enum IntegrationEventStatus {
   RECEIVED = "received",
+  PROCESSING = "processing",
   PROCESSED = "processed",
   FAILED = "failed",
 }

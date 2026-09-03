@@ -35,12 +35,14 @@ const remotePatternsFromConfig = (): RemotePattern[] => {
 
   return patterns;
 };
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
   productionBrowserSourceMaps: false,
   typescript: { ignoreBuildErrors: false },
+
   images: {
     unoptimized: true,
     dangerouslyAllowLocalIP: process.env.NODE_ENV === "development",

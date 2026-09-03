@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useCallback } from "react";
+import { useState, useCallback } from "react";
 
 import GenericForm from "@/components/shared/generic-form";
 import {
@@ -13,7 +12,6 @@ import { postJson } from "@/lib/core/util";
 
 export default function CheckoutForm({
   cartId,
-  clearCart,
   onSuccess,
 }: CheckoutFormProps) {
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
@@ -26,7 +24,7 @@ export default function CheckoutForm({
         const result = await postJson<{ iframeUrl: string }>(
           "paymob/initiate",
           {
-            cartId: cartId,
+            orderId: cartId,
             name: data.name,
             phone: data.phone,
             email: data.email,

@@ -137,7 +137,7 @@ export default class Queries {
     const { isEnabled: draft } = await draftMode();
 
     const docs = await Queries.runPayloadFind<T>({
-      collection,
+      collection: collection as any,
       tag: `${collection}-${slug}`,
       cache: !draft,
       params: {
@@ -400,7 +400,7 @@ export default class Queries {
     collection: CollectionName,
   ): Promise<SitemapItem[]> {
     return Queries.runPayloadFind<SitemapItem>({
-      collection,
+      collection: collection as any,
       tag: AppConst.CACHE_TAG_SITEMAP,
       params: {
         draft: false,

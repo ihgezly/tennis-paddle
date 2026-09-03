@@ -1,7 +1,7 @@
 import { addDataAndFileToRequest } from "payload";
 import type { CollectionConfig } from "payload";
 import { isAdmin } from "@/lib/collections/base-fields";
-import { restockOrderItems } from "@/lib/core/inventory";
+import { restockInventory } from "@/lib/core/inventory";
 import { logAudit } from "@/lib/core/audit";
 import {
   CollectionName,
@@ -80,7 +80,12 @@ export const ReturnRequest: CollectionConfig = {
         });
 
         if (nextStatus === ReturnStatus.RESTOCKED) {
-          await restockOrderItems(req, returnRequest);
+          const items = returnRequest.items.map((item: any) => ({
+            product: item.product,
+            variant: item.variant,
+            quantity: item.quantity,
+          }));
+          await restockInventory(req.payload, items, Number(id));
         }
 
         await logAudit(req, {

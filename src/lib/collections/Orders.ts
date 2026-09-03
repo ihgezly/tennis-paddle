@@ -1,6 +1,5 @@
 import { addDataAndFileToRequest } from "payload";
 
-import type { Variant } from "@/lib/core/types/payload-types";
 import type { CollectionOverride } from "@payloadcms/plugin-ecommerce/types";
 import type {
   CollectionAfterChangeHook,
@@ -8,16 +7,15 @@ import type {
 } from "payload";
 
 import {
-  adminOnlyAccess,
   isAdmin,
   stripAdminFieldComponent,
 } from "@/lib/collections/base-fields";
 import appConfig from "@/lib/core/config";
 import { OrderNotifier } from "@/lib/core/OrderNotifier";
 import {
-  type CartItem,
   CollectionName,
   OrderStatus,
+  PaymentStatus,
 } from "@/lib/core/types/types";
 import { isValidOrderStatusTransition } from "@/lib/core/util";
 
@@ -28,25 +26,22 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
     admin: {
       ...(defaultCollection.admin || {}),
       useAsTitle: "name",
-      defaultColumns: ["name", "phone", "email", "createdAt"],
+      defaultColumns: ["name", "phone", "email", "status", "paymentStatus", "createdAt"],
     },
 
     access: {
-      // العملاء يشاهدون طلباتهم فقط، والأدمن يشاهد الكل
       read: ({ req: { user } }) => {
         if (!user) return false;
         if (isAdmin({ req: { user } as any })) return true;
         return { customer: { equals: user.id } };
       },
-      // لا يُسمح بإنشاء طلب مباشرة من الواجهة؛ الدفع الإلكتروني هو المسؤول
-      create: () => false,
+      create: ({ req: { user } }) => Boolean(user),
       update: isAdmin,
       delete: isAdmin,
       admin: isAdmin,
     },
 
     fields: [
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...((defaultCollection.fields || []) as any[])
         .filter(
           (f) =>
@@ -68,7 +63,7 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
           if (f?.name === "status")
             return {
               ...f,
-              defaultValue: OrderStatus.NEW,
+              defaultValue: OrderStatus.PENDING_PAYMENT,
               options: Object.values(OrderStatus),
               admin: {
                 ...(f.admin || {}),
@@ -113,12 +108,42 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
             relationTo: CollectionName.products,
             required: true,
           },
-
           { name: "title", type: "text", required: true },
           { name: "quantity", type: "number", required: true },
           { name: "unitPrice", type: "number", required: true },
           { name: "lineTotal", type: "number", required: true },
         ],
+      },
+
+      // Payment fields
+      {
+        name: "paymentStatus",
+        type: "select",
+        defaultValue: PaymentStatus.PENDING,
+        options: Object.values(PaymentStatus),
+        admin: { position: "sidebar", readOnly: true },
+      },
+      {
+        name: "currencyCode",
+        type: "select",
+        defaultValue: "EGP",
+        options: ["EGP"],
+        admin: { position: "sidebar", readOnly: true },
+      },
+      {
+        name: "merchantOrderId",
+        type: "text",
+        admin: { position: "sidebar", readOnly: true },
+      },
+      {
+        name: "paymobOrderId",
+        type: "text",
+        admin: { position: "sidebar", readOnly: true },
+      },
+      {
+        name: "paymobTransactionId",
+        type: "text",
+        admin: { position: "sidebar", readOnly: true },
       },
     ],
 
@@ -188,84 +213,25 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
           return doc;
         },
       ],
+
       beforeValidate: [
         ...((defaultCollection.hooks
           ?.beforeValidate as CollectionBeforeValidateHook[]) || []),
-        async ({ data, req, operation }) => {
+
+        async ({ data, operation }) => {
           if (!data) return data;
 
-          if (operation === "create") data.status = OrderStatus.NEW;
+          if (operation === "create" && !data.status) {
+            data.status = OrderStatus.PENDING_PAYMENT;
+          }
 
-          const rawCart = data.cart;
-          const cartId = typeof rawCart === "object" ? rawCart?.id : rawCart;
-          if (!cartId) return data;
+          if (operation === "create" && !data.paymentStatus) {
+            data.paymentStatus = PaymentStatus.PENDING;
+          }
 
-          const cart = await req.payload.findByID({
-            collection: "carts",
-            id: cartId,
-            depth: 3,
-          });
-
-          const items: CartItem[] = Array.isArray(cart?.items)
-            ? cart.items
-            : [];
-
-          const snapshot = items
-            .map((it) => {
-              const quantity = Number(it?.quantity ?? 0);
-              if (!quantity) return null;
-
-              const product =
-                typeof it.product === "object" && it.product
-                  ? it.product
-                  : undefined;
-
-              const variant =
-                typeof it.variant === "object" && it.variant
-                  ? (it.variant as Variant)
-                  : undefined;
-
-              const productId =
-                typeof it.product === "object" ? it.product?.id : it.product;
-
-              if (!productId || !product) return null;
-
-              const firstOption =
-                variant?.options?.[0] && typeof variant.options[0] === "object"
-                  ? variant.options[0]
-                  : undefined;
-
-              const title = firstOption?.label
-                ? `${product.title} – ${firstOption.label}`
-                : (product.title ?? "");
-
-              const unitPrice =
-                variant?.priceInUSD != null
-                  ? Number(variant.priceInUSD)
-                  : Number(product.priceInUSD ?? 0);
-
-              return {
-                product: productId,
-                title,
-                quantity,
-                unitPrice,
-                lineTotal: unitPrice * quantity,
-              };
-            })
-            .filter(
-              (
-                x,
-              ): x is {
-                product: number;
-                title: string;
-                quantity: number;
-                unitPrice: number;
-                lineTotal: number;
-              } => Boolean(x),
-            );
-
-          data.items = snapshot;
-          data.amount = cart.subtotal;
+          if (operation === "create" && !data.currencyCode) {
+            data.currencyCode = "EGP";
+          }
 
           return data;
         },

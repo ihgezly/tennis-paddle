@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev -p 3344",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
@@ -22,6 +22,11 @@
     "reset": "yes | payload migrate:fresh",
     "generate:importmap": "payload generate:importmap",
     "generate:types": "payload generate:types",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:load": "k6 run tests/load/full-flow.js",
     "reinstall": "rm -rf tsconfig.tsbuildinfo .next node_modules pnpm-lock.yaml && pnpm install",
     "reinstall:full": "rm -rf pnpm-lock.yaml .next .turbo node_modules && pnpm store prune && pnpm install"
   },
@@ -53,7 +58,9 @@
     "sonner": "2.0.8",
     "tailwind-merge": "3.6.0",
     "three": "^0.180.0",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "pino": "^9.0.0",
+    "pino-pretty": "^11.0.0"
   },
   "devDependencies": {
     "@next/env": "16.3.2",
@@ -76,7 +83,13 @@
     "tailwindcss": "4.1.18",
     "tsx": "4.23.12",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.67.0"
+    "typescript-eslint": "8.67.0",
+    "vitest": "^1.6.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "@playwright/test": "^1.44.0",
+    "@faker-js/faker": "^8.4.1",
+    "supertest": "^7.0.0",
+    "@types/supertest": "^6.0.2"
   },
   "browserslist": [
     "defaults",

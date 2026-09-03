@@ -1,6 +1,6 @@
 import { addDataAndFileToRequest } from "payload";
 import type { CollectionConfig } from "payload";
-import { adminOnlyAccess, isAdmin } from "@/lib/collections/base-fields";
+import { isAdmin } from "@/lib/collections/base-fields";
 import { logAudit } from "@/lib/core/audit";
 import {
   CollectionName,
@@ -178,7 +178,7 @@ export const SellRequest: CollectionConfig = {
       name: "currencyCode",
       type: "select",
       defaultValue: "EGP",
-      options: ["EGP", "USD"],
+      options: ["EGP"],
     },
     {
       name: "images",

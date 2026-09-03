@@ -7,7 +7,6 @@ import { useMemo, useState } from "react";
 
 import CheckoutForm from "@/components/checkout/checkout-form";
 import CheckoutSummary from "@/components/checkout/checkout-summary";
-import { Button } from "@/components/ui";
 
 export default function CheckoutClient() {
   const t = useTranslations("checkout.page");

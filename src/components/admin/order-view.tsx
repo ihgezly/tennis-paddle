@@ -92,7 +92,7 @@ const OrderViewInner = () => {
         id,
         phone,
         email,
-        status: (status ?? OrderStatus.NEW) as OrderStatus,
+        status: (status ?? OrderStatus.PENDING_PAYMENT) as OrderStatus,
       });
     });
 

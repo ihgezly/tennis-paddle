@@ -13,7 +13,7 @@ export const Variants: CollectionOverride = ({ defaultCollection }) => {
   });
 
   fields.push({
-    name: "originalPriceInUSD",
+    name: "originalPriceInEGP",
     type: "number",
     min: 0,
     admin: {
@@ -33,7 +33,7 @@ export const Variants: CollectionOverride = ({ defaultCollection }) => {
       defaultColumns: Array.from(
         new Set([
           ...(defaultCollection.admin?.defaultColumns ?? []),
-          "priceInUSD",
+          "priceInEGP",
           "inventory",
         ]),
       ),
