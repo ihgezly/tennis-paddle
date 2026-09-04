@@ -12,23 +12,26 @@
 # Error details
 
 ```
-Error: browserType.launch: Target page, context or browser has been closed
-Browser logs:
-
-<launching> /home/codespace/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-updater-scheduler --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/playwright_chromiumdev_profile-z3gYEs --remote-debugging-pipe --no-startup-window
-<launched> pid=13987
-[pid=13987][err] /home/codespace/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell: error while loading shared libraries: libatk-1.0.so.0: cannot open shared object file: No such file or directory
+Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3344/sell
 Call log:
-  - <launching> /home/codespace/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-updater-scheduler --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/playwright_chromiumdev_profile-z3gYEs --remote-debugging-pipe --no-startup-window
-  - <launched> pid=13987
-  - [pid=13987][err] /home/codespace/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell: error while loading shared libraries: libatk-1.0.so.0: cannot open shared object file: No such file or directory
-  - [pid=13987] <gracefully close start>
-  - [pid=13987] <kill>
-  - [pid=13987] <will force kill>
-  - [pid=13987] exception while trying to kill process: Error: kill ESRCH
-  - [pid=13987] <process did exit: exitCode=127, signal=null>
-  - [pid=13987] starting temporary directories cleanup
-  - [pid=13987] finished temporary directories cleanup
-  - [pid=13987] <gracefully close end>
+  - navigating to "http://localhost:3344/sell", waiting until "load"
 
+```
+
+# Test source
+
+```ts
+  1  | import { test, expect } from "@playwright/test";
+  2  | 
+  3  | test("submit sell request", async ({ page }) => {
+> 4  |   await page.goto("/sell");
+     |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3344/sell
+  5  |   await page.fill('input[name="title"]', "Babolat Racket");
+  6  |   await page.fill('textarea[name="description"]', "Good condition");
+  7  |   await page.fill('input[name="askingPrice"]', "5000");
+  8  |   await page.setInputFiles('input[type="file"]', ["tests/fixtures/img1.jpg", "tests/fixtures/img2.jpg", "tests/fixtures/img3.jpg", "tests/fixtures/img4.jpg", "tests/fixtures/img5.jpg"]);
+  9  |   await page.click('button[type="submit"]');
+  10 |   await expect(page).toHaveURL(/sell-requests/);
+  11 | });
+  12 | 
 ```

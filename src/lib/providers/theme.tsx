@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 export const themeLocalStorageKey = "payload-theme";
-export const defaultTheme: Theme = "light";
+export const defaultTheme: Theme = "dark";
 
 export type Theme = "dark" | "light";
 
@@ -30,8 +30,14 @@ export const useTheme = (): ThemeContextType => {
   const setTheme = useCallback((next: Theme) => {
     localStorage.setItem(themeLocalStorageKey, next);
     document.documentElement.setAttribute("data-theme", next);
+    document.documentElement.classList.toggle("dark", next === "dark");
     setThemeState(next);
   }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
@@ -39,9 +45,9 @@ export const useTheme = (): ThemeContextType => {
         const next = getStoredTheme();
         setThemeState(next);
         document.documentElement.setAttribute("data-theme", next);
+        document.documentElement.classList.toggle("dark", next === "dark");
       }
     };
-
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);

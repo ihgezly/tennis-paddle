@@ -44,11 +44,11 @@
       }
     }
   },
+
   "product": {
     "not_found": "No products found.",
     "relatedProducts": "Related Products",
     "customer_reviews": "Customer Reviews",
-
     "stock": {
       "onlyLeft": "Only {count} left in stock",
       "inStock": "In stock",
@@ -65,7 +65,12 @@
       "previous": "Previous image",
       "next": "Next image",
       "select_image": "Select image"
-    }
+    },
+    "condition": {
+      "new": "New",
+      "used": "Used"
+    },
+    "view3d": "View 3D Model"
   },
 
   "general": {
@@ -75,7 +80,6 @@
     "noMatch": "No products found",
     "clear": "Clear search",
     "faq": "Frequently Asked Questions",
-
     "toggle_theme": "Toggle theme",
     "categories": "Categories",
     "category_all": "All Products",
@@ -85,6 +89,7 @@
     "somethingWentWrongDescription": "There was an issue with our storefront. This may be temporary. Please try again.",
     "tryAgain": "Try again"
   },
+
   "cart": {
     "title": "My Cart",
     "description": "Manage your cart here, add items to view the total.",
@@ -92,6 +97,7 @@
     "total": "Total",
     "checkout": "Proceed to Checkout"
   },
+
   "checkout": {
     "page": {
       "emptyCart": "Your cart is empty.",
@@ -126,6 +132,7 @@
       "failed": "Order failed"
     }
   },
+
   "admin": {
     "orderStatus": {
       "title": "Status",
@@ -156,6 +163,7 @@
       }
     }
   },
+
   "accessibility": {
     "title": "Accessibility Tools",
     "contrast": "High Contrast",
@@ -166,5 +174,74 @@
     "invert": "Invert Colors",
     "readableFont": "Readable Font",
     "reset": "Reset"
+  },
+
+  "hero": {
+    "tagline": "Premium Tennis & Padel Equipment",
+    "title": "Play Different.",
+    "subtitle": "Discover the latest equipment for players who demand more.",
+    "shopNow": "Shop Now",
+    "sellEquipment": "Sell Your Equipment"
+  },
+
+  "home": {
+    "newArrivals": {
+      "title": "New Arrivals",
+      "subtitle": "Discover the latest equipment"
+    },
+    "shopBySport": {
+      "title": "Shop by Sport",
+      "subtitle": "Choose your game",
+      "explore": "Explore"
+    },
+    "dynamicCategories": {
+      "title": "Product Types",
+      "subtitle": "Find what you need"
+    },
+    "finalCta": {
+      "title": "Sell Your Equipment",
+      "subtitle": "Have gear you no longer use? Turn it into credit or cash.",
+      "button": "Start Selling"
+    }
+  },
+
+  "auth": {
+    "loginLabel": "Login",
+    "registerLabel": "Register",
+    "fullName": "Full Name",
+    "email": "Email",
+    "password": "Password",
+    "loginButton": "Login",
+    "createAccount": "Create Account",
+    "alreadyHaveAccount": "Already have an account?",
+    "needAccount": "Need an account?",
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Login to continue your journey"
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Join the next generation of players"
+    }
+  },
+
+  "category": {
+    "noProducts": "No products found",
+    "filters": "Filters"
+  },
+
+  "account": {
+    "orders": {
+      "title": "My Orders",
+      "empty": "No orders yet.",
+      "orderNo": "Order No.",
+      "unauthorized": "Please log in to view your orders."
+    },
+    "sellRequests": {
+      "title": "My Sell Requests",
+      "empty": "No sell requests yet.",
+      "requestNo": "Request No.",
+      "unauthorized": "Please log in to view your sell requests."
+    }
   }
 }

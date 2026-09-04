@@ -1,6 +1,5 @@
 import type {
   ShippingProvider,
-  CreateShipmentInput,
   CreateShipmentResult,
   ShipmentStatus,
 } from "@/lib/shipping/types";

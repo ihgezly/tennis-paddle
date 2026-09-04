@@ -23,7 +23,7 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
 
   admin: {
     ...defaultCollection?.admin,
-    defaultColumns: ["title", "enableVariants", "_status", "variants.variants"],
+    defaultColumns: ["title", "brand", "enableVariants", "_status", "variants.variants"],
     ...makeAdminPreview(RoutePath.product),
     useAsTitle: "title",
   },
@@ -80,6 +80,12 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
     { name: "title", type: "text", required: true, localized: true },
 
     {
+      name: "brand",
+      type: "text",
+      admin: { position: "sidebar" },
+    },
+
+    {
       name: "categories",
       type: "relationship",
       admin: { position: "sidebar", sortOptions: "title" },
@@ -110,6 +116,14 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
         return f;
       }),
 
+    {
+      name: "priceInEGP",
+      type: "number",
+      min: 0,
+      admin: {
+        description: "Product price in Egyptian Pounds (primary display price).",
+      },
+    },
     {
       name: "originalPriceInEGP",
       type: "number",

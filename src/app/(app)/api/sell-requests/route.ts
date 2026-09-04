@@ -47,6 +47,7 @@ export async function POST(req: Request) {
 
     const data = {
       ...safeData,
+      currencyCode: "EGP" as const, // تأكيد القيمة الحرفية
       customer: customerId,
       category: Number(category),
       conditionType: Number(conditionType),

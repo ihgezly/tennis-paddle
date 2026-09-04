@@ -62,7 +62,7 @@ export default function CartModal() {
         aria-hidden="true"
         onClick={() => setIsOpen(false)}
         className={cn(
-          "fixed inset-0 z-50 bg-black/40 transition-opacity duration-300",
+          "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-300",
           isOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none",
@@ -74,33 +74,35 @@ export default function CartModal() {
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "cart-drawer fixed inset-y-0 right-0 z-50 flex w-5/6 flex-col gap-4 shadow-lg sm:max-w-sm",
-          "transition-transform duration-300 ease-in-out",
+          "cart-drawer fixed inset-y-0 right-0 z-50 flex w-5/6 flex-col gap-4 shadow-lg sm:max-w-sm border-l border-border",
+          "transition-transform duration-300 ease-in-out bg-surface text-foreground",
           isOpen ? "translate-x-0" : "translate-x-full",
         )}
       >
-        <div className="flex flex-col gap-1.5 p-4">
+        <div className="flex flex-col gap-1.5 p-4 border-b border-border">
           <div className="flex items-center justify-between">
-            <span className="font-semibold">{t("title")}</span>
+            <span className="font-semibold text-foreground">{t("title")}</span>
 
             <button
               type="button"
               onClick={() => setIsOpen(false)}
               aria-label="Close cart"
-              className="rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:outline-none"
+              className="rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:outline-none text-foreground hover:text-red-400"
             >
-              <HiXMark className="h-4 w-4 cursor-pointer text-current hover:text-red-400" />
+              <HiXMark className="h-4 w-4 cursor-pointer" />
               <span className="sr-only">Close</span>
             </button>
           </div>
 
-          <p className="cart-muted text-sm">{t("description")}</p>
+          <p className="text-sm text-text-secondary">{t("description")}</p>
         </div>
 
         {rows.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-4 text-center">
             <div className="text-5xl leading-none">🛒</div>
-            <p className="text-center text-2xl font-bold">{t("emptyTitle")}</p>
+            <p className="text-center text-2xl font-bold text-foreground">
+              {t("emptyTitle")}
+            </p>
           </div>
         ) : (
           <div className="flex grow min-h-0 px-4">
@@ -129,12 +131,12 @@ export default function CartModal() {
                           </div>
 
                           <div className="flex flex-1 flex-col text-base">
-                            <span className="leading-tight">
+                            <span className="leading-tight text-foreground">
                               {product.title}
                             </span>
 
                             {isVariant && variant ? (
-                              <p className="cart-muted text-sm capitalize">
+                              <p className="cart-muted text-sm capitalize text-text-secondary">
                                 {Array.isArray(variant.options)
                                   ? variant.options
                                       .map((o) =>
@@ -156,14 +158,14 @@ export default function CartModal() {
                           {typeof price === "number" ? (
                             <Price
                               amount={price}
-                              className="flex justify-end space-y-2 text-right text-sm"
+                              className="flex justify-end space-y-2 text-right text-sm text-foreground"
                             />
                           ) : null}
 
-                          <div className="ml-auto flex h-9 flex-row items-center rounded-lg border border-[var(--cart-border)]">
+                          <div className="ml-auto flex h-9 flex-row items-center rounded-lg border border-border">
                             <EditItemQuantityButton item={item} type="minus" />
                             <p className="w-6 text-center">
-                              <span className="w-full text-sm">
+                              <span className="w-full text-sm text-foreground">
                                 {item.quantity}
                               </span>
                             </p>
@@ -176,13 +178,13 @@ export default function CartModal() {
                 })}
               </ul>
 
-              <div className="px-4 py-4">
+              <div className="px-4 py-4 border-t border-border">
                 {typeof cart?.subtotal === "number" ? (
-                  <div className="mb-3 flex items-center justify-between border-b border-[var(--cart-border)] pb-2">
-                    <p className="cart-muted text-sm">{t("total")}</p>
+                  <div className="mb-3 flex items-center justify-between border-b border-border pb-2">
+                    <p className="text-sm text-text-secondary">{t("total")}</p>
                     <Price
                       amount={cart.subtotal}
-                      className="text-right text-base"
+                      className="text-right text-base text-gold"
                     />
                   </div>
                 ) : null}
@@ -190,7 +192,7 @@ export default function CartModal() {
                 <Button
                   eventName="begin_checkout"
                   variant="secondary"
-                  className="w-full !border  !border-gray-300"
+                  className="w-full !border !border-border"
                 >
                   <Link href="/checkout" onClick={() => setIsOpen(false)}>
                     {t("checkout")}

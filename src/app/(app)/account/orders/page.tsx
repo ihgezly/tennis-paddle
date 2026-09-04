@@ -1,43 +1,47 @@
-// src/app/(app)/account/orders/page.tsx
-import { getTranslations } from "next-intl/server";
-import { getPayload } from "payload";
 import configPromise from "@payload-config";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
+import { getPayload } from "payload";
+import { headers } from "next/headers";
+import { getTranslations } from "next-intl/server";
 
-export default async function AccountOrdersPage() {
-  const t = await getTranslations("checkout.page");
-  const cookieStore = await cookies();
-  const token = cookieStore.get("payload-token")?.value;
-  if (!token) return <div>Please login</div>;
+export const dynamic = "force-dynamic";
+
+export default async function OrdersPage() {
+  const t = await getTranslations("account.orders");
+  const headersList = await headers();
 
   const payload = await getPayload({ config: configPromise });
-  const decoded = jwt.verify(token, process.env.PAYLOAD_SECRET || "") as {
-    id: string;
-  };
-  const userId = decoded.id;
+  const user = await payload.auth({
+    headers: headersList,
+    req: {
+      headers: headersList,
+    } as any,
+  });
+
+  if (!user?.user) {
+    return <div>{t("unauthorized")}</div>;
+  }
 
   const orders = await payload.find({
     collection: "orders",
-    where: { customer: { equals: userId } },
+    where: {
+      customer: { equals: (user.user as any).id },
+    },
     sort: "-createdAt",
   });
 
   return (
-    <div className="container py-8">
-      <h1 className="text-2xl font-semibold mb-4">{t("title")}</h1>
+    <div>
+      <h1>{t("title")}</h1>
       {orders.docs.length === 0 ? (
-        <p>No orders yet</p>
+        <p>{t("empty")}</p>
       ) : (
-        <div className="space-y-4">
+        <ul>
           {orders.docs.map((order: any) => (
-            <div key={order.id} className="border rounded-lg p-4">
-              <p>Order #{order.id}</p>
-              <p>Status: {order.status}</p>
-              <p>Total: {order.total}</p>
-            </div>
+            <li key={order.id}>
+              {t("orderNo")} {order.orderNumber} - {order.status}
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );

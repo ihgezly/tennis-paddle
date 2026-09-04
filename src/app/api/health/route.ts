@@ -7,7 +7,7 @@ export async function GET() {
   try {
     await payload.db.drizzle.execute("SELECT 1");
     return NextResponse.json({ status: "ok", database: "connected", timestamp: new Date().toISOString() });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ status: "error", database: "disconnected" }, { status: 503 });
   }
 }

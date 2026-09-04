@@ -1,60 +1,56 @@
+import CategoryPageLayout from "@/components/category";
+import DAL from "@/lib/core/dal";
 import { notFound } from "next/navigation";
 
-import type { PropsSlug } from "@/lib/core/types/types";
-import type { Metadata } from "next";
-
-import CategoryPageLayout from "@/components/category";
-import { JsonLd } from "@/components/shared/elements-ssr";
-import DAL from "@/lib/core/dal";
-import { getDecodedSlug } from "@/lib/core/util";
-import {
-  generateJsonLdBreadcrumbsCategory,
-  generateJsonLdItemListCategory,
-} from "@/lib/seo/jsonld";
-import { generateMetadataCategory } from "@/lib/seo/metadata";
-
-export const dynamic = "force-static";
-
-export async function generateMetadata({
+export default async function CategoryPage({
   params,
-}: PropsSlug): Promise<Metadata> {
-  const slug = await getDecodedSlug(params);
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{
+    page?: string;
+    brand?: string;
+    condition?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    q?: string;
+    sort?: string;
+  }>;
+}) {
+  const { slug } = await params;
+  const filters = await searchParams;
 
-  const category = await DAL.queryCategoryBySlug(slug);
-  if (!category) return { robots: "noindex" };
-  return generateMetadataCategory(category);
-}
+  const category = slug !== "/" ? await DAL.queryCategoryBySlug(slug) : null;
+  if (slug !== "/" && !category) return notFound();
 
-export default async function CategoryPage({ params }: PropsSlug) {
-  const slug = await getDecodedSlug(params);
+  const page = Math.max(1, Number(filters.page || 1));
+  const limit = 12;
 
-  const category = await DAL.queryCategoryBySlug(slug);
-  if (!category) return notFound();
-  const products = await DAL.queryAllProducts();
+  const { products, totalCount } = await DAL.queryCategoryProductsPaginated(
+    slug,
+    {
+      page,
+      limit,
+      brand: filters.brand,
+      condition: filters.condition,
+      minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
+      maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
+      search: filters.q,
+      sort: filters.sort,
+    },
+  );
 
-  const filtered = products.filter((p) => {
-    const cats = p.categories || [];
-    return cats.some(
-      (c) => String(typeof c === "object" ? c.id : c) === String(category.id),
-    );
-  });
+  const totalPages = Math.ceil(totalCount / limit);
 
   return (
-    <>
-      <JsonLd
-        data={[
-          generateJsonLdItemListCategory(category, filtered),
-          generateJsonLdBreadcrumbsCategory(category),
-        ]}
-      />
-
-      <CategoryPageLayout
-        title={category.title}
-        description={category.description}
-        products={filtered}
-        slug={slug}
-        faqs={category.faqs}
-      />
-    </>
+    <CategoryPageLayout
+      title={category ? category.title : "All Products"}
+      description={category?.description ?? null}
+      products={products}
+      slug={slug}
+      currentPage={page}
+      totalPages={totalPages}
+      searchParams={filters}
+    />
   );
 }

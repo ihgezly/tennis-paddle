@@ -60,7 +60,7 @@ export const buildProductPurchaseSectionData = (
     id: product.id,
     inventory: product.inventory!,
     price: product.priceInUSD!,
-    originalPrice: product.originalPriceInUSD ?? undefined,
+    originalPrice: product.originalPriceInEGP ?? undefined,
     variants: [],
     priceRange: { min: 0, max: 0 },
     conditionType: product.conditionType ?? null,

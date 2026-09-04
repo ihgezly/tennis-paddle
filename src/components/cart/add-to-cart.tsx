@@ -79,6 +79,7 @@ export default function AddToCart({
     },
     [addItem, hasVariants, product.id, selectedVariant, t],
   );
+
   const handleShare = async () => {
     if (!navigator.share) {
       alert(t("shareNotSupported"));
@@ -94,11 +95,12 @@ export default function AddToCart({
       console.error("Share failed:", err);
     }
   };
+
   return (
     <div className="flex items-center gap-3 w-md">
       <Button
         aria-label={t("button")}
-        className="hover:opacity-90 flex-1"
+        className="hover:opacity-90 flex-1 bg-gold text-black hover:bg-gold/80"
         disabled={disabled}
         onClick={addToCart}
         type="submit"
@@ -111,9 +113,9 @@ export default function AddToCart({
         onClick={handleShare}
         aria-label={t("share")}
         variant="nav"
-        className="inline-flex items-center justify-center p-2 rounded-md transition-opacity hover:opacity-90"
+        className="inline-flex items-center justify-center p-2 rounded-md transition-opacity hover:opacity-90 border border-border"
       >
-        <FiShare2 size={22} />
+        <FiShare2 size={22} className="text-foreground" />
       </Button>
     </div>
   );

@@ -7,12 +7,16 @@ import ImageVideo from "@/components/shared/image-video";
 import { RoutePath } from "@/lib/core/types/types";
 
 export default function ProductGridItem({ product }: { product: Product }) {
-  const { image, priceInUSD, originalPriceInUSD, title, slug } = product;
-
-  const hasDiscount = !!originalPriceInUSD && originalPriceInUSD > priceInUSD!;
+  const { image, priceInUSD, title, slug } = product;
+  // استخدم originalPriceInEGP بدلاً من originalPriceInUSD
+  const originalPriceInEGP = (product as any).originalPriceInEGP;
+  const hasDiscount =
+    !!originalPriceInEGP && originalPriceInEGP > (product as any).priceInEGP!;
   const discountPercent = hasDiscount
     ? Math.round(
-        ((originalPriceInUSD! - priceInUSD!) / originalPriceInUSD!) * 100,
+        ((originalPriceInEGP! - (product as any).priceInEGP!) /
+          originalPriceInEGP!) *
+          100,
       )
     : null;
 
@@ -43,7 +47,7 @@ export default function ProductGridItem({ product }: { product: Product }) {
         <div className="flex items-center justify-center gap-2">
           {hasDiscount && (
             <span className="text-gray-400 line-through text-sm dark:text-gray-500">
-              <Price amount={originalPriceInUSD!} />
+              <Price amount={originalPriceInEGP!} />
             </span>
           )}
           <span
@@ -53,7 +57,7 @@ export default function ProductGridItem({ product }: { product: Product }) {
                 : "text-gray-900 dark:text-gray-100"
             }
           >
-            <Price amount={priceInUSD!} />
+            <Price amount={(product as any).priceInEGP ?? priceInUSD!} />
           </span>
         </div>
       </div>

@@ -222,6 +222,7 @@ export type ProductSinglePage = Pick<
   conditionGrade?: Product["conditionGrade"];
   conditionNotes?: Product["conditionNotes"];
   glbModel?: Product["glbModel"];
+  brand?: string | null;
 };
 
 export type DalStatic = {
@@ -232,4 +233,18 @@ export type DalStatic = {
   querySiteSettings(): Promise<SiteSetting>;
   querySitemapData(): Promise<SitemapData>;
   queryCurrentUser(req: Request): Promise<User | null>;
+  queryDistinctBrands(categoryId?: number | null): Promise<string[]>;
+  queryCategoryProductsPaginated(
+    slug: string,
+    options: {
+      page?: number;
+      limit?: number;
+      brand?: string;
+      condition?: string;
+      minPrice?: number;
+      maxPrice?: number;
+      search?: string;
+      sort?: string;
+    },
+  ): Promise<{ products: Product[]; totalCount: number }>;
 };

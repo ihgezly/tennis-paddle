@@ -50,6 +50,7 @@ export default function Search({ products }: { products: Product[] }) {
       .slice(0, maxResults)
       .map((x) => x.p);
   }, [products, query]);
+
   useEffect(() => {
     const onMouseDown = (e: MouseEvent) => {
       if (!rootRef.current) return;
@@ -84,12 +85,10 @@ export default function Search({ products }: { products: Product[] }) {
           aria-controls="search-results"
           role="combobox"
           className="
-        w-full rounded-xl border px-4 py-3 pr-10 text-sm outline-none
-        bg-white text-neutral-900 border-neutral-200 placeholder:text-neutral-400
-        focus:border-neutral-300 focus:ring-2 focus:ring-neutral-200
-        dark:bg-neutral-900 dark:text-neutral-50 dark:border-neutral-700 dark:placeholder:text-neutral-500
-        dark:focus:border-neutral-600 dark:focus:ring-neutral-700
-      "
+            w-full rounded-xl border px-4 py-3 pr-10 text-sm outline-none
+            bg-background text-foreground border-border placeholder:text-text-muted
+            focus:border-gold focus:ring-2 focus:ring-gold/20
+          "
         />
 
         <div className="absolute inset-y-0 right-3 flex items-center">
@@ -97,7 +96,7 @@ export default function Search({ products }: { products: Product[] }) {
             <button
               type="button"
               aria-label={t("clear")}
-              className="text-neutral-400 hover:text-neutral-600 hover:cursor-pointer dark:text-neutral-500 dark:hover:text-neutral-300"
+              className="text-text-muted hover:text-foreground hover:cursor-pointer"
               onClick={() => {
                 setQuery("");
                 setOpen(false);
@@ -106,7 +105,7 @@ export default function Search({ products }: { products: Product[] }) {
               <FiX className="h-5 w-5" />
             </button>
           ) : (
-            <FiSearch className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
+            <FiSearch className="h-5 w-5 text-text-muted" />
           )}
         </div>
       </div>
@@ -114,14 +113,13 @@ export default function Search({ products }: { products: Product[] }) {
       {open ? (
         <div
           className="
-        absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-xl border shadow-lg
-        border-neutral-200 bg-white
-        dark:border-neutral-700 dark:bg-neutral-900
-        max-md:left-1/2 max-md:right-auto max-md:-translate-x-1/2
-        max-md:w-[min(calc(100vw-2rem),28rem)]
-      "
+            absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-xl border shadow-lg
+            border-border bg-surface
+            max-md:left-1/2 max-md:right-auto max-md:-translate-x-1/2
+            max-md:w-[min(calc(100vw-2rem),28rem)]
+          "
         >
-          <div className="px-4 py-2 text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+          <div className="px-4 py-2 text-xs font-semibold text-text-secondary">
             {t("products")}
           </div>
 
@@ -136,34 +134,32 @@ export default function Search({ products }: { products: Product[] }) {
                     setQuery("");
                   }}
                   className="
-                flex items-center gap-3 px-4 py-3
-                hover:bg-neutral-50
-                dark:hover:bg-neutral-800
-              "
+                    flex items-center gap-3 px-4 py-3
+                    hover:bg-surface-2 transition-colors
+                  "
                 >
                   <div
                     className="
-                  h-10 w-10 overflow-hidden rounded-lg border
-                  border-neutral-200 bg-neutral-50
-                  dark:border-neutral-700 dark:bg-neutral-800
-                "
+                      h-10 w-10 overflow-hidden rounded-lg border
+                      border-border bg-surface-2
+                    "
                   >
                     <ImageVideo resource={product.image as Media} />
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-neutral-900 dark:text-neutral-50">
+                    <div className="truncate text-sm font-medium text-foreground">
                       {product.title}
                     </div>
                   </div>
 
-                  <div className="shrink-0 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
+                  <div className="shrink-0 text-sm font-semibold text-gold">
                     <Price amount={product.priceInUSD!} />
                   </div>
                 </Link>
               ))
             ) : (
-              <div className="p-3 text-sm text-neutral-500 dark:text-neutral-400">
+              <div className="p-3 text-sm text-text-secondary">
                 {t("noMatch")}
               </div>
             )}

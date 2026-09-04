@@ -22,6 +22,7 @@
       "body": { "label": "التقييم", "required": "مطلوب" }
     }
   },
+
   "order_notifier": {
     "whatsappAdmin": "📦 طلب جديد ← ",
     "email": {
@@ -40,6 +41,7 @@
       }
     }
   },
+
   "product": {
     "not_found": "لا توجد منتجات.",
     "relatedProducts": "منتجات ذات صلة",
@@ -60,8 +62,14 @@
       "previous": "الصورة السابقة",
       "next": "الصورة التالية",
       "select_image": "اختر صورة"
-    }
+    },
+    "condition": {
+      "new": "جديد",
+      "used": "مستعمل"
+    },
+    "view3d": "عرض النموذج ثلاثي الأبعاد"
   },
+
   "general": {
     "back": "رجوع",
     "products": "المنتجات",
@@ -78,6 +86,7 @@
     "somethingWentWrongDescription": "حدثت مشكلة في المتجر. قد تكون مؤقتة. حاول مرة أخرى.",
     "tryAgain": "حاول مرة أخرى"
   },
+
   "cart": {
     "title": "سلة التسوق",
     "description": "أدر سلة التسوق هنا، أضف عناصر لعرض الإجمالي.",
@@ -85,6 +94,7 @@
     "total": "الإجمالي",
     "checkout": "إتمام الشراء"
   },
+
   "checkout": {
     "page": {
       "emptyCart": "سلتك فارغة.",
@@ -108,6 +118,7 @@
       "failed": "فشل الطلب"
     }
   },
+
   "admin": {
     "orderStatus": {
       "title": "الحالة",
@@ -138,6 +149,7 @@
       }
     }
   },
+
   "accessibility": {
     "title": "أدوات الوصول",
     "contrast": "تباين عالٍ",
@@ -149,8 +161,78 @@
     "readableFont": "خط قابل للقراءة",
     "reset": "إعادة تعيين"
   },
+
   "sell": {
     "title": "بيع معداتك",
     "description": "اعرض معداتك للبيع وسنتواصل معك"
+  },
+
+  "hero": {
+    "tagline": "معدات تنس وبادل فاخرة",
+    "title": "العب بشكل مختلف.",
+    "subtitle": "اكتشف أحدث المعدات للاعبين الذين يطالبون بالمزيد.",
+    "shopNow": "تسوق الآن",
+    "sellEquipment": "بيع معداتك"
+  },
+
+  "home": {
+    "newArrivals": {
+      "title": "وصل حديثاً",
+      "subtitle": "اكتشف أحدث المعدات"
+    },
+    "shopBySport": {
+      "title": "تسوق حسب الرياضة",
+      "subtitle": "اختر لعبتك",
+      "explore": "استكشف"
+    },
+    "dynamicCategories": {
+      "title": "أنواع المنتجات",
+      "subtitle": "اعثر على ما تحتاجه"
+    },
+    "finalCta": {
+      "title": "بيع معداتك",
+      "subtitle": "هل لديك معدات لا تستخدمها؟ حولها إلى رصيد أو نقد.",
+      "button": "ابدأ البيع"
+    }
+  },
+
+  "auth": {
+    "loginLabel": "تسجيل الدخول",
+    "registerLabel": "إنشاء حساب",
+    "fullName": "الاسم الكامل",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "loginButton": "دخول",
+    "createAccount": "إنشاء الحساب",
+    "alreadyHaveAccount": "لديك حساب بالفعل؟",
+    "needAccount": "تحتاج حساب؟",
+    "login": {
+      "title": "مرحباً بعودتك",
+      "subtitle": "سجل دخولك للمتابعة"
+    },
+    "register": {
+      "title": "إنشاء حساب",
+      "subtitle": "انضم للجيل القادم من اللاعبين"
+    }
+  },
+
+  "category": {
+    "noProducts": "لا توجد منتجات",
+    "filters": "الفلاتر"
+  },
+
+  "account": {
+    "orders": {
+      "title": "طلباتي",
+      "empty": "لا توجد طلبات بعد.",
+      "orderNo": "رقم الطلب",
+      "unauthorized": "يرجى تسجيل الدخول لعرض طلباتك."
+    },
+    "sellRequests": {
+      "title": "طلبات البيع",
+      "empty": "لا توجد طلبات بيع بعد.",
+      "requestNo": "رقم الطلب",
+      "unauthorized": "يرجى تسجيل الدخول لعرض طلبات البيع."
+    }
   }
 }

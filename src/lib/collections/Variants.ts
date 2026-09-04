@@ -13,13 +13,15 @@ export const Variants: CollectionOverride = ({ defaultCollection }) => {
   });
 
   fields.push({
+    name: "priceInEGP",
+    type: "number",
+    min: 0,
+  });
+
+  fields.push({
     name: "originalPriceInEGP",
     type: "number",
     min: 0,
-    admin: {
-      description:
-        "Original price before discount (optional). Shown as a strikethrough price when set.",
-    },
   });
 
   return {

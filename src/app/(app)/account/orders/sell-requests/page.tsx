@@ -1,45 +1,47 @@
-// src/app/(app)/account/orders/sell-requests/page.tsx
-import { getTranslations } from "next-intl/server";
-import { getPayload } from "payload";
 import configPromise from "@payload-config";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
+import { getPayload } from "payload";
+import { headers } from "next/headers";
+import { getTranslations } from "next-intl/server";
 
-export default async function AccountSellRequestsPage() {
-  const t = await getTranslations("sell");
-  const cookieStore = await cookies();
-  const token = cookieStore.get("payload-token")?.value;
-  if (!token) return <div>Please login</div>;
+export const dynamic = "force-dynamic";
+
+export default async function SellRequestsPage() {
+  const t = await getTranslations("account.sellRequests");
+  const headersList = await headers();
 
   const payload = await getPayload({ config: configPromise });
-  const decoded = jwt.verify(token, process.env.PAYLOAD_SECRET || "") as {
-    id: string;
-  };
-  const userId = decoded.id;
+  const user = await payload.auth({
+    headers: headersList,
+    req: {
+      headers: headersList,
+    } as any,
+  });
 
-  const requests = await payload.find({
+  if (!user?.user) {
+    return <div>{t("unauthorized")}</div>;
+  }
+
+  const sellRequests = await payload.find({
     collection: "sell-requests",
-    where: { customer: { equals: userId } },
+    where: {
+      customer: { equals: (user.user as any).id },
+    },
     sort: "-createdAt",
   });
 
   return (
-    <div className="container py-8">
-      <h1 className="text-2xl font-semibold mb-4">{t("title")}</h1>
-      {requests.docs.length === 0 ? (
-        <p>No sell requests yet</p>
+    <div>
+      <h1>{t("title")}</h1>
+      {sellRequests.docs.length === 0 ? (
+        <p>{t("empty")}</p>
       ) : (
-        <div className="space-y-4">
-          {requests.docs.map((req: any) => (
-            <div key={req.id} className="border rounded-lg p-4">
-              <p>{req.title}</p>
-              <p>Status: {req.status}</p>
-              <p>
-                Asking Price: {req.askingPrice} {req.currencyCode}
-              </p>
-            </div>
+        <ul>
+          {sellRequests.docs.map((request: any) => (
+            <li key={request.id}>
+              {t("requestNo")} {request.id} - {request.status}
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
