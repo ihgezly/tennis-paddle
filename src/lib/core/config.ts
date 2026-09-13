@@ -13,6 +13,8 @@ const LOCALE_CONFIG: Record<AppLocale, LocaleConfig> = {
   en: { lang: "en", dir: "ltr", locale: "en-US", isRtl: false, currency: "EGP" },
 };
 
+const stripToDigits = (v: string) => (v || "").replace(/\D/g, "");
+
 export type AppConfig = {
   SITE_NAME: string;
   BASE_URL: string;
@@ -25,6 +27,14 @@ export type AppConfig = {
   PREVIEW_SECRET: string;
   PAYLOAD_SECRET: string;
 
+  PAYMENT_ENABLED: boolean;
+  SHIPPING_ENABLED: boolean;
+
+  WHATSAPP_NUMBER: string;
+  WHATSAPP_MESSAGE: string;
+  CONTACT_PHONE: string;
+  CONTACT_EMAIL: string;
+
   SEND_EMAIL_WHATSAPP: boolean;
   EMAIL_FROM_ADDRESS: string;
   EMAIL_SMTP_HOST: string;
@@ -33,7 +43,7 @@ export type AppConfig = {
   EMAIL_SMTP_PASS: string;
 
   CALLMEBOT_API_KEY: string;
-  WHATSAPP_NUMBER: string;
+  WHATSAPP_NUMBER_ADMIN: string;
 
   PAYMOB_API_KEY: string;
   PAYMOB_INTEGRATION_ID: string;
@@ -55,13 +65,19 @@ export type AppConfig = {
   META_PIXEL?: string;
 };
 
+const truthy = (v: string | undefined) => v === "true" || v === "1";
+
 export const appConfig: AppConfig = {
-  SITE_NAME: (process.env.NEXT_PUBLIC_SITE_NAME || "Paddle & Tennis Store") as string,
-  BASE_URL: (process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3344") as string,
+  SITE_NAME: (process.env.NEXT_PUBLIC_SITE_NAME ||
+    "Paddle & Tennis Store") as string,
+  BASE_URL: (process.env.NEXT_PUBLIC_BASE_URL ||
+    "http://localhost:3344") as string,
   SERVER_URL: (process.env.NEXT_PUBLIC_SERVER_URL ||
     process.env.NEXT_PUBLIC_BASE_URL ||
     "http://localhost:3344") as string,
-  LOCAL: LOCALE_CONFIG[(process.env.NEXT_PUBLIC_LANG as AppLocale) ?? "ar"] as LocaleConfig,
+  LOCAL: LOCALE_CONFIG[
+    (process.env.NEXT_PUBLIC_LANG as AppLocale) ?? "ar"
+  ] as LocaleConfig,
   DATABASE_URL: process.env.DATABASE_URL as string,
   BLOB_TOKEN: (process.env.BLOB_TOKEN || "") as string,
   BUCKET_PREFIX: process.env.BUCKET_PREFIX ?? "paddle_tennis_store",
@@ -69,7 +85,19 @@ export const appConfig: AppConfig = {
   PREVIEW_SECRET: (process.env.PREVIEW_SECRET || "") as string,
   PAYLOAD_SECRET: (process.env.PAYLOAD_SECRET || "") as string,
 
-  SEND_EMAIL_WHATSAPP: process.env.SEND_EMAIL_WHATSAPP === "true",
+  PAYMENT_ENABLED: truthy(process.env.NEXT_PUBLIC_PAYMENT_ENABLED),
+  SHIPPING_ENABLED: truthy(process.env.NEXT_PUBLIC_SHIPPING_ENABLED),
+
+  WHATSAPP_NUMBER: stripToDigits(
+    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "",
+  ),
+  WHATSAPP_MESSAGE: (
+    process.env.NEXT_PUBLIC_WHATSAPP_MESSAGE || "مرحبا، أريد تأكيد طلبي"
+  ).trim(),
+  CONTACT_PHONE: (process.env.NEXT_PUBLIC_CONTACT_PHONE || "").trim(),
+  CONTACT_EMAIL: (process.env.NEXT_PUBLIC_CONTACT_EMAIL || "").trim(),
+
+  SEND_EMAIL_WHATSAPP: truthy(process.env.SEND_EMAIL_WHATSAPP),
   EMAIL_FROM_ADDRESS: (process.env.EMAIL_FROM_ADDRESS || "") as string,
   EMAIL_SMTP_HOST: (process.env.EMAIL_SMTP_HOST || "") as string,
   EMAIL_SMTP_PORT: Number(process.env.EMAIL_SMTP_PORT || 587),
@@ -77,14 +105,16 @@ export const appConfig: AppConfig = {
   EMAIL_SMTP_PASS: (process.env.EMAIL_SMTP_PASS || "") as string,
 
   CALLMEBOT_API_KEY: (process.env.CALLMEBOT_API_KEY || "") as string,
-  WHATSAPP_NUMBER: (process.env.WHATSAPP_NUMBER || "") as string,
+  WHATSAPP_NUMBER_ADMIN: stripToDigits(process.env.WHATSAPP_NUMBER || ""),
 
   PAYMOB_API_KEY: (process.env.PAYMOB_API_KEY || "") as string,
   PAYMOB_INTEGRATION_ID: (process.env.PAYMOB_INTEGRATION_ID || "") as string,
   PAYMOB_IFRAME_ID: (process.env.PAYMOB_IFRAME_ID || "") as string,
   PAYMOB_HMAC_SECRET: (process.env.PAYMOB_HMAC_SECRET || "") as string,
 
-  SHIPPING_PROVIDER: (process.env.SHIPPING_PROVIDER as "dummy" | "bosta" | "aramex" | "jt") ?? "dummy",
+  SHIPPING_PROVIDER:
+    (process.env.SHIPPING_PROVIDER as "dummy" | "bosta" | "aramex" | "jt") ??
+    "dummy",
   BOSTA_API_KEY: (process.env.BOSTA_API_KEY || "") as string,
   ARAMEX_USERNAME: (process.env.ARAMEX_USERNAME || "") as string,
   ARAMEX_PASSWORD: (process.env.ARAMEX_PASSWORD || "") as string,

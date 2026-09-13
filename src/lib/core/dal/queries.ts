@@ -499,6 +499,100 @@ export default class Queries {
     })) as Product[];
   }
 
+  // ✅ queryHomeProducts
+  static async queryHomeProducts(limit = 10): Promise<{
+    products: Product[];
+    conditionTypes: { id: number; code: string }[];
+    conditionGrades: { id: number; code: string }[];
+  }> {
+    const [conditionTypes, conditionGrades] = await Promise.all([
+      Queries.runPayloadFind<{ id: number; code: string }>({
+        collection: "condition-types",
+        tag: "home-condition-types",
+        params: {
+          limit: 10,
+          pagination: false,
+          select: { id: true, code: true } as any,
+        },
+      }),
+      Queries.runPayloadFind<{ id: number; code: string }>({
+        collection: "condition-grades",
+        tag: "home-condition-grades",
+        params: {
+          limit: 20,
+          pagination: false,
+          select: { id: true, code: true } as any,
+        },
+      }),
+    ]);
+
+    const products = await Queries.runPayloadFind<Product>({
+      collection: CollectionName.products,
+      tag: "home-products",
+      params: {
+        draft: false,
+        overrideAccess: false,
+        limit: 100,
+        pagination: false,
+        sort: "-updatedAt",
+        depth: 0,
+        where: {
+          and: [
+            { _status: { equals: "published" } },
+            { inventory: { greater_than: 0 } },
+          ],
+        },
+        select: {
+          title: true,
+          slug: true,
+          image: true,
+          brand: true,
+          priceInEGP: true,
+          originalPriceInEGP: true,
+          priceInUSD: true,
+          originalPriceInUSD: true,
+          conditionType: true,
+          conditionGrade: true,
+          inventory: true,
+          updatedAt: true,
+        } as any,
+      },
+    });
+
+    const imageIds = Array.from(
+      new Set(products.map((p) => Number(p.image)).filter(Boolean)),
+    );
+
+    if (imageIds.length) {
+      const media = await Queries.runPayloadFind<Media>({
+        collection: "media",
+        tag: "home-products-media",
+        params: {
+          depth: 0,
+          limit: 0,
+          pagination: false,
+          where: { id: { in: imageIds } },
+        },
+      });
+
+      const mediaById = new Map<number, Media>();
+      for (const m of media) mediaById.set(Number(m.id), m);
+
+      products.forEach((p, i) => {
+        products[i] = {
+          ...p,
+          image: (mediaById.get(Number(p.image)) ?? p.image) as any,
+        };
+      });
+    }
+
+    return {
+      products: products.slice(0, limit * 3),
+      conditionTypes,
+      conditionGrades,
+    };
+  }
+
   static async queryProductBySlug(
     slug: string,
   ): Promise<ProductSinglePage | null> {
@@ -633,6 +727,7 @@ export default class Queries {
     });
   }
 
+  // ✅ معدّلة — بترجّع الأقسام الرئيسية فقط (parent غير موجود)
   static queryCategoriesBasic(): Promise<Category[]> {
     return Queries.runPayloadFind<Category>({
       collection: CollectionName.category,
@@ -643,7 +738,36 @@ export default class Queries {
         pagination: false,
         sort: "position",
         where: {
-          _status: { equals: "published" },
+          and: [
+            { _status: { equals: "published" } },
+            { parent: { exists: false } },
+          ],
+        },
+        select: {
+          title: true,
+          slug: true,
+          id: true,
+          image: true,
+        } as any,
+      },
+    });
+  }
+
+  // ✅ queryChildCategories — الأقسام الفرعية لقسم رئيسي
+  static async queryChildCategories(parentId: number): Promise<Category[]> {
+    return Queries.runPayloadFind<Category>({
+      collection: CollectionName.category,
+      tag: `child-categories-${parentId}`,
+      params: {
+        depth: 0,
+        limit: 0,
+        pagination: false,
+        sort: "position",
+        where: {
+          and: [
+            { _status: { equals: "published" } },
+            { parent: { equals: parentId } },
+          ],
         },
         select: {
           title: true,

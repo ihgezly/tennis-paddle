@@ -9,10 +9,8 @@ import { cn } from "@/lib/core/util";
 
 export default async function Gallery({
   gallery,
-  glbModel,
 }: {
   gallery: NonNullable<Product["gallery"]>;
-  glbModel?: { url?: string } | null;
 }) {
   const t = await getTranslations("product.gallery");
   const canNavigate = gallery.length > 1;
@@ -177,19 +175,6 @@ export default async function Gallery({
           })}
         </div>
       </div>
-
-      {glbModel?.url ? (
-        <div className="mt-4 flex justify-center">
-          <a
-            href={glbModel.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-gray-50"
-          >
-            عرض ثلاثي الأبعاد
-          </a>
-        </div>
-      ) : null}
     </div>
   );
 }

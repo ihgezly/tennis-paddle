@@ -29,25 +29,26 @@ const LivePreviewListener = () => {
   );
 };
 
-const AdminBar = ({ adminBarProps = {} }: { adminBarProps?: PayloadAdminBarProps }) => {
+const AdminBar = ({
+  adminBarProps = {},
+}: {
+  adminBarProps?: PayloadAdminBarProps;
+}) => {
   const [show, setShow] = useState(false);
   const router = useRouter();
 
   const onAuthChange = useCallback((user: User) => {
     setShow(
       Boolean(
-        user && Array.isArray(user.roles) && user.roles.includes("admin")
-      )
+        user && Array.isArray(user.roles) && user.roles.includes("admin"),
+      ),
     );
   }, []);
 
   return (
     <div
       dir="ltr"
-      className={cn(
-        "w-full bg-black text-white",
-        show ? "block" : "hidden"
-      )}
+      className={cn("w-full bg-black text-white", show ? "block" : "hidden")}
     >
       <PayloadAdminBar
         {...adminBarProps}
@@ -82,8 +83,8 @@ const ThemeToggle = () => {
 };
 
 const NAV_ITEMS = [
-  { label: "Padel", href: "/categories/padel" },
-  { label: "Tennis", href: "/categories/tennis" },
+  { label: "Padel", href: "/category/padel" },
+  { label: "Tennis", href: "/category/tennis" },
   { label: "Shop", href: "/categories" },
   { label: "Sell", href: "/sell" },
 ];
@@ -110,11 +111,10 @@ const HeaderBar = ({ logo, products }: HeaderProps) => {
         "sticky top-0 z-40 transition-all duration-300 border-b",
         isScrolled
           ? "bg-background/80 backdrop-blur-xl border-border"
-          : "bg-transparent border-transparent"
+          : "bg-transparent border-transparent",
       )}
     >
       <nav className="container flex items-center justify-between py-4">
-        {/* Logo */}
         <Link href="/" className="flex items-center gap-2 z-10">
           <ImageVideo
             resource={logo}
@@ -122,7 +122,6 @@ const HeaderBar = ({ logo, products }: HeaderProps) => {
           />
         </Link>
 
-        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
           {NAV_ITEMS.map((item) => (
             <Link
@@ -135,20 +134,22 @@ const HeaderBar = ({ logo, products }: HeaderProps) => {
           ))}
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-3 z-10">
           <div className="hidden md:block w-56">
             <Search products={products} />
           </div>
           <ThemeToggle />
           <Link
-            href="/user"
+            href="/account/orders"
             className="p-2 rounded-full hover:bg-surface-2 transition"
             aria-label="Account"
           >
             <HiOutlineUser size={20} />
           </Link>
-          <CartModal />
+
+          {/* السلة تظهر فقط لو الدفع الإلكتروني مفعّل */}
+          {appConfig.PAYMENT_ENABLED ? <CartModal /> : null}
+
           <button
             className="md:hidden p-2 rounded-full hover:bg-surface-2 transition"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -159,7 +160,6 @@ const HeaderBar = ({ logo, products }: HeaderProps) => {
         </div>
       </nav>
 
-      {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-border bg-background">
           <div className="container py-4 flex flex-col gap-4">

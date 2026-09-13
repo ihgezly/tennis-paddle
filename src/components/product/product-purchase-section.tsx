@@ -54,17 +54,6 @@ export default function ProductPurchaseSectionClient({
       <div className="flex items-center justify-center pb-2">
         <AddToCart product={product} />
       </div>
-
-      {product.glbModel?.url ? (
-        <div className="flex justify-center pb-4">
-          <Button
-            variant="outline"
-            onClick={() => window.open(product.glbModel!.url!, "_blank")}
-          >
-            عرض ثلاثي الأبعاد
-          </Button>
-        </div>
-      ) : null}
     </>
   );
 }

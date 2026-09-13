@@ -44,7 +44,7 @@ export default function AuthShell({ mode, title, subtitle }: AuthShellProps) {
       }
 
       toast.success(isRegister ? "Account created" : "Login successful");
-      router.push("/user");
+      router.push("/account/orders");
       router.refresh();
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");

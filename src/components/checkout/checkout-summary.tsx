@@ -18,7 +18,7 @@ export default function CheckoutSummary() {
   const t = useTranslations("checkout.page");
 
   return (
-    <div className="w-full p-2 lg:p-8  flex flex-col gap-6 rounded-lg max-w-lg mx-auto">
+    <div className="w-full p-2 lg:p-8 flex flex-col gap-6 rounded-lg max-w-lg mx-auto">
       <h2 className="text-3xl font-medium">{t("yourCart")}</h2>
 
       {cart?.items?.map((item, index) => {
@@ -34,7 +34,10 @@ export default function CheckoutSummary() {
         if (!quantity) return null;
 
         const price =
-          variant?.priceInUSD != null ? variant.priceInUSD : product.priceInUSD;
+          (variant as any)?.priceInEGP ??
+          (product as any).priceInEGP ??
+          variant?.priceInUSD ??
+          product.priceInUSD;
 
         const variantLabels =
           variant?.options
@@ -57,13 +60,11 @@ export default function CheckoutSummary() {
             <div className="flex grow justify-between items-center">
               <div className="flex flex-col gap-1">
                 <p className="font-medium text-lg">{product.title}</p>
-
                 {variantLabels ? (
-                  <p className="text-sm font-mono  tracking-widest">
+                  <p className="text-sm font-mono tracking-widest">
                     {variantLabels}
                   </p>
                 ) : null}
-
                 <div>x{quantity}</div>
               </div>
 

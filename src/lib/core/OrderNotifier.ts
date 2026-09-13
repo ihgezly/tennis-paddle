@@ -19,11 +19,15 @@ export class OrderNotifier {
   constructor(private readonly payload: Payload) {}
 
   async send(order: Order) {
-    await this.sendEmail(order);
-    await this.sendWhatsappAdmin(Number(order.id));
+    await Promise.allSettled([
+      this.sendCustomerEmail(order),
+      this.sendAdminEmail(order),
+      this.sendWhatsappAdmin(Number(order.id)),
+    ]);
   }
 
-  private async sendEmail(order: Order) {
+  private async sendCustomerEmail(order: Order) {
+    if (!order.email) return;
     const emailItems = await this.buildEmailItems(order);
     const html = this.generateOrderEmailHtml(order, emailItems);
 
@@ -33,23 +37,62 @@ export class OrderNotifier {
         subject: `${messages.order_notifier.email.subjectPrefix}${order.id}`,
         html,
       });
-      console.log(`✅ Order email sent #${order.id}`);
     } catch (error) {
       console.error(`❌ Order email failed #${order.id}`, error);
     }
   }
 
-  private async sendWhatsappAdmin(orderId: number) {
-    const text = `${messages.order_notifier.whatsappAdmin}${appConfig.BASE_URL}/admin/collections/orders/${orderId}`;
-    const url = `https://api.callmebot.com/whatsapp.php?phone=${appConfig.WHATSAPP_NUMBER}&text=${encodeURIComponent(
-      text,
-    )}&apikey=${appConfig.CALLMEBOT_API_KEY}`;
+  private async sendAdminEmail(order: Order) {
+    const adminEmail = appConfig.CONTACT_EMAIL;
+    if (!adminEmail) return;
+
+    const lines = (order.items || [])
+      .map(
+        (item: any) =>
+          `• ${item.title} × ${item.quantity} = ${formatPrice(item.lineTotal)}`,
+      )
+      .join("\n");
+
+    const html = `
+<div dir="${appConfig.LOCAL.dir}" style="font-family: sans-serif; padding: 16px; max-width: 600px;">
+  <h2>🛒 طلب جديد #${order.id}</h2>
+  <p><strong>الاسم:</strong> ${order.name}</p>
+  <p><strong>الموبايل:</strong> ${order.phone}</p>
+  <p><strong>الإيميل:</strong> ${order.email}</p>
+  <hr />
+  <pre style="font-size: 14px; line-height: 1.6;">${lines}</pre>
+  <hr />
+  <p><strong>الإجمالي:</strong> ${formatPrice(order.amount ?? 0)}</p>
+  <p><a href="${appConfig.BASE_URL}/admin/collections/orders/${order.id}">افتح الطلب في الأدمن →</a></p>
+</div>`;
 
     try {
-      await fetch(url);
-      console.log(`✅ whatsapp sent #${orderId}`);
+      await this.payload.sendEmail({
+        to: adminEmail,
+        subject: `🛒 طلب جديد #${order.id} - ${order.name}`,
+        html,
+      });
     } catch (error) {
-      console.error(`❌ whatsapp failed #${orderId}`, error);
+      console.error(`❌ Admin email failed #${order.id}`, error);
+    }
+  }
+
+  private async sendWhatsappAdmin(orderId: number) {
+    const phone = appConfig.WHATSAPP_NUMBER_ADMIN;
+    const apiKey = appConfig.CALLMEBOT_API_KEY;
+
+    if (!phone || !apiKey) {
+      console.warn("WhatsApp admin notification skipped: missing config");
+      return;
+    }
+
+    const text = `${messages.order_notifier.whatsappAdmin}${appConfig.BASE_URL}/admin/collections/orders/${orderId}`;
+    const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(text)}&apikey=${apiKey}`;
+
+    try {
+      await fetch(url, { method: "GET" });
+    } catch (error) {
+      console.error(`❌ WhatsApp admin failed #${orderId}`, error);
     }
   }
 
@@ -80,7 +123,10 @@ export class OrderNotifier {
       select: { id: true, image: true },
     });
 
-    const productById = new Map(productsRes.docs.map((p) => [Number(p.id), p]));
+    const productById = new Map(
+      productsRes.docs.map((p) => [Number(p.id), p]),
+    );
+
     return items
       .map((item) => {
         const productId =
@@ -108,6 +154,7 @@ export class OrderNotifier {
       })
       .filter((x): x is EmailItem => Boolean(x));
   }
+
   private generateOrderEmailHtml(order: Order, emailItems: EmailItem[]) {
     const itemsHtml = emailItems
       .map(
@@ -118,23 +165,20 @@ export class OrderNotifier {
   </td>
   <td style="padding: 8px;">${item.title}</td>
   <td style="padding: 8px;">${item.quantity}</td>
-    <td style="padding: 8px;">${formatPrice(item.unitPrice)}</td>
-    <td style="padding: 8px;"><strong>${formatPrice(item.lineTotal)}</strong></td>
-</tr>
-`,
+  <td style="padding: 8px;">${formatPrice(item.unitPrice)}</td>
+  <td style="padding: 8px;"><strong>${formatPrice(item.lineTotal)}</strong></td>
+</tr>`,
       )
       .join("");
+
     return `
 <div dir="${appConfig.LOCAL.dir}" style="font-family: sans-serif; padding: 10px; max-width: 600px; margin: auto;">
-
   <h2 style="margin-bottom: 10px;">
     ${messages.order_notifier.email.greeting} ${order.name},
   </h2>
-
   <p style="margin: 0 0 20px 0;">
     ${messages.order_notifier.email.confirmation}
   </p>
-
   <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
     <thead style="background-color: #f5f5f5;">
       <tr style="text-align: center;">
@@ -145,24 +189,13 @@ export class OrderNotifier {
         <th style="padding: 10px;">${messages.order_notifier.email.headers.total}</th>
       </tr>
     </thead>
-    <tbody>
-      ${itemsHtml}
-    </tbody>
+    <tbody>${itemsHtml}</tbody>
   </table>
-
   <h3 style="margin-top: 20px;">
-${messages.order_notifier.email.total} ${formatPrice(order.amount!)}
+    ${messages.order_notifier.email.total} ${formatPrice(order.amount ?? 0)}
   </h3>
-
-  <p>
-    ${messages.order_notifier.email.orderNumber}
-    <strong>#${order.id}</strong>
-  </p>
-
-  <p>
-    ${messages.order_notifier.email.thanks}
-  </p>
-</div>
-`;
+  <p>${messages.order_notifier.email.orderNumber} <strong>#${order.id}</strong></p>
+  <p>${messages.order_notifier.email.thanks}</p>
+</div>`;
   }
 }

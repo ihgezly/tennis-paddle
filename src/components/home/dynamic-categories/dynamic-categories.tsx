@@ -1,6 +1,7 @@
 import Link from "next/link";
-import DAL from "@/lib/core/dal";
 import { getTranslations } from "next-intl/server";
+
+import DAL from "@/lib/core/dal";
 
 export default async function DynamicCategories() {
   const t = await getTranslations("home.dynamicCategories");
@@ -21,7 +22,7 @@ export default async function DynamicCategories() {
         {categories.map((category) => (
           <Link
             key={category.id}
-            href={`/categories/${category.slug}`}
+            href={`/category/${category.slug}`}
             className="rounded-full border border-border px-6 py-3 text-sm font-medium text-foreground transition hover:border-gold hover:text-gold"
           >
             {category.title}

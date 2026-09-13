@@ -1,12 +1,15 @@
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import type { Product } from "@/lib/core/types/payload-types";
+
+import type { Category, Product } from "@/lib/core/types/payload-types";
+
 import ProductCard from "@/components/shop/product-card/product-card";
 import FiltersToolbar from "@/components/shop/filters/filters-toolbar";
 import BrandFilter from "@/components/shop/filters/brand-filter";
 import ConditionFilter from "@/components/shop/filters/condition-filter";
 import PriceFilter from "@/components/shop/filters/price-filter";
-import DAL from "@/lib/core/dal";
 import { RichText } from "@/components/ui";
+import DAL from "@/lib/core/dal";
 
 type Props = {
   title: string;
@@ -16,6 +19,7 @@ type Props = {
   currentPage?: number;
   totalPages?: number;
   searchParams?: Record<string, string | undefined>;
+  children?: Category[];
 };
 
 export default async function CategoryPageLayout({
@@ -26,6 +30,7 @@ export default async function CategoryPageLayout({
   currentPage = 1,
   totalPages = 1,
   searchParams,
+  children = [],
 }: Props) {
   const t = await getTranslations("category");
   const category = slug !== "/" ? await DAL.queryCategoryBySlug(slug) : null;
@@ -33,16 +38,35 @@ export default async function CategoryPageLayout({
 
   return (
     <div className="container py-12">
-      <div className="mb-12 text-center">
+      <div className="mb-8 text-center">
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight uppercase">
           {title}
         </h1>
         {description ? (
           <div className="mt-4 text-lg text-text-secondary max-w-2xl mx-auto text-start">
-            <RichText data={description} enableGutter={false} enableProse={false} />
+            <RichText
+              data={description}
+              enableGutter={false}
+              enableProse={false}
+            />
           </div>
         ) : null}
       </div>
+
+      {/* الأقسام الفرعية */}
+      {children.length > 0 ? (
+        <div className="mb-10 flex flex-wrap justify-center gap-3">
+          {children.map((child) => (
+            <Link
+              key={child.id}
+              href={`/category/${child.slug}`}
+              className="rounded-full border border-border bg-surface px-5 py-2 text-sm font-medium text-foreground transition hover:border-gold hover:text-gold"
+            >
+              {child.title}
+            </Link>
+          ))}
+        </div>
+      ) : null}
 
       <div className="mb-6 lg:hidden">
         <FiltersToolbar brands={brands} />
@@ -70,7 +94,7 @@ export default async function CategoryPageLayout({
         </div>
       </div>
 
-      {totalPages > 1 && (
+      {totalPages > 1 ? (
         <div className="mt-8 flex items-center justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
             const params = new URLSearchParams();
@@ -93,7 +117,7 @@ export default async function CategoryPageLayout({
             );
           })}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

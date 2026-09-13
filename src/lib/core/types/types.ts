@@ -247,4 +247,10 @@ export type DalStatic = {
       sort?: string;
     },
   ): Promise<{ products: Product[]; totalCount: number }>;
+  queryHomeProducts(limit?: number): Promise<{
+    products: Product[];
+    conditionTypes: { id: number; code: string }[];
+    conditionGrades: { id: number; code: string }[];
+  }>;
+  queryChildCategories(parentId: number): Promise<Category[]>;
 };

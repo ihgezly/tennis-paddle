@@ -62,6 +62,11 @@ export default buildConfig({
   db: postgresAdapter({
     pool: {
       connectionString: appConfig.DATABASE_URL,
+      // ✅ إصلاح خطأ SELF_SIGNED_CERT_IN_CHAIN مع Supabase
+      ssl:
+        process.env.NODE_ENV === "production"
+          ? { rejectUnauthorized: false }
+          : false,
     },
   }),
   editor: lexicalEditor({

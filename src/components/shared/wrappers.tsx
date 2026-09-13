@@ -88,3 +88,13 @@ export const ReviewForm = dynamic(
     ssr: false,
   },
 );
+
+export const GlbViewerClient = dynamic(
+  () => import("@/components/product/glb-viewer"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[500px] w-full animate-pulse rounded-lg bg-surface-2" />
+    ),
+  },
+);

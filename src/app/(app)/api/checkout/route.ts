@@ -2,7 +2,11 @@ import { getPayload } from "payload";
 import configPromise from "@payload-config";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { checkRateLimit, getClientIp, RATE_LIMITS } from "@/lib/core/rate-limit";
+import {
+  checkRateLimit,
+  getClientIp,
+  RATE_LIMITS,
+} from "@/lib/core/rate-limit";
 import { requireUser } from "@/lib/auth/get-current-user";
 import { withPayloadTransaction } from "@/lib/core/db/transaction";
 import { reserveInventory } from "@/lib/core/inventory";
@@ -10,6 +14,13 @@ import { OrderStatus, PaymentStatus } from "@/lib/core/types/types";
 
 const checkoutSchema = z.object({
   cartId: z.union([z.string(), z.number()]),
+  name: z.string().trim().min(1).max(120).optional(),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\+?[0-9]{7,15}$/)
+    .optional(),
+  email: z.string().trim().email().optional(),
 });
 
 type CheckoutItem = {
@@ -41,7 +52,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Invalid input" }, { status: 400 });
   }
 
+  const bodyName = parsed.data.name?.trim();
+  const bodyPhone = parsed.data.phone?.trim();
+  const bodyEmail = parsed.data.email?.trim();
+
   try {
+    // ✅ مسجل دخول إلزامي — الطلب لازم يكون من حساب
     const user = await requireUser(req);
     const payload = await getPayload({ config: configPromise });
 
@@ -56,7 +72,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Cart is empty" }, { status: 400 });
     }
 
-    // ملكية السلة
     const cartCustomerId =
       typeof cart.customer === "object"
         ? Number((cart.customer as any)?.id)
@@ -101,7 +116,8 @@ export async function POST(req: Request) {
           });
 
           if (!product) throw new Error("PRODUCT_NOT_FOUND");
-          if (product._status !== "published") throw new Error("PRODUCT_NOT_AVAILABLE");
+          if (product._status !== "published")
+            throw new Error("PRODUCT_NOT_AVAILABLE");
 
           let variant: any = null;
           if (variantId) {
@@ -125,11 +141,13 @@ export async function POST(req: Request) {
             }
           }
 
-          // استخدم priceInUSD مؤقتًا حتى نضيف priceInEGP
+          // EGP أولاً ثم USD كـfallback
           const unitPrice = Number(
-            (variant as any)?.priceInUSD ??
-            (product as any)?.priceInUSD ??
-            0,
+            variant?.priceInEGP ??
+              (product as any)?.priceInEGP ??
+              variant?.priceInUSD ??
+              (product as any)?.priceInUSD ??
+              0,
           );
 
           if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
@@ -144,7 +162,7 @@ export async function POST(req: Request) {
           items.push({
             product: productId,
             variant: variantId || null,
-            sku: (variant as any)?.sku ?? null,
+            sku: variant?.sku ?? null,
             title: variant?.title || product.title || "Product",
             quantity,
             unitPrice,
@@ -154,7 +172,10 @@ export async function POST(req: Request) {
 
         if (!items.length) throw new Error("EMPTY_CHECKOUT");
 
-        const totalAmount = items.reduce((sum, item) => sum + item.lineTotal, 0);
+        const totalAmount = items.reduce(
+          (sum, item) => sum + item.lineTotal,
+          0,
+        );
         if (!Number.isFinite(totalAmount) || totalAmount <= 0) {
           throw new Error("INVALID_TOTAL");
         }
@@ -168,19 +189,33 @@ export async function POST(req: Request) {
             items,
             amount: totalAmount,
             status: OrderStatus.PENDING_PAYMENT,
-            paymentStatus: PaymentStatus.PENDING, // سيكون as any لأنه غير موجود في النوع بعد
+            paymentStatus: PaymentStatus.PENDING,
             currencyCode: "EGP",
-            name: (cart.customer as any)?.name || user.email,
-            phone: (cart.customer as any)?.phone || "",
-            email: (cart.customer as any)?.email || user.email,
-          } as any, // استخدام as any لتجاوز الحقول غير المعروفة
+            name:
+              bodyName ||
+              (cart.customer as any)?.name ||
+              user.email ||
+              "Customer",
+            phone:
+              bodyPhone ||
+              (cart.customer as any)?.phone ||
+              "",
+            email:
+              bodyEmail ||
+              (cart.customer as any)?.email ||
+              user.email,
+          } as any,
           overrideAccess: true,
           req: txReq,
         });
 
         await reserveInventory(tx, items, Number(order.id), expiresAt);
 
-        return { orderId: Number(order.id), totalAmount, currencyCode: "EGP" };
+        return {
+          orderId: Number(order.id),
+          totalAmount,
+          currencyCode: "EGP",
+        };
       },
     );
 
@@ -188,10 +223,18 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("CHECKOUT ERROR:", error);
 
-    if (error?.message === "UNAUTHORIZED") return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    if (error?.message === "FORBIDDEN") return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-    if (error?.message === "INVALID_QUANTITY" || error?.message === "INVALID_PRODUCT_ID") {
-      return NextResponse.json({ message: "Invalid cart item" }, { status: 400 });
+    if (error?.message === "UNAUTHORIZED")
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (error?.message === "FORBIDDEN")
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    if (
+      error?.message === "INVALID_QUANTITY" ||
+      error?.message === "INVALID_PRODUCT_ID"
+    ) {
+      return NextResponse.json(
+        { message: "Invalid cart item" },
+        { status: 400 },
+      );
     }
     if (
       error?.message === "PRODUCT_NOT_FOUND" ||
@@ -199,13 +242,26 @@ export async function POST(req: Request) {
       error?.message === "PRODUCT_NOT_AVAILABLE" ||
       error?.message === "VARIANT_PRODUCT_MISMATCH"
     ) {
-      return NextResponse.json({ message: "One or more products are no longer available" }, { status: 400 });
+      return NextResponse.json(
+        { message: "أحد المنتجات لم يعد متاحاً" },
+        { status: 400 },
+      );
     }
-    if (error?.message === "INVALID_PRODUCT_PRICE" || error?.message === "INVALID_LINE_TOTAL" || error?.message === "INVALID_TOTAL") {
-      return NextResponse.json({ message: "Unable to calculate order total" }, { status: 400 });
+    if (
+      error?.message === "INVALID_PRODUCT_PRICE" ||
+      error?.message === "INVALID_LINE_TOTAL" ||
+      error?.message === "INVALID_TOTAL"
+    ) {
+      return NextResponse.json(
+        { message: "تعذّر حساب إجمالي الطلب" },
+        { status: 400 },
+      );
     }
     if (error?.name === "InsufficientStockError") {
-      return NextResponse.json({ message: "Some items are out of stock" }, { status: 409 });
+      return NextResponse.json(
+        { message: "بعض المنتجات نفدت من المخزون" },
+        { status: 409 },
+      );
     }
 
     return NextResponse.json({ message: "Checkout failed" }, { status: 500 });

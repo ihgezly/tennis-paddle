@@ -154,7 +154,13 @@ export default function Search({ products }: { products: Product[] }) {
                   </div>
 
                   <div className="shrink-0 text-sm font-semibold text-gold">
-                    <Price amount={product.priceInUSD!} />
+                    <Price
+                      amount={
+                        (product as any).priceInEGP ??
+                        product.priceInUSD ??
+                        0
+                      }
+                    />
                   </div>
                 </Link>
               ))

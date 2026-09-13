@@ -23,6 +23,11 @@ export default async function CategoryPage({
   const category = slug !== "/" ? await DAL.queryCategoryBySlug(slug) : null;
   if (slug !== "/" && !category) return notFound();
 
+  // الأقسام الفرعية
+  const children = category
+    ? await DAL.queryChildCategories(category.id)
+    : [];
+
   const page = Math.max(1, Number(filters.page || 1));
   const limit = 12;
 
@@ -51,6 +56,7 @@ export default async function CategoryPage({
       currentPage={page}
       totalPages={totalPages}
       searchParams={filters}
+      children={children}
     />
   );
 }

@@ -6,7 +6,11 @@ import Gallery from "@/components/product/gallery";
 import ProductGridItem from "@/components/product/grid/product-grid-item";
 import ProductDescription from "@/components/product/product-description";
 import ProductReviews from "@/components/product/review";
-import { AutoScrollRow, BackButton } from "@/components/shared/wrappers";
+import {
+  AutoScrollRow,
+  BackButton,
+  GlbViewerClient,
+} from "@/components/shared/wrappers";
 
 export default async function ProductPageLayout({
   product,
@@ -14,6 +18,7 @@ export default async function ProductPageLayout({
   product: ProductSinglePage & { glbModel?: any };
 }) {
   const t = await getTranslations("product");
+  const glbUrl = (product.glbModel as any)?.url as string | undefined;
 
   return (
     <div className="container pb-2">
@@ -25,13 +30,27 @@ export default async function ProductPageLayout({
         </div>
         <div className="h-full w-full basis-full lg:basis-1/2">
           <div className="min-h-[32rem] w-full">
-            <Gallery gallery={product.gallery || []} glbModel={product.glbModel as any} />
+            <Gallery gallery={product.gallery || []} />
           </div>
         </div>
       </div>
+
+      {glbUrl ? (
+        <div className="mt-8 rounded-lg border border-border bg-surface p-4">
+          <h3 className="mb-4 text-lg font-semibold">
+            {t("view3d") || "معاينة ثلاثية الأبعاد"}
+          </h3>
+          <div className="overflow-hidden rounded-lg">
+            <GlbViewerClient url={glbUrl} />
+          </div>
+        </div>
+      ) : null}
+
       {product.relatedProducts?.length ? (
         <div className="pt-8">
-          <h3 className="mb-4 text-lg font-semibold">{t("relatedProducts")}</h3>
+          <h3 className="mb-4 text-lg font-semibold">
+            {t("relatedProducts")}
+          </h3>
           <AutoScrollRow className="snap-x snap-proximity">
             {product.relatedProducts.map((p) => (
               <div
@@ -44,6 +63,7 @@ export default async function ProductPageLayout({
           </AutoScrollRow>
         </div>
       ) : null}
+
       <ProductReviews reviews={product.reviews} productId={product.id} />
     </div>
   );

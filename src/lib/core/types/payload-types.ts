@@ -217,6 +217,10 @@ export interface User {
 export interface Category {
   id: number;
   title: string;
+  /**
+   * اتركه فارغاً لقسم رئيسي (زي Padel أو Tennis). املأه لقسم فرعي (زي مضارب أو أحذية).
+   */
+  parent?: (number | null) | Category;
   position: number;
   image: number | Media;
   description: {
@@ -916,6 +920,7 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface CategorySelect<T extends boolean = true> {
   title?: T;
+  parent?: T;
   position?: T;
   image?: T;
   description?: T;

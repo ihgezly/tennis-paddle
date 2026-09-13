@@ -27,7 +27,7 @@ export const Category: CollectionConfig = {
   admin: {
     useAsTitle: "title",
     group: "Content",
-    defaultColumns: ["title", "position", "slug", "updatedAt"],
+    defaultColumns: ["title", "parent", "position", "slug", "updatedAt"],
     ...makeAdminPreview(RoutePath.category),
   },
   hooks: {
@@ -44,6 +44,21 @@ export const Category: CollectionConfig = {
   },
   fields: [
     { name: "title", type: "text", required: true, localized: true },
+
+    {
+      name: "parent",
+      type: "relationship",
+      relationTo: RoutePath.category,
+      admin: {
+        position: "sidebar",
+        description:
+          "اتركه فارغاً لقسم رئيسي (زي Padel أو Tennis). املأه لقسم فرعي (زي مضارب أو أحذية).",
+      },
+      filterOptions: ({ id }) => {
+        if (!id) return true;
+        return { id: { not_equals: id } };
+      },
+    },
 
     {
       name: "position",

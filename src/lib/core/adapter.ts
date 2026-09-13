@@ -12,6 +12,26 @@ export const getCartQuantity = (
   return cart.items.reduce((sum, it) => sum + Number(it?.quantity ?? 0), 0);
 };
 
+const pickPrice = (product: any, variant: any): number | undefined => {
+  return (
+    variant?.priceInEGP ??
+    product?.priceInEGP ??
+    variant?.priceInUSD ??
+    product?.priceInUSD ??
+    undefined
+  );
+};
+
+const pickOriginalPrice = (product: any, variant: any): number | undefined => {
+  return (
+    variant?.originalPriceInEGP ??
+    product?.originalPriceInEGP ??
+    variant?.originalPriceInUSD ??
+    product?.originalPriceInUSD ??
+    undefined
+  );
+};
+
 const getCartItemData = (item: CartItem) => {
   const product = item.product as Product;
   if (!product) return null;
@@ -19,13 +39,12 @@ const getCartItemData = (item: CartItem) => {
   const variant =
     typeof item?.variant === "object" ? (item.variant as Variant) : null;
 
-  const price = variant?.priceInUSD ?? product.priceInUSD ?? undefined;
-
   return {
     product,
     variant,
     isVariant: Boolean(variant),
-    price,
+    price: pickPrice(product, variant),
+    originalPrice: pickOriginalPrice(product, variant),
   };
 };
 
@@ -56,11 +75,13 @@ export const buildProductPurchaseSectionData = (
   conditionNotes?: Product["conditionNotes"];
   glbModel?: Product["glbModel"];
 } => {
+  const basePrice = pickPrice(product, null) ?? 0;
+
   const base_ans = {
     id: product.id,
     inventory: product.inventory!,
-    price: product.priceInUSD!,
-    originalPrice: product.originalPriceInEGP ?? undefined,
+    price: basePrice,
+    originalPrice: pickOriginalPrice(product, null),
     variants: [],
     priceRange: { min: 0, max: 0 },
     conditionType: product.conditionType ?? null,
@@ -82,16 +103,28 @@ export const buildProductPurchaseSectionData = (
         .map((o): PurchaseOption | null => {
           const v = combined.variants.find(
             (x) =>
-              x.options && x.options.some((id) => String(id) === String(o.id)),
+              x.options &&
+              x.options.some((id) => String(id) === String(o.id)),
           );
 
           if (!v) return null;
+
+          const vAny = v as any;
+          const price =
+            vAny.priceInEGP ??
+            vAny.priceInUSD ??
+            basePrice;
+          const originalPrice =
+            vAny.originalPriceInEGP ??
+            vAny.originalPriceInUSD ??
+            undefined;
+
           return {
             id: String(v.id),
             label: o.label,
             inventory: v.inventory,
-            price: v.priceInUSD,
-            originalPrice: v.originalPriceInUSD ?? undefined,
+            price,
+            originalPrice,
           };
         })
         .filter((x): x is PurchaseOption => Boolean(x))
