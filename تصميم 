@@ -1,0 +1,2489 @@
+شفت المشروع كامل (Next.js + Payload) وشايف إن عندك أساس قوي فعلاً — عندك gold, padel-blue, tennis-orange جاهزين في tailwind.config.mjs، وعندك auth-shell.tsx فيه بداية فكرة الـ split-color، وعندك embla-carousel-react مُثبّت بالفعل ومُستخدم في auto-scroll-row.tsx. يعني كل اللي طلبته ممكن يتبني فوق اللي موجود من غير ما نجيب مكتبات جديدة.
+
+1) لوحة الألوان
+
+بدل الأبيض/الأسود العادي، الأساس اللي هيدّي إحساس "فخامة + توهج" هو خلفية شبه سودة بميل بنفسجي/أزرق خفيف (مش أسود خالص)، مع الألوان دي فوقها كـ glow:
+
+css
+/* src/lib/styles/globals.css — إضافة/تعديل الـ CSS variables */
+:root[data-theme="dark"] {
+  --background: #0a0a10;
+  --surface: #121218;
+  --surface-2: #1a1a22;
+  --border: #2a2a35;
+
+  --foreground: #f5f3ee;        /* أبيض دافئ مش فاقع */
+  --text-secondary: #a8a6b5;
+  --text-muted: #6e6c7c;
+
+  --gold: #d4af6a;              /* دهبي فخامة، مش صارخ */
+  --padel-blue: #29c7ff;        /* برجع الجزء الأزرق اللي موجود فعلاً في auth-shell */
+  --tennis-orange: #ff6338;     /* برجع الـ rgba اللي موجود فعلاً في auth-shell */
+  --shoes-green: #3ecf8e;       /* لون جديد مخصص للشوزات فقط */
+
+  --success: #3ecf8e;
+  --warning: #f5a623;
+  --error: #ff4757;
+}
+
+وفي tailwind.config.mjs تضيف سطر واحد جنب اللي موجودين:
+
+js
+colors: {
+  // ...existing
+  "shoes-green": "var(--shoes-green)",
+}
+
+المنطق: الـ padel-blue والـ tennis-orange دول بالفعل مُستخدَمين حرفيًا كـ rgba في auth-shell.tsx (rgba(41,199,255,.4) وrgba(255,99,56,.4)) — يعني القيم اللي مقترحها متوافقة 100% مع اللي شغال عندك حاليًا، مش لوحة جديدة تتعارض معاه.
+
+2) صفحة تسجيل الدخول/الحساب — نص مضرب متوهج
+
+عندك حاليًا في auth-shell.tsx placeholder بسيط (دايرة بيضاوية بتتلون). هستبدله بنص مضرب حقيقي (SVG) بيدخل بانيميشن ويتوهّج حسب الوضع:
+
+tsx
+// src/components/auth/racket-glow.tsx
+"use client";
+
+export default function RacketGlow({ mode }: { mode: "padel" | "tennis" }) {
+  const isPadel = mode === "padel";
+  const color = isPadel ? "var(--padel-blue)" : "var(--tennis-orange)";
+  const side = isPadel ? "left" : "right"; // نص الشمال للبادل، نص اليمين للتنس
+
+  return (
+    <div
+      className="relative h-80 w-80"
+      style={{
+        clipPath:
+          side === "left" ? "inset(0 50% 0 0)" : "inset(0 0 0 50%)",
+        animation: "racket-reveal .9s cubic-bezier(.16,1,.3,1) forwards",
+      }}
+    >
+      <svg viewBox="0 0 200 300" className="h-full w-full">
+        <defs>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* رأس المضرب */}
+        <ellipse
+          cx="100" cy="110" rx="75" ry="95"
+          fill="none" stroke={color} strokeWidth="6"
+          filter="url(#glow)"
+          style={{ animation: "pulse-glow 2.4s ease-in-out infinite" }}
+        />
+        {/* الأوتار */}
+        {Array.from({ length: 6 }).map((_, i) => (
+          <line key={`v${i}`} x1={45 + i * 22} y1="25" x2={45 + i * 22} y2="195"
+            stroke={color} strokeOpacity="0.35" strokeWidth="1.2" />
+        ))}
+        {Array.from({ length: 7 }).map((_, i) => (
+          <line key={`h${i}`} x1="30" y1={35 + i * 24} x2="170" y2={35 + i * 24}
+            stroke={color} strokeOpacity="0.35" strokeWidth="1.2" />
+        ))}
+        {/* اليد */}
+        <rect x="92" y="200" width="16" height="90" rx="8" fill={color} filter="url(#glow)" />
+      </svg>
+    </div>
+  );
+}
+css
+/* أضفهم في globals.css */
+@keyframes racket-reveal {
+  from { opacity: 0; transform: scale(.85) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes pulse-glow {
+  0%, 100% { filter: drop-shadow(0 0 6px currentColor); }
+  50%      { filter: drop-shadow(0 0 18px currentColor); }
+}
+
+وفي auth-shell.tsx تستبدل الـ <div className="mx-auto h-64 w-16 ..."> بـ:
+
+tsx
+<RacketGlow mode={isPadel ? "padel" : "tennis"} />
+
+كده لما يعمل Login → يظهر نص المضرب الشمال (بادل) بتوهج أزرق بارد. ولما يعمل Register → نص المضرب اليمين (تنس) بتوهج برتقالي دافئ. والانتقال بينهم بيتغير بسلاسة لأن الـ isPadel بيتحدث من mode والـ transition-colors موجودة أصلاً على الـ container.
+
+3) كاروسيل أول 10 منتجات (جديد → كسر زيرو → مستعمل)
+
+منطق الترتيب عندك أصلاً صح 100% في new-arrivals.tsx (getConditionScore). المطلوب بس إننا نبدّل الـ grid الثابت بكاروسيل سلس. بما إن embla-carousel-react مُثبّت أصلاً، أبسط حل متسق مع باقي المشروع:
+
+tsx
+// src/components/home/new-arrivals/new-arrivals-carousel.tsx
+"use client";
+
+import useEmblaCarousel from "embla-carousel-react";
+import { useCallback, useEffect, useState } from "react";
+
+export default function NewArrivalsCarousel({
+  children,
+}: {
+  children: React.ReactNode[];
+}) {
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: "start",
+    dragFree: false,
+    containScroll: "trimSnaps",
+  });
+  const [selected, setSelected] = useState(0);
+
+  const onSelect = useCallback(() => {
+    if (emblaApi) setSelected(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.on("select", onSelect);
+    onSelect();
+  }, [emblaApi, onSelect]);
+
+  return (
+    <div className="overflow-hidden" ref={emblaRef}>
+      <div className="flex gap-4">
+        {children.map((child, i) => (
+          <div
+            key={i}
+            className="min-w-0 flex-[0_0_45%] sm:flex-[0_0_30%] lg:flex-[0_0_19%] transition-all duration-500"
+            style={{
+              transform: i === selected ? "scale(1)" : "scale(0.96)",
+              opacity: Math.abs(i - selected) > 2 ? 0.6 : 1,
+            }}
+          >
+            {child}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+وفي new-arrivals.tsx تلف الـ .map بتاع الكروت جوه <NewArrivalsCarousel> بدل الـ <div className="grid ...">. الانيميشن هنا بسيط ومش معقد زي ما طلبت: تكبير خفيف للكارت النشط + سلاسة في السحب، من غير أي مكتبة إضافية.
+تمام، نكمل بنفس المنطق ونعمم نظام الألوان على صفحات الأقسام (padel / tennis) وصفحة الشوز، وكمان نحسّن كروت المنتجات عشان تعكس "الأصلية" و"كسر زيرو" بوضوح.
+
+4) دالة موحّدة لتحديد ثيم كل قسم (Sport Theme)
+
+بدل ما نكرر شرط if padel then blue else orange في كل مكون، نعمل helper واحد نستخدمه في كل حتة:
+
+ts
+// src/lib/core/util.ts — إضافة
+
+export type SportTheme = {
+  color: string;       // CSS var name
+  glow: string;         // rgba للـ box-shadow
+  label: string;
+};
+
+export function getSportTheme(slugOrTitle: string): SportTheme {
+  const key = (slugOrTitle || "").toLowerCase();
+
+  if (key.includes("padel") || key.includes("بادل")) {
+    return { color: "var(--padel-blue)", glow: "rgba(41,199,255,0.35)", label: "Padel" };
+  }
+  if (key.includes("tennis") || key.includes("تنس")) {
+    return { color: "var(--tennis-orange)", glow: "rgba(255,99,56,0.35)", label: "Tennis" };
+  }
+  if (key.includes("shoe") || key.includes("shoes") || key.includes("حذاء") || key.includes("احذية")) {
+    return { color: "var(--shoes-green)", glow: "rgba(62,207,142,0.35)", label: "Shoes" };
+  }
+  return { color: "var(--gold)", glow: "rgba(212,175,106,0.3)", label: "General" };
+}
+5) Hero بتاع صفحة القسم بلون متوهج حسب الرياضة
+
+في src/components/category/index.tsx، العنوان دلوقتي text-5xl ... uppercase بلون واحد ثابت. نخليه ياخد توهج القسم:
+
+tsx
+// في أعلى الملف
+import { getSportTheme } from "@/lib/core/util";
+
+// جوه الكومبوننت، بعد ما بتجيب category:
+const theme = getSportTheme(slug !== "/" ? (category?.title ?? slug) : "");
+tsx
+<div className="mb-8 text-center">
+  <h1
+    className="text-5xl md:text-7xl font-bold tracking-tight uppercase transition-all duration-700"
+    style={{ textShadow: `0 0 30px ${theme.glow}` }}
+  >
+    {title}
+  </h1>
+  <div
+    className="mx-auto mt-4 h-[2px] w-24 rounded-full"
+    style={{ backgroundColor: theme.color, boxShadow: `0 0 12px ${theme.glow}` }}
+  />
+  {/* ...description زي ما هي */}
+</div>
+
+كده لما اليوزر يدخل /category/padel العنوان بيتوهّج أزرق بارد، ولما يدخل /category/tennis بيتوهّج برتقالي دافئ — نفس الإحساس بتاع صفحة اللوجين، بس هنا بيحصل تلقائي حسب اسم/slug القسم مش حسب فعل اليوزر.
+
+6) كروت "Shop by Sport" في الصفحة الرئيسية
+
+في shop-by-sport.tsx حاليًا الكارت بحدود عادية. نضيف حدود متوهجة بتظهر عند الـ hover حسب رياضة كل قسم:
+
+tsx
+// أعلى الملف
+import { getSportTheme } from "@/lib/core/util";
+
+// جوه الـ map
+const theme = getSportTheme(category.title);
+
+<Link
+  key={category.id}
+  href={`/category/${category.slug}`}
+  className="group relative h-64 overflow-hidden rounded-3xl border border-border bg-surface-2 transition-all duration-500"
+  style={{
+    ["--sport-glow" as any]: theme.glow,
+  }}
+  onMouseEnter={(e) => {
+    (e.currentTarget as HTMLElement).style.boxShadow = `0 0 40px var(--sport-glow)`;
+    (e.currentTarget as HTMLElement).style.borderColor = theme.color;
+  }}
+  onMouseLeave={(e) => {
+    (e.currentTarget as HTMLElement).style.boxShadow = "none";
+    (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
+  }}
+>
+
+(لو عايز تتجنب الـ inline event handlers وتخليها CSS بحتة، أقدر أعمّلك نسخة بـ data-sport attribute + CSS selectors بدل الـ JS — قولّي.)
+
+7) كروت المنتجات: badge "أصلي" أخضر + "كسر زيرو" دهبي
+
+دي أهم نقطة فعليًا لأنك بتبيع فئات غالية أصلية — لازم اليوزر يفرّق بصريًا بين:
+
+🟢 أصلي (Shoes) → أخضر
+🟡 كسر زيرو (like_new) → دهبي، مختلف عن "مستعمل" العادي
+⚪ مستعمل عادي → رمادي محايد
+
+في new-arrivals.tsx عندك بالفعل منطق conditionLabel بيفرق بين "جديد"/"مستعمل" بس. نوسّعه:
+
+tsx
+// بدل حساب conditionLabel الحالي، حطه بالشكل ده:
+const cg = product.conditionGrade as any;
+const isLikeNew = cg?.code === "like_new";
+
+const badge = isLikeNew
+  ? { text: "كسر زيرو", bg: "var(--gold)", text_color: "#000" }
+  : ct?.code === "new"
+    ? { text: "جديد", bg: "rgba(0,0,0,0.7)", text_color: "#fff" }
+    : ct?.code === "used"
+      ? { text: "مستعمل", bg: "rgba(0,0,0,0.7)", text_color: "#fff" }
+      : null;
+tsx
+{badge ? (
+  <span
+    className="absolute top-2 start-2 rounded-full px-3 py-1 text-xs font-medium backdrop-blur"
+    style={{
+      backgroundColor: badge.bg,
+      color: badge.text_color,
+      boxShadow: isLikeNew ? "0 0 14px rgba(212,175,106,0.6)" : "none",
+    }}
+  >
+    {badge.text}
+  </span>
+) : null}
+
+وبما إن نفس الشكل مكرر في product-grid-item.tsx وproduct-card.tsx، أعمل منه component واحد مشترك تستخدمه في التلاتة:
+
+tsx
+// src/components/shared/condition-badge.tsx
+export function ConditionBadge({
+  conditionType,
+  conditionGrade,
+}: {
+  conditionType?: { code: string } | null;
+  conditionGrade?: { code: string } | null;
+}) {
+  if (!conditionType) return null;
+
+  const isLikeNew = conditionGrade?.code === "like_new";
+  const isNew = conditionType.code === "new";
+
+  const text = isLikeNew ? "كسر زيرو" : isNew ? "جديد" : "مستعمل";
+
+  return (
+    <span
+      className="absolute top-2 start-2 rounded-full px-3 py-1 text-xs font-medium backdrop-blur"
+      style={{
+        backgroundColor: isLikeNew ? "var(--gold)" : "rgba(0,0,0,0.7)",
+        color: isLikeNew ? "#000" : "#fff",
+        boxShadow: isLikeNew ? "0 0 14px rgba(212,175,106,0.55)" : "none",
+      }}
+    >
+      {text}
+    </span>
+  );
+}
+
+وبعدين تستبدل أي <span> بتاع condition في التلات ملفات بـ <ConditionBadge conditionType={ct} conditionGrade={cg} /> — كده الشكل موحّد في كل مكان بدل التكرار.
+
+علامة "أصلي" لقسم الشوزات تحديدًا
+
+لو الفئة شوز وعندك حقل زي isAuthentic أو brand في المنتج، أضف badge تاني بجنب condition badge:
+
+tsx
+{theme.label === "Shoes" && product.isAuthentic ? (
+  <span
+    className="absolute top-2 end-2 flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
+    style={{ backgroundColor: "var(--shoes-green)", color: "#000" }}
+  >
+    ✓ أصلي
+  </span>
+) : null}
+
+كده بقى عندك نظام ألوان موحّد بيتغيّر تلقائيًا (Login ↔ Register، Category padel ↔ tennis، Shoes) بدل ما تكتب شرط منفصل كل مرة.
+تمام، نخلص النقطتين دول بدقة كاملة ونربطهم بنفس نظام getSportTheme اللي عملناه، عشان كل حاجة متسقة من الهيدر لحد صفحة المنتج.
+
+أولًا: تحديث getSportTheme — نضيف قيمة hex حقيقية
+
+هنحتاجها دلوقتي لأن الـ 3D viewer (Three.js) مش بيفهم var(--color)، محتاج hex فعلي:
+
+ts
+// src/lib/core/util.ts — استبدل الدالة القديمة بالكامل بده
+
+export type SportKey = "padel" | "tennis" | "shoes" | "general";
+
+export type SportTheme = {
+  key: SportKey;
+  color: string;   // مرجع CSS variable — للاستخدام في className / style
+  hex: string;      // القيمة الفعلية — لازمة لـ Three.js وأي canvas
+  glow: string;      // rgba جاهزة للـ box-shadow / text-shadow
+  label: string;
+};
+
+const SPORT_THEMES: Record<SportKey, Omit<SportTheme, "key">> = {
+  padel:   { color: "var(--padel-blue)",    hex: "#29c7ff", glow: "rgba(41,199,255,0.35)",  label: "Padel" },
+  tennis:  { color: "var(--tennis-orange)", hex: "#ff6338", glow: "rgba(255,99,56,0.35)",   label: "Tennis" },
+  shoes:   { color: "var(--shoes-green)",   hex: "#3ecf8e", glow: "rgba(62,207,142,0.35)",  label: "Shoes" },
+  general: { color: "var(--gold)",          hex: "#d4af6a", glow: "rgba(212,175,106,0.3)",  label: "General" },
+};
+
+export function getSportTheme(slugOrTitle?: string | null): SportTheme {
+  const key = (slugOrTitle || "").toLowerCase();
+
+  let matched: SportKey = "general";
+  if (key.includes("padel") || key.includes("بادل")) matched = "padel";
+  else if (key.includes("tennis") || key.includes("تنس")) matched = "tennis";
+  else if (
+    key.includes("shoe") ||
+    key.includes("حذاء") ||
+    key.includes("احذية") ||
+    key.includes("أحذية")
+  )
+    matched = "shoes";
+
+  return { key: matched, ...SPORT_THEMES[matched] };
+}
+النقطة 1: صفحة المنتج (Gallery + 3D Viewer)
+أ) product/index.tsx — نحسب ثيم المنتج من القسم بتاعه ونمرره تحت
+tsx
+import { getTranslations } from "next-intl/server";
+
+import type { ProductSinglePage } from "@/lib/core/types/types";
+
+import Gallery from "@/components/product/gallery";
+import ProductGridItem from "@/components/product/grid/product-grid-item";
+import ProductDescription from "@/components/product/product-description";
+import ProductReviews from "@/components/product/review";
+import {
+  AutoScrollRow,
+  BackButton,
+  GlbViewerClient,
+} from "@/components/shared/wrappers";
+import { getSportTheme } from "@/lib/core/util";
+
+export default async function ProductPageLayout({
+  product,
+}: {
+  product: ProductSinglePage & { glbModel?: any };
+}) {
+  const t = await getTranslations("product");
+  const glbUrl = (product.glbModel as any)?.url as string | undefined;
+
+  const firstCategory = Array.isArray(product.categories)
+    ? product.categories[0]
+    : null;
+  const categoryLabel =
+    firstCategory && typeof firstCategory === "object"
+      ? (firstCategory as any).title || (firstCategory as any).slug || ""
+      : "";
+
+  const theme = getSportTheme(categoryLabel);
+
+  return (
+    <div
+      className="container pb-2"
+      style={{
+        ["--product-accent" as any]: theme.color,
+        ["--product-glow" as any]: theme.glow,
+      }}
+    >
+      <BackButton />
+
+      <div className="flex flex-col gap-12 rounded-lg border border-t-0 border-border p-8 lg:flex-row lg:gap-8">
+        <div className="basis-full lg:basis-1/2">
+          <ProductDescription product={product} theme={theme} />
+        </div>
+        <div className="h-full w-full basis-full lg:basis-1/2">
+          <div className="min-h-[32rem] w-full">
+            <Gallery gallery={product.gallery || []} />
+          </div>
+        </div>
+      </div>
+
+      {glbUrl ? (
+        <div className="mt-8 rounded-lg border border-border bg-surface p-4">
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+            <span
+              className="inline-block h-2 w-2 rounded-full"
+              style={{
+                backgroundColor: theme.color,
+                boxShadow: `0 0 8px var(--product-glow)`,
+              }}
+            />
+            {t("view3d") || "معاينة ثلاثية الأبعاد"}
+          </h3>
+          <div className="overflow-hidden rounded-lg">
+            <GlbViewerClient url={glbUrl} accentHex={theme.hex} />
+          </div>
+        </div>
+      ) : null}
+
+      {product.relatedProducts?.length ? (
+        <div className="pt-8">
+          <h3 className="mb-4 text-lg font-semibold">
+            {t("relatedProducts")}
+          </h3>
+          <AutoScrollRow className="snap-x snap-proximity">
+            {product.relatedProducts.map((p) => (
+              <div
+                key={p.id}
+                className="min-w-0 flex-[0_0_82%] max-w-[21rem] sm:flex-[0_0_48%] md:flex-[0_0_31%] lg:flex-[0_0_23%] lg:max-w-[20rem]"
+              >
+                <ProductGridItem product={p} />
+              </div>
+            ))}
+          </AutoScrollRow>
+        </div>
+      ) : null}
+
+      <ProductReviews reviews={product.reviews} productId={product.id} />
+    </div>
+  );
+}
+ب) product/product-description.tsx — سعر المنتج بلون هوية القسم بدل التركواز الثابت 
+#AAF2E7
+tsx
+import type { ProductSinglePage } from "@/lib/core/types/types";
+import type { SportTheme } from "@/lib/core/util";
+
+import { Price } from "@/components/shared/elements-ssr";
+import { ProductPurchaseSection } from "@/components/shared/wrappers";
+import { Faq, RichText } from "@/components/ui";
+
+export default function ProductDescription({
+  product,
+  theme,
+}: {
+  product: ProductSinglePage;
+  theme: SportTheme;
+}) {
+  const isLongTitle = (product.title || "").length > 30;
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="border-b border-border pb-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <h1
+            className={[
+              "font-bold leading-tight",
+              isLongTitle ? "text-3xl" : "text-4xl",
+              "break-words",
+            ].join(" ")}
+          >
+            {product.title}
+          </h1>
+
+          <div className="flex lg:justify-end">
+            <div
+              className="rounded-full px-4 py-1 text-2xl font-bold whitespace-nowrap"
+              style={{
+                backgroundColor: theme.color,
+                color: "#0a0a10",
+                boxShadow: `0 0 20px var(--product-glow)`,
+              }}
+            >
+              {product.purchase_section.variants.length > 0 ? (
+                <Price
+                  highestAmount={product.purchase_section.priceRange.max}
+                  lowestAmount={product.purchase_section.priceRange.min}
+                />
+              ) : (
+                <Price amount={product.purchase_section.price} />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={
+          product.purchase_section.variants.length
+            ? "min-h-[12rem]"
+            : "min-h-[3rem]"
+        }
+      >
+        <ProductPurchaseSection product={product.purchase_section} />
+      </div>
+
+      <div className="border-t border-border pt-1 text-[1.125rem] leading-relaxed">
+        <RichText
+          data={product.description}
+          enableGutter={false}
+          enableProse={false}
+        />
+      </div>
+
+      <Faq faqs={product.faqs} title={product.title} />
+    </div>
+  );
+}
+ج) product/gallery.tsx — patch على الأزرق الثابت (مكانين فقط)
+
+استبدل السطرين دول:
+
+css
+#gallery-radio-${i}:checked ~ .gallery-thumbs .gallery-thumb-${i} {
+  border-width: 2px;
+  border-color: rgb(37 99 235);
+}
+
+بـ:
+
+css
+#gallery-radio-${i}:checked ~ .gallery-thumbs .gallery-thumb-${i} {
+  border-width: 2px;
+  border-color: var(--product-accent, rgb(37 99 235));
+  box-shadow: 0 0 14px var(--product-glow, transparent);
+}
+
+واستبدل كلاس الـ thumb container:
+
+tsx
+"group flex h-full w-full items-center justify-center overflow-hidden rounded-lg border bg-white dark:bg-black border-neutral-200 dark:border-neutral-800"
+
+بـ:
+
+tsx
+"group flex h-full w-full items-center justify-center overflow-hidden rounded-lg border bg-surface transition-colors duration-300 border-border hover:border-[var(--product-accent)]"
+
+وفي الـ prev/next labels، استبدل hover:text-blue-500 (موجودة مرتين) بـ hover:text-[var(--product-accent)].
+
+د) product/glb-viewer.tsx — الخلفية الرمادية الفاتحة (
+#f5f5f5) كانت بتكسر إحساس الفخامة كله. استبدله بالكامل:
+tsx
+"use client";
+import { useEffect, useRef, useState } from "react";
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+
+export default function GlbViewer({
+  url,
+  accentHex = "#d4af6a",
+}: {
+  url: string;
+  accentHex?: string;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current || !url) return;
+    const container = containerRef.current;
+    const width = container.clientWidth,
+      height = container.clientHeight;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color("#0e0e14");
+
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(5, 3, 5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.5;
+
+    const ambient = new THREE.AmbientLight(0xffffff, 0.35);
+    scene.add(ambient);
+
+    const key = new THREE.DirectionalLight(0xffffff, 1.1);
+    key.position.set(10, 20, 10);
+    key.castShadow = true;
+    scene.add(key);
+
+    // إضاءة بلون هوية القسم — إحساس عرض في معرض فاخر مش شكل تقني عادي
+    const accentLight = new THREE.PointLight(
+      new THREE.Color(accentHex),
+      2.2,
+      15,
+    );
+    accentLight.position.set(-4, 2, -4);
+    scene.add(accentLight);
+
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(6, 64),
+      new THREE.MeshStandardMaterial({
+        color: 0x14141c,
+        metalness: 0.3,
+        roughness: 0.6,
+      }),
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -1;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // حلقة توهج تحت المنتج بلون القسم
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(1.6, 1.75, 64),
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color(accentHex),
+        transparent: true,
+        opacity: 0.5,
+        side: THREE.DoubleSide,
+      }),
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = -0.98;
+    scene.add(ring);
+
+    new GLTFLoader().load(
+      url,
+      (gltf) => {
+        const model = gltf.scene;
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = maxDim > 0 ? 4 / maxDim : 1;
+        model.scale.setScalar(scale);
+        model.position.sub(center.multiplyScalar(scale));
+        model.position.y = Math.max(model.position.y, -1);
+        model.traverse((child: any) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+        scene.add(model);
+        setLoading(false);
+      },
+      undefined,
+      () => {
+        setError("تعذّر تحميل النموذج ثلاثي الأبعاد");
+        setLoading(false);
+      },
+    );
+
+    let frameId: number;
+    const animate = () => {
+      frameId = requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      controls.dispose();
+      renderer.dispose();
+      if (renderer.domElement.parentNode === container) {
+        container.removeChild(renderer.domElement);
+      }
+    };
+  }, [url, accentHex]);
+
+  return (
+    <div ref={containerRef} className="relative h-[500px] w-full bg-[#0e0e14]">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div
+            className="h-10 w-10 animate-spin rounded-full border-2 border-t-transparent"
+            style={{ borderColor: `${accentHex}55`, borderTopColor: "transparent" }}
+          />
+        </div>
+      )}
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-red-400">
+          {error}
+        </div>
+      )}
+    </div>
+  );
+}
+
+وفي shared/wrappers.tsx، الـ GlbViewerClient بيستقبل props ويمررها زي ما هي للـ dynamic import، فمش محتاج تعديل — بس تأكد إن الاستدعاء في product/index.tsx بيبعت accentHex={theme.hex} (متعمول أعلاه فعلًا).
+
+ثانيًا: الهيدر — "اللمسة الفخمة من أول ثانية"
+
+الفكرة: خط واحد رفيع فوق الهيدر بتدرّج الألوان التلاتة (Padel → Gold → Tennis) ظاهر من أول لحظة تحميل — ده الـ "توقيع" البصري المميز للبراند. بعدين كل عنصر في الناف بيتلون بهوية القسم بتاعه عند الـ hover.
+
+tsx
+// src/components/layout/header.tsx — استبدال كامل
+
+"use client";
+
+import { PayloadAdminBar } from "@payloadcms/admin-bar";
+import { RefreshRouteOnSave } from "@payloadcms/live-preview-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { FiSun, FiMoon, FiMenu, FiX } from "react-icons/fi";
+import { HiOutlineUser } from "react-icons/hi";
+
+import type { Media, User, Product } from "@/lib/core/types/payload-types";
+import type { PayloadAdminBarProps } from "@payloadcms/admin-bar";
+
+import CartModal from "@/components/cart/cart-modal";
+import AccessibilityBar from "@/components/layout/accessibility-bar";
+import Search from "@/components/layout/search";
+import ImageVideo from "@/components/shared/image-video";
+import appConfig from "@/lib/core/config";
+import { cn } from "@/lib/core/util";
+import { useTheme } from "@/lib/providers/theme";
+
+const LivePreviewListener = () => {
+  const router = useRouter();
+  return (
+    <RefreshRouteOnSave
+      refresh={router.refresh}
+      serverURL={appConfig.BASE_URL}
+    />
+  );
+};
+
+const AdminBar = ({
+  adminBarProps = {},
+}: {
+  adminBarProps?: PayloadAdminBarProps;
+}) => {
+  const [show, setShow] = useState(false);
+  const router = useRouter();
+
+  const onAuthChange = useCallback((user: User) => {
+    setShow(
+      Boolean(
+        user && Array.isArray(user.roles) && user.roles.includes("admin"),
+      ),
+    );
+  }, []);
+
+  return (
+    <div
+      dir="ltr"
+      className={cn("w-full bg-black text-white", show ? "block" : "hidden")}
+    >
+      <PayloadAdminBar
+        {...adminBarProps}
+        className="container py-2 text-white"
+        cmsURL={appConfig.SERVER_URL}
+        logo={<span>Dashboard</span>}
+        onAuthChange={onAuthChange as any}
+        onPreviewExit={() => {
+          fetch(`${appConfig.SERVER_URL}/preview/exit`).then(() => {
+            router.push("/");
+            router.refresh();
+          });
+        }}
+      />
+    </div>
+  );
+};
+
+const ThemeToggle = () => {
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark";
+
+  return (
+    <button
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      className="p-2 rounded-full hover:bg-surface-2 transition"
+      aria-label="Toggle theme"
+    >
+      {isDark ? <FiSun size={20} /> : <FiMoon size={20} />}
+    </button>
+  );
+};
+
+// هوية كل قسم — لازم تتوافق مع getSportTheme في lib/core/util.ts
+const NAV_ITEMS = [
+  { label: "Padel", href: "/category/padel", accent: "var(--padel-blue)" },
+  { label: "Tennis", href: "/category/tennis", accent: "var(--tennis-orange)" },
+  { label: "Shop", href: "/categories", accent: "var(--gold)" },
+  { label: "Sell", href: "/sell", accent: "var(--gold)" },
+];
+
+// الخط المُوقّع في أعلى الصفحة — ظاهر من أول تحميل، هو الحاجة المميزة الوحيدة اللي بنعتمد عليها
+const SignatureLine = () => (
+  <div
+    className="h-[2px] w-full"
+    style={{
+      background:
+        "linear-gradient(90deg, transparent, var(--padel-blue), var(--gold), var(--tennis-orange), transparent)",
+    }}
+  />
+);
+
+type HeaderProps = {
+  logo: Media;
+  products: Product[];
+  adminBarProps?: PayloadAdminBarProps;
+};
+
+const HeaderBar = ({ logo, products }: HeaderProps) => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <header
+      className={cn(
+        "sticky top-0 z-40 transition-all duration-500",
+        isScrolled
+          ? "bg-background/85 backdrop-blur-xl shadow-[0_1px_0_0_var(--border)]"
+          : "bg-transparent",
+      )}
+    >
+      <SignatureLine />
+
+      <nav className="container flex items-center justify-between py-4">
+        <Link
+          href="/"
+          className="z-10 flex items-center gap-2 animate-[logo-in_.8s_ease-out]"
+        >
+          <ImageVideo
+            resource={logo}
+            imgClassName="h-10 w-auto object-contain"
+          />
+        </Link>
+
+        <div className="hidden items-center gap-8 md:flex">
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="group relative py-2 text-sm font-medium uppercase tracking-wider text-foreground/80"
+              style={{ ["--nav-accent" as any]: item.accent }}
+            >
+              <span className="transition-colors duration-300 group-hover:text-[var(--nav-accent)]">
+                {item.label}
+              </span>
+              <span
+                className="absolute inset-x-0 -bottom-0.5 h-[2px] origin-center scale-x-0 rounded-full bg-[var(--nav-accent)] transition-transform duration-300 group-hover:scale-x-100"
+                style={{ boxShadow: "0 0 8px var(--nav-accent)" }}
+              />
+            </Link>
+          ))}
+        </div>
+
+        <div className="z-10 flex items-center gap-3">
+          <div className="hidden w-56 md:block">
+            <Search products={products} />
+          </div>
+          <ThemeToggle />
+          <Link
+            href="/account/orders"
+            className="rounded-full p-2 transition hover:bg-surface-2"
+            aria-label="Account"
+          >
+            <HiOutlineUser size={20} />
+          </Link>
+
+          {appConfig.PAYMENT_ENABLED ? <CartModal /> : null}
+
+          <button
+            className="rounded-full p-2 transition hover:bg-surface-2 md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Menu"
+          >
+            {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+          </button>
+        </div>
+      </nav>
+
+      {mobileMenuOpen && (
+        <div className="border-t border-border bg-background md:hidden">
+          <div className="container flex flex-col gap-4 py-4">
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="py-2 text-lg font-medium uppercase tracking-wider"
+                style={{ ["--nav-accent" as any]: item.accent }}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <span className="transition-colors hover:text-[var(--nav-accent)]">
+                  {item.label}
+                </span>
+              </Link>
+            ))}
+            <div className="mt-2">
+              <Search products={products} />
+            </div>
+          </div>
+        </div>
+      )}
+    </header>
+  );
+};
+
+export default function HeaderClient({ adminBarProps, ...props }: HeaderProps) {
+  return (
+    <>
+      <AdminBar adminBarProps={adminBarProps} />
+      <LivePreviewListener />
+      <HeaderBar {...props} />
+      <AccessibilityBar />
+    </>
+  );
+}
+
+وأضف الـ keyframe بتاع الشعار + احترام prefers-reduced-motion (مهم لأننا ضفنا انيميشن في أكتر من مكان — Login racket, Header logo, Carousel):
+
+css
+/* src/lib/styles/globals.css — إضافة */
+
+@keyframes logo-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+ليه الشكل ده تحديدًا؟
+خط التوقيع فوق الهيدر هو العنصر الجريء الوحيد اللي بنعتمد عليه (Padel → Gold → Tennis) — بيظهر في كل صفحة من أول تحميل، وده أقوى من أي انيميشن متكرر، وبيلخص هوية البراند بالكامل في شكل واحد بسيط.
+كل حاجة تانية (hover على الناف، دخول الشعار، تحميل الجاليري) — motion بيرد على فعل اليوزر أو لحظة تحميل واحدة بس، مش انيميشنز متناثرة في كل مكان، عشان يفضل حاسس إنه فخامة مش "معرض ضو وصوت".
+الـ 3D viewer اتغير بالكامل من خلفية رمادية فاتحة لخلفية غامقة فيها إضاءة بلون القسم — عشان لما يفتح المنتج الأصلي يحس إنه بيتفرج عليه في معرض، مش في أداة تقنية.
+أول حاجة: نستخرج خط التوقيع (الجرادينت) لملف مشترك عشان يستخدم في الهيدر والفوتر من غير تكرار كود — الفكرة إن الفوتر يكون "bookend" بصري للهيدر (نفس الخط فوق وتحت الصفحة كلها).
+
+tsx
+// src/components/shared/signature-line.tsx
+export default function SignatureLine({
+  className = "",
+}: {
+  className?: string;
+}) {
+  return (
+    <div
+      className={`h-[2px] w-full ${className}`}
+      style={{
+        background:
+          "linear-gradient(90deg, transparent, var(--padel-blue), var(--gold), var(--tennis-orange), transparent)",
+      }}
+    />
+  );
+}
+
+وفي header.tsx تشيل الـ const SignatureLine = () => (...) المحلي، وتحط بدالها:
+
+tsx
+import SignatureLine from "@/components/shared/signature-line";
+1) الفوتر — src/components/layout/footer.tsx
+tsx
+import { FaInstagram, FaFacebookF, FaWhatsapp } from "react-icons/fa";
+import { HiOutlinePhone, HiOutlineMail } from "react-icons/hi";
+import { TbWorld } from "react-icons/tb";
+
+import type { SiteSetting } from "@/payload-types";
+
+import SignatureLine from "@/components/shared/signature-line";
+
+const SOCIAL_ICON_CLASS =
+  "h-10 w-10 flex items-center justify-center rounded-full border border-border text-foreground/70 transition-all duration-300 hover:text-gold hover:border-gold hover:shadow-[0_0_16px_rgba(212,175,106,0.45)]";
+
+export default function Footer({ footer }: { footer: SiteSetting["footer"] }) {
+  if (!footer) return null;
+
+  return (
+    <footer className="w-full border-t border-border bg-background text-foreground">
+      <SignatureLine />
+
+      <div className="container mx-auto flex flex-col gap-8 py-10 md:flex-row md:items-start md:justify-between">
+        {/* هوية + عنوان */}
+        <div className="flex flex-col items-center gap-1.5 text-center md:items-start md:text-start">
+          {footer.title && (
+            <div className="text-lg font-semibold tracking-tight">
+              {footer.title}
+            </div>
+          )}
+          {footer.address && (
+            <div className="text-sm text-text-secondary">{footer.address}</div>
+          )}
+        </div>
+
+        {/* تواصل مباشر */}
+        <div className="flex flex-col items-center gap-1.5 text-sm md:items-end">
+          {footer.phone && (
+            
+              href={`tel:${footer.phone}`}
+              className="text-text-secondary transition-colors hover:text-gold"
+            >
+              {footer.phone}
+            </a>
+          )}
+          {footer.email && (
+            
+              href={`mailto:${footer.email}`}
+              className="text-text-secondary transition-colors hover:text-gold"
+            >
+              {footer.email}
+            </a>
+          )}
+        </div>
+
+        {/* أيقونات التواصل الاجتماعي */}
+        <div className="flex items-center justify-center gap-3">
+          {footer.social?.instagram && (
+            
+              href={`https://instagram.com/${footer.social.instagram}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+              className={SOCIAL_ICON_CLASS}
+            >
+              <FaInstagram className="text-lg" />
+            </a>
+          )}
+
+          {footer.social?.facebook && (
+            
+              href={`https://facebook.com/${footer.social.facebook}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+              className={SOCIAL_ICON_CLASS}
+            >
+              <FaFacebookF className="text-lg" />
+            </a>
+          )}
+
+          {footer.social?.whatsappNumber && (
+            
+              href={`https://wa.me/${footer.social.whatsappNumber}${
+                footer.social.whatsappMessage
+                  ? `?text=${encodeURIComponent(footer.social.whatsappMessage)}`
+                  : ""
+              }`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="WhatsApp"
+              className={SOCIAL_ICON_CLASS}
+            >
+              <FaWhatsapp className="text-lg" />
+            </a>
+          )}
+
+          {footer.phone && (
+            
+              href={`tel:${footer.phone}`}
+              aria-label="Phone"
+              className={SOCIAL_ICON_CLASS}
+            >
+              <HiOutlinePhone className="text-lg" />
+            </a>
+          )}
+
+          {footer.email && (
+            
+              href={`mailto:${footer.email}`}
+              aria-label="Email"
+              className={SOCIAL_ICON_CLASS}
+            >
+              <HiOutlineMail className="text-lg" />
+            </a>
+          )}
+
+          {footer.website && (
+            
+              href={footer.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Website"
+              className={SOCIAL_ICON_CLASS}
+            >
+              <TbWorld className="text-lg" />
+            </a>
+          )}
+        </div>
+
+        {/* نسخة الموبايل المصغّرة */}
+        <div className="flex items-center justify-center gap-2 text-sm md:hidden">
+          {footer.phone && <a href={`tel:${footer.phone}`}>{footer.phone}</a>}
+          {footer.phone && footer.email && (
+            <span className="text-text-muted">|</span>
+          )}
+          {footer.email && (
+            <a href={`mailto:${footer.email}`}>{footer.email}</a>
+          )}
+        </div>
+      </div>
+
+      <div className="border-t border-border py-4 text-center text-xs text-text-muted">
+        © {new Date().getFullYear()} {footer.title || "Ace Gear Store"}. All
+        rights reserved.
+      </div>
+    </footer>
+  );
+}
+
+ليه كده بالظبط: مفيش أي إضافة لوان جديدة هنا غير الـ gold — لأن الفوتر مش تابع لقسم رياضة معينة (بادل/تنس)، فاستخدام لون واحد محايد (الدهبي، لون الهوية العامة) أدق من إننا نحط ألوان متعددة من غير سبب. الحركة الوحيدة هي الـ hover glow، رد فعل على فعل اليوزر مش حركة تلقائية.
+
+2) الـ Checkout
+
+الـ checkout مالوش قسم رياضي محدد (السلة ممكن فيها بادل وتنس مع بعض)، فبرضو بيستخدم الـ gold كلون ثقة موحّد، بالظبط زي الفوتر — ده قرار تصميمي مقصود مش نسيان.
+
+أ) src/app/(app)/checkout/page.tsx — شاشة "لازم تسجل دخول"
+tsx
+import { getTranslations } from "next-intl/server";
+import { headers } from "next/headers";
+import Link from "next/link";
+
+import type { Metadata } from "next";
+
+import { Checkout } from "@/components/shared/wrappers";
+import DAL from "@/lib/core/dal";
+
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("checkout.page");
+  return { title: t("title") };
+}
+
+export default async function CheckoutPage() {
+  const t = await getTranslations("checkout.page");
+  const headersList = await headers();
+  const fakeReq = new Request("http://local", { headers: headersList });
+  const user = await DAL.queryCurrentUser(fakeReq);
+
+  if (!user) {
+    return (
+      <div className="container flex min-h-[60vh] flex-col items-center justify-center gap-6 px-4 py-16 text-center">
+        <div
+          className="flex h-16 w-16 items-center justify-center rounded-full border border-gold/40"
+          style={{ boxShadow: "0 0 24px rgba(212,175,106,0.35)" }}
+        >
+          <svg viewBox="0 0 24 24" className="h-7 w-7 text-gold" fill="none">
+            <path
+              d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2ZM8 9V7a4 4 0 1 1 8 0v2"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+
+        <h1 className="text-3xl font-bold md:text-4xl">
+          يرجى تسجيل الدخول أولاً
+        </h1>
+        <p className="max-w-md text-text-secondary">
+          عشان تقدر تكمل الطلب، لازم يكون عندك حساب. سجّل دخول أو أنشئ حساب
+          جديد في دقيقة.
+        </p>
+
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link
+            href="/login"
+            className="rounded-full bg-gold px-8 py-3 font-semibold text-black transition hover:opacity-90"
+          >
+            تسجيل الدخول
+          </Link>
+          <Link
+            href="/register"
+            className="rounded-full border border-border px-8 py-3 font-semibold text-foreground transition hover:border-gold hover:text-gold"
+          >
+            إنشاء حساب
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container flex min-h-[90vh] flex-col">
+      <h1 className="text-center text-4xl font-semibold">{t("title")}</h1>
+      <Checkout />
+    </div>
+  );
+}
+
+التغيير الوحيد الجوهري هنا: أيقونة قفل صغيرة بتوهج دهبي بديلاً عن الشاشة المجردة — رسالة بصرية بسيطة إن العملية دي آمنة، من غير ما نضيف نص زيادة أو badges مبالغ فيها.
+
+ب) src/components/checkout/index.tsx — شاشة تأكيد الطلب (اللحظة الأهم في الرحلة كلها)
+
+الإيموجي ✅ كان بيكسر إحساس الفخامة فجأة. استبدلته بـ SVG بيرسم نفسه — حركة واحدة منظمة بترد على فعل حقيقي (نجاح الطلب)، مش حركة تلقائية بتتكرر:
+
+tsx
+"use client";
+
+import { useCart } from "@payloadcms/plugin-ecommerce/client/react";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
+import { FaWhatsapp } from "react-icons/fa";
+
+import CheckoutForm from "@/components/checkout/checkout-form";
+import CheckoutSummary from "@/components/checkout/checkout-summary";
+import appConfig from "@/lib/core/config";
+
+const SuccessCheck = () => (
+  <div
+    className="flex h-20 w-20 items-center justify-center rounded-full"
+    style={{
+      backgroundColor: "rgba(212,175,106,0.12)",
+      boxShadow: "0 0 40px rgba(212,175,106,0.4)",
+    }}
+  >
+    <svg viewBox="0 0 52 52" className="h-10 w-10">
+      <circle
+        cx="26" cy="26" r="24"
+        fill="none" stroke="var(--gold)" strokeWidth="2"
+        strokeDasharray="151"
+        style={{ animation: "circle-draw .6s ease-out forwards" }}
+      />
+      <path
+        d="M15 27l7 7 15-15"
+        fill="none" stroke="var(--gold)" strokeWidth="3"
+        strokeLinecap="round" strokeLinejoin="round"
+        strokeDasharray="40"
+        style={{ animation: "check-draw .4s .5s ease-out forwards", opacity: 0 }}
+      />
+    </svg>
+  </div>
+);
+
+export default function CheckoutClient() {
+  const t = useTranslations("checkout.page");
+  const { cart, clearCart } = useCart();
+  const [orderId, setOrderId] = useState<string | null>(null);
+
+  const cartIsEmpty = !cart?.items?.length;
+
+  const cartId = useMemo(() => {
+    const id = cart?.id;
+    return typeof id === "number" ? id : undefined;
+  }, [cart]);
+
+  if (orderId) {
+    const waNumber = appConfig.WHATSAPP_NUMBER;
+    const message = encodeURIComponent(
+      `${appConfig.WHATSAPP_MESSAGE} #${orderId}`,
+    );
+    const waLink = waNumber
+      ? `https://wa.me/${waNumber}?text=${message}`
+      : null;
+
+    return (
+      <div className="flex flex-col items-center gap-4 px-4 py-12 text-center">
+        <SuccessCheck />
+
+        <h2 className="text-3xl font-bold md:text-4xl">
+          {t("orderReceived")}
+        </h2>
+        <p className="text-xl font-semibold text-gold">
+          {t("orderId", { id: orderId })}
+        </p>
+        <p className="max-w-md text-text-secondary">
+          سنتواصل معك خلال 24 ساعة لتأكيد الطلب وتحديد طريقة الدفع والاستلام.
+        </p>
+
+        {waLink ? (
+          
+            href={waLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-3 rounded-full bg-[#25D366] px-8 py-4 font-semibold text-white transition hover:opacity-90"
+          >
+            <FaWhatsapp size={22} />
+            تأكيد عبر واتساب
+          </a>
+        ) : null}
+
+        {appConfig.CONTACT_PHONE ? (
+          
+            href={`tel:${appConfig.CONTACT_PHONE}`}
+            className="text-sm text-text-secondary underline underline-offset-4 hover:text-gold"
+          >
+            أو اتصل بنا: {appConfig.CONTACT_PHONE}
+          </a>
+        ) : null}
+
+        <Link
+          href="/"
+          className="mt-6 underline underline-offset-4 hover:text-gold"
+        >
+          {t("backToShop")}
+        </Link>
+      </div>
+    );
+  }
+
+  if (cartIsEmpty) {
+    return (
+      <div className="flex flex-col items-center py-12 text-center text-foreground">
+        <p className="text-lg font-medium">{t("emptyCart")}</p>
+        <Link
+          href="/"
+          className="mt-4 underline underline-offset-4 hover:text-gold"
+        >
+          {t("continueShopping")}
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto my-8 flex w-full max-w-5xl flex-col items-start justify-center gap-6 px-4 md:flex-row">
+      <CheckoutForm
+        cartId={cartId}
+        clearCart={clearCart}
+        onSuccess={(id) => {
+          void clearCart?.();
+          setOrderId(id);
+        }}
+      />
+      <CheckoutSummary />
+    </div>
+  );
+}
+
+وضيف الـ keyframes دول في globals.css (وهيتم تجاهلهم تلقائيًا لو اليوزر مفعّل prefers-reduced-motion بفضل القاعدة العامة اللي ضفناها قبل كده):
+
+css
+/* src/lib/styles/globals.css — إضافة */
+@keyframes circle-draw {
+  from { stroke-dashoffset: 151; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes check-draw {
+  from { stroke-dashoffset: 40; opacity: 1; }
+  to   { stroke-dashoffset: 0; opacity: 1; }
+}
+ج) src/components/checkout/checkout-summary.tsx — نفس معاملة سعر المنتج بالظبط (اتساق)
+
+استبدل الجزء الخاص بالإجمالي بس (الباقي زي ما هو):
+
+tsx
+<hr className="border-border" />
+
+<div className="flex items-center justify-between gap-2">
+  <span className="text-lg font-medium uppercase text-text-secondary">
+    {t("total")}
+  </span>
+  <div
+    className="rounded-full px-5 py-1.5 text-2xl font-bold"
+    style={{
+      backgroundColor: "var(--gold)",
+      color: "#0a0a10",
+      boxShadow: "0 0 20px rgba(212,175,106,0.4)",
+    }}
+  >
+    <Price amount={cart?.subtotal ?? 0} />
+  </div>
+</div>
+
+ليه الإجمالي بالذات اتحط في bubble متوهج: ده نفس المعاملة اللي عملناها لسعر المنتج في صفحة المنتج — يعني لو اليوزر شاف المنتج وبعدين وصل للـ checkout، عينه هتلاقي نفس "لغة" عرض السعر، وده اللي بيخلي الموقع حاسس إنه متصمم بضمير وليس مجموعة صفحات منفصلة.
+
+الخلاصة النهائية لقرار الألوان في الموقع كله
+الصفحة/الجزء	اللون المستخدم	السبب
+Login	padel-blue (نص شمال)	فعل اليوزر (تسجيل دخول)
+Register	tennis-orange (نص يمين)	فعل اليوزر (حساب جديد)
+Category padel/tennis/shoes	حسب القسم تلقائيًا	هوية القسم
+صفحة المنتج	حسب قسم المنتج	استمرارية من صفحة القسم
+الهيدر (nav hover)	حسب كل رابط	تمهيد بصري لهوية كل قسم
+الفوتر + Checkout	gold ثابت	محايد، مفيهوش قسم واحد، ولازم يبان "ثقة" مش "حماس رياضي"
+Sell page: حاليًا أضعف صفحة تصميميًا في المشروع كله (لسه بألوان border/bg-primary عادية مش متصلة بنظام الألوان بتاعنا خالص) — ده اللي هيتصلح.
+Search: شغالة كويس لكنها محتاجة توضيح أكتر (تظليل الكلمة اللي بيدور عليها اليوزر + تنقل بالكيبورد).
+1) صفحة البيع — src/components/sell/sell-equipment-form.tsx
+
+القرار هنا: gold برضو (زي الـ checkout) — لأن اليوزر بيبيع معدات ممكن تكون بادل أو تنس أو شوز، مفيش قسم واحد. لكن أضفنا لمسة واحدة ذكية: أول ما يكتب اسم القسم في خانة الـ category، بيظهر chip صغير بلون هوية الرياضة دي — تأكيد بصري لحظي إنه في المكان الصح.
+
+وأهم حاجة: شارة "كسر زيرو" بالدهبي المتوهج لازم تظهر هنا بالظبط بنفس شكلها في كروت المنتجات — لأن ده أول مكان بيختار فيه اليوزر الحالة.
+
+tsx
+// src/components/sell/sell-equipment-form.tsx
+"use client";
+
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { FiUploadCloud, FiX } from "react-icons/fi";
+
+import { getSportTheme } from "@/lib/core/util";
+
+const CONDITION_TYPES = [
+  { code: "new", label: "جديد" },
+  { code: "used", label: "مستعمل" },
+] as const;
+
+const CONDITION_GRADES = [
+  { code: "like_new", label: "كسر زيرو", accent: true },
+  { code: "excellent", label: "ممتاز", accent: false },
+  { code: "good", label: "جيد", accent: false },
+  { code: "fair", label: "مقبول", accent: false },
+] as const;
+
+const FIELD_CLASS =
+  "w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-sm text-foreground placeholder:text-text-muted transition focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20";
+
+export default function SellEquipmentForm() {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [images, setImages] = useState<File[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [category, setCategory] = useState("");
+  const [conditionType, setConditionType] = useState<"new" | "used">("new");
+  const [conditionGrade, setConditionGrade] = useState<string>("");
+
+  const sportTheme = useMemo(() => getSportTheme(category), [category]);
+  const showSportChip = sportTheme.key !== "general" && category.trim().length > 0;
+
+  const previews = useMemo(
+    () => images.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    [images],
+  );
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const next = [...images, ...files].slice(0, 10);
+    setError(next.length < 5 ? "يجب رفع 5 صور على الأقل." : null);
+    setImages(next);
+    e.target.value = "";
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (images.length < 5) {
+      setError("يجب رفع 5 صور على الأقل.");
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const imageIds: number[] = [];
+      for (const file of images) {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("alt", file.name);
+        const res = await fetch("/api/media", { method: "POST", body: fd });
+        if (!res.ok) throw new Error("فشل رفع إحدى الصور");
+        imageIds.push((await res.json()).doc.id);
+      }
+
+      const formData = new FormData(e.currentTarget);
+      const payload = {
+        title: formData.get("title"),
+        category,
+        brand: formData.get("brand") || undefined,
+        description: formData.get("description"),
+        conditionType,
+        conditionGrade: conditionType === "used" ? conditionGrade || undefined : undefined,
+        askingPrice: Number(formData.get("askingPrice")),
+        currencyCode: "EGP",
+        images: imageIds.map((id) => ({ image: id })),
+      };
+
+      const res = await fetch("/api/sell-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error((await res.json()).message || "فشل إرسال الطلب");
+
+      toast.success("تم إرسال طلب البيع بنجاح");
+      router.push("/account/orders/sell-requests");
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || "حدث خطأ ما");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="mx-auto flex w-full max-w-2xl flex-col gap-8 rounded-2xl border border-border bg-surface p-6 md:p-8"
+    >
+      {/* بيانات المنتج */}
+      <section className="flex flex-col gap-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-text-secondary">
+          بيانات المنتج
+        </h2>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-medium">اسم المنتج *</label>
+          <input name="title" required minLength={3} maxLength={120} className={FIELD_CLASS} placeholder="مثال: مضرب بادل Bullpadel Vertex" />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">القسم *</label>
+            <div className="relative">
+              <input
+                name="category"
+                required
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="padel-rackets"
+                className={FIELD_CLASS}
+              />
+              {showSportChip && (
+                <span
+                  className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+                  style={{
+                    backgroundColor: `color-mix(in srgb, ${sportTheme.hex} 20%, transparent)`,
+                    color: sportTheme.hex,
+                  }}
+                >
+                  {sportTheme.label}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">الماركة</label>
+            <input name="brand" maxLength={80} className={FIELD_CLASS} placeholder="اختياري" />
+          </div>
+        </div>
+      </section>
+
+      {/* الحالة */}
+      <section className="flex flex-col gap-4 border-t border-border pt-6">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-text-secondary">
+          الحالة
+        </h2>
+
+        <div className="flex gap-2">
+          {CONDITION_TYPES.map((c) => (
+            <button
+              key={c.code}
+              type="button"
+              onClick={() => {
+                setConditionType(c.code);
+                if (c.code === "new") setConditionGrade("");
+              }}
+              className={`rounded-full border px-5 py-2 text-sm font-medium transition ${
+                conditionType === c.code
+                  ? "border-gold bg-gold text-black"
+                  : "border-border bg-surface-2 text-foreground/80 hover:border-gold/50"
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+
+        {conditionType === "used" && (
+          <div className="flex flex-wrap gap-2">
+            {CONDITION_GRADES.map((g) => {
+              const selected = conditionGrade === g.code;
+              return (
+                <button
+                  key={g.code}
+                  type="button"
+                  onClick={() => setConditionGrade(g.code)}
+                  className="rounded-full border px-4 py-1.5 text-sm font-medium transition"
+                  style={
+                    selected
+                      ? {
+                          borderColor: "var(--gold)",
+                          backgroundColor: "var(--gold)",
+                          color: "#0a0a10",
+                          boxShadow: g.accent ? "0 0 14px rgba(212,175,106,0.55)" : "none",
+                        }
+                      : {
+                          borderColor: "var(--border)",
+                          backgroundColor: "var(--surface-2)",
+                          color: "var(--text-secondary)",
+                        }
+                  }
+                >
+                  {g.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* السعر والوصف */}
+      <section className="flex flex-col gap-4 border-t border-border pt-6">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-text-secondary">
+          السعر والوصف
+        </h2>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-medium">السعر المطلوب (جنيه) *</label>
+          <input name="askingPrice" type="number" required min={0} step="1" className={FIELD_CLASS} />
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-medium">الوصف *</label>
+          <textarea name="description" required minLength={10} maxLength={2000} rows={4} className={FIELD_CLASS} placeholder="اكتب تفاصيل الحالة، سنة الشراء، وأي عيوب إن وجدت..." />
+        </div>
+      </section>
+
+      {/* الصور */}
+      <section className="flex flex-col gap-4 border-t border-border pt-6">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-text-secondary">
+          الصور (5 على الأقل) *
+        </h2>
+
+        <label
+          htmlFor="sell-images"
+          className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-surface-2 px-4 py-8 text-center transition hover:border-gold/50"
+        >
+          <FiUploadCloud className="h-6 w-6 text-text-muted" />
+          <span className="text-sm text-text-secondary">
+            اضغط لرفع الصور — {images.length}/10
+          </span>
+          <input
+            id="sell-images"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+        </label>
+
+        {previews.length > 0 && (
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+            {previews.map((p, i) => (
+              <div key={i} className="group relative aspect-square overflow-hidden rounded-lg border border-border">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.url} alt="" className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeImage(i)}
+                  aria-label="حذف الصورة"
+                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition group-hover:opacity-100"
+                >
+                  <FiX size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {error && (
+        <p className="rounded-lg bg-error/10 px-4 py-3 text-sm text-error">{error}</p>
+      )}
+
+      <button
+        type="submit"
+        disabled={isSubmitting || images.length < 5}
+        className="w-full rounded-full bg-gold py-3.5 font-semibold text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+        style={{ boxShadow: "0 0 24px rgba(212,175,106,0.3)" }}
+      >
+        {isSubmitting ? "جاري الإرسال..." : "إرسال طلب البيع"}
+      </button>
+    </form>
+  );
+}
+
+وتحديث الصفحة نفسها عشان تحضن الفورم في خلفية متسقة مع باقي الموقع:
+
+tsx
+// src/app/(app)/sell/page.tsx
+import { getTranslations } from "next-intl/server";
+import SellEquipmentForm from "@/components/sell/sell-equipment-form";
+
+export default async function SellPage() {
+  const t = await getTranslations("sell");
+  return (
+    <div className="container py-12">
+      <div className="mb-8 text-center">
+        <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+          {t("title")}
+        </h1>
+        <p className="mt-3 text-text-secondary">
+          بيع معداتك الأصلية بسهولة — هنقيّمها ونتواصل معاك بأسرع وقت
+        </p>
+      </div>
+      <SellEquipmentForm />
+    </div>
+  );
+}
+
+ملحوظة صريحة: الفورم القديم كان شغال ببيانات صحيحة لكن شكله مقطوع تمامًا عن باقي الموقع (حرفيًا bg-primary مش موجود أصلًا في التوكنز بتاعتكم). النسخة الجديدة بتستخدم بالظبط نفس الـ FIELD_CLASS pattern في كل الحقول، فأي تعديل لون تعمله بعدين في مكان واحد بيتطبق على الفورم كله.
+
+2) نتائج البحث — src/components/layout/search.tsx
+
+هنا الإضافة الحقيقية: تظليل الكلمة اللي بيدور عليها اليوزر (أهم تحسين UX في أي بحث) + تنقل بالسهام في الكيبورد — من غير أي مكتبة جديدة.
+
+tsx
+"use client";
+
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FiSearch, FiX } from "react-icons/fi";
+
+import type { Media, Product } from "@/lib/core/types/payload-types";
+
+import { Price } from "@/components/shared/elements-ssr";
+import ImageVideo from "@/components/shared/image-video";
+import { RoutePath } from "@/lib/core/types/types";
+
+const maxResults = 5;
+
+// يظلّل الجزء المطابق من العنوان بلون الدهب — بدون أي مكتبة إضافية
+const HighlightedText = ({ text, query }: { text: string; query: string }) => {
+  const q = query.trim();
+  if (!q) return <>{text}</>;
+
+  const index = text.toLowerCase().indexOf(q.toLowerCase());
+  if (index === -1) return <>{text}</>;
+
+  return (
+    <>
+      {text.slice(0, index)}
+      <mark className="rounded-sm bg-gold/25 text-gold" style={{ padding: "0 1px" }}>
+        {text.slice(index, index + q.length)}
+      </mark>
+      {text.slice(index + q.length)}
+    </>
+  );
+};
+
+export default function Search({ products }: { products: Product[] }) {
+  const t = useTranslations("general");
+
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const resultRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [activeIndex, setActiveIndex] = useState(-1);
+
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+
+    if (!q) return products.slice(0, maxResults);
+
+    return products
+      .map((p) => {
+        const title = p.title.toLowerCase();
+        const slug = p.slug.toLowerCase();
+        const price = String(p.priceInUSD);
+
+        let score = 0;
+        if (title === q) score = 100;
+        else if (title.startsWith(q)) score = 80;
+        else if (title.includes(q)) score = 60;
+
+        if (slug.includes(q)) score += 40;
+        if (price.includes(q)) score += 20;
+
+        return { p, score };
+      })
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score || a.p.title.localeCompare(b.p.title))
+      .slice(0, maxResults)
+      .map((x) => x.p);
+  }, [products, query]);
+
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [results]);
+
+  useEffect(() => {
+    const onMouseDown = (e: MouseEvent) => {
+      if (!rootRef.current) return;
+      if (!rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    setOpen(Boolean(query.trim()));
+  }, [query]);
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!open || results.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => {
+        const next = i < results.length - 1 ? i + 1 : 0;
+        resultRefs.current[next]?.scrollIntoView({ block: "nearest" });
+        return next;
+      });
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => {
+        const next = i > 0 ? i - 1 : results.length - 1;
+        resultRefs.current[next]?.scrollIntoView({ block: "nearest" });
+        return next;
+      });
+    } else if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
+      resultRefs.current[activeIndex]?.click();
+    }
+  };
+
+  return (
+    <div ref={rootRef} className="relative w-full">
+      <div className="relative" onFocus={() => setOpen(Boolean(query.trim()) || results.length > 0)}>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleInputKeyDown}
+          placeholder={t("search")}
+          aria-label={t("search")}
+          aria-expanded={open}
+          aria-controls="search-results"
+          aria-activedescendant={activeIndex >= 0 ? `search-result-${activeIndex}` : undefined}
+          role="combobox"
+          className="
+            w-full rounded-xl border px-4 py-3 pr-10 text-sm outline-none
+            bg-background text-foreground border-border placeholder:text-text-muted
+            transition-shadow focus:border-gold focus:ring-2 focus:ring-gold/20
+          "
+        />
+
+        <div className="absolute inset-y-0 right-3 flex items-center">
+          {open ? (
+            <button
+              type="button"
+              aria-label={t("clear")}
+              className="text-text-muted hover:text-foreground hover:cursor-pointer"
+              onClick={() => {
+                setQuery("");
+                setOpen(false);
+              }}
+            >
+              <FiX className="h-5 w-5" />
+            </button>
+          ) : (
+            <FiSearch className="h-5 w-5 text-text-muted" />
+          )}
+        </div>
+      </div>
+
+      {open ? (
+        <div
+          id="search-results"
+          role="listbox"
+          className="
+            absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-xl border shadow-lg
+            border-border bg-surface
+            max-md:left-1/2 max-md:right-auto max-md:-translate-x-1/2
+            max-md:w-[min(calc(100vw-2rem),28rem)]
+          "
+        >
+          <div className="px-4 py-2 text-xs font-semibold text-text-secondary">
+            {t("products")}
+          </div>
+
+          <div className="max-h-[22rem] overflow-auto">
+            {results.length > 0 ? (
+              results.map((product, i) => (
+                <Link
+                  key={product.id}
+                  id={`search-result-${i}`}
+                  role="option"
+                  aria-selected={i === activeIndex}
+                  ref={(el) => {
+                    resultRefs.current[i] = el;
+                  }}
+                  href={`/${RoutePath.product}/${product.slug}`}
+                  onClick={() => {
+                    setOpen(false);
+                    setQuery("");
+                  }}
+                  onMouseEnter={() => setActiveIndex(i)}
+                  className={`
+                    flex items-center gap-3 px-4 py-3 transition-colors
+                    ${i === activeIndex ? "bg-surface-2" : "hover:bg-surface-2"}
+                  `}
+                  style={i === activeIndex ? { boxShadow: "inset 2px 0 0 0 var(--gold)" } : undefined}
+                >
+                  <div className="h-10 w-10 overflow-hidden rounded-lg border border-border bg-surface-2">
+                    <ImageVideo resource={product.image as Media} />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-foreground">
+                      <HighlightedText text={product.title} query={query} />
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 text-sm font-semibold text-gold">
+                    <Price
+                      amount={(product as any).priceInEGP ?? product.priceInUSD ?? 0}
+                    />
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="flex flex-col items-center gap-2 p-6 text-center">
+                <FiSearch className="h-6 w-6 text-text-muted" />
+                <span className="text-sm text-text-secondary">{t("noMatch")}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+إيه اللي اتغير بالظبط وليه:
+التحسين	السبب
+HighlightedText بتظلل جزء الكلمة بالدهبي	اليوزر يشوف فورًا ليه النتيجة دي ظهرت
+تنقل بـ ArrowUp/ArrowDown/Enter	يوزر الكيبورد (وتجربة اللابتوب عمومًا) يقدر يختار من غير ماوس
+aria-activedescendant + role="option"	إتاحة صحيحة — قارئ الشاشة بيعرف مكان الاختيار الحالي
+boxShadow: inset 2px 0 0 gold على النتيجة النشطة	إشارة واضحة بس مش صارخة (خط رفيع مش خلفية ملونة كاملة)
+فاضي (noMatch) بقى بأيقونة بدل نص مجرد	نفس منطق "empty state هو دعوة لفعل"
+
+مفيش استخدام لألوان الرياضات هنا (padel/tennis) عن قصد — لأن نتيجة البحث ممكن تجمع منتجات من أقسام مختلطة، فأي لون رياضي هيبقى مضلل. الدهب هنا بقى الخيط اللي بيربط كل صفحة "وظيفية" (بحث، checkout، فوتر، sell) في هوية واحدة، بينما الألوان الباردة/الدافئة اتحجزت للصفحات اللي فعلًا بتمثل قسم رياضي محدد (category، product، login/register).
+1) صفحة Categories الرئيسية
+
+القرار: العنوان والخلفية العامة بتفضل gold محايد (زي ما اتفقنا فى الـ checkout والفوتر)، لكن نضيف شرائح تصفية سريعة بهوية كل رياضة فوق قائمة المنتجات — عشان اليوزر يقدر "يفلتر بصريًا" على بادل/تنس/شوز من أول نظرة، وده أفضل استخدام عملي لنظام الألوان اللي بنيناه.
+
+أ) src/app/(app)/categories/page.tsx
+tsx
+import CategoryPageLayout from "@/components/category";
+import DAL from "@/lib/core/dal";
+
+export default async function AllCategoriesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    page?: string;
+    brand?: string;
+    condition?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    q?: string;
+    sort?: string;
+  }>;
+}) {
+  const filters = await searchParams;
+
+  const page = Math.max(1, Number(filters.page || 1));
+  const limit = 12;
+
+  const [{ products, totalCount }, topCategories] = await Promise.all([
+    DAL.queryCategoryProductsPaginated("/", {
+      page,
+      limit,
+      brand: filters.brand,
+      condition: filters.condition,
+      minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
+      maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
+      search: filters.q,
+      sort: filters.sort,
+    }),
+    DAL.queryCategoriesBasic(),
+  ]);
+
+  const totalPages = Math.ceil(totalCount / limit);
+
+  return (
+    <CategoryPageLayout
+      title="All Products"
+      description={null}
+      products={products}
+      slug="/"
+      currentPage={page}
+      totalPages={totalPages}
+      searchParams={filters}
+      topCategories={topCategories}
+    />
+  );
+}
+
+ملحوظة صادقة: أنا بستخدم DAL.queryCategoriesBasic() لأنها بالفعل مُستخدَمة في header.tsx/categories.tsx/dynamic-categories.tsx وترجع قائمة الأقسام الأساسية — مفترض إنها كافية هنا. لو الدالة دي بترجع أقسام فرعية كمان مش الرئيسية بس، هنحتاج فلترة زيادة بـ .filter(c => !c.parent) قبل ما نبعتها.
+
+ب) src/components/category/index.tsx
+tsx
+import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+
+import type { Category, Product } from "@/lib/core/types/payload-types";
+
+import ProductCard from "@/components/shop/product-card/product-card";
+import FiltersToolbar from "@/components/shop/filters/filters-toolbar";
+import BrandFilter from "@/components/shop/filters/brand-filter";
+import ConditionFilter from "@/components/shop/filters/condition-filter";
+import PriceFilter from "@/components/shop/filters/price-filter";
+import { RichText } from "@/components/ui";
+import DAL from "@/lib/core/dal";
+import { getSportTheme } from "@/lib/core/util";
+
+type Props = {
+  title: string;
+  description: Product["description"] | null;
+  products: Product[];
+  slug: string;
+  currentPage?: number;
+  totalPages?: number;
+  searchParams?: Record<string, string | undefined>;
+  children?: Category[];
+  topCategories?: Category[];
+};
+
+export default async function CategoryPageLayout({
+  title,
+  description,
+  products,
+  slug,
+  currentPage = 1,
+  totalPages = 1,
+  searchParams,
+  children = [],
+  topCategories = [],
+}: Props) {
+  const t = await getTranslations("category");
+  const category = slug !== "/" ? await DAL.queryCategoryBySlug(slug) : null;
+  const brands = await DAL.queryDistinctBrands(category?.id ?? null);
+
+  const isRoot = slug === "/";
+  const pageTheme = isRoot
+    ? { color: "var(--gold)", glow: "rgba(212,175,106,0.3)" }
+    : (() => {
+        const th = getSportTheme(category?.title ?? slug);
+        return { color: th.color, glow: th.glow };
+      })();
+
+  return (
+    <div className="container py-12">
+      <div className="mb-8 text-center">
+        <h1
+          className="text-5xl md:text-7xl font-bold tracking-tight uppercase transition-all duration-700"
+          style={{ textShadow: `0 0 30px ${pageTheme.glow}` }}
+        >
+          {title}
+        </h1>
+        <div
+          className="mx-auto mt-4 h-[2px] w-24 rounded-full"
+          style={{ backgroundColor: pageTheme.color, boxShadow: `0 0 12px ${pageTheme.glow}` }}
+        />
+        {description ? (
+          <div className="mt-4 text-lg text-text-secondary max-w-2xl mx-auto text-start">
+            <RichText data={description} enableGutter={false} enableProse={false} />
+          </div>
+        ) : null}
+      </div>
+
+      {/* شرائح تصفية سريعة بهوية كل رياضة — تظهر بس في صفحة "كل المنتجات" */}
+      {isRoot && topCategories.length > 0 ? (
+        <div className="mb-10 flex flex-wrap justify-center gap-3">
+          {topCategories.map((cat) => {
+            const theme = getSportTheme(cat.title);
+            return (
+              <Link
+                key={cat.id}
+                href={`/category/${cat.slug}`}
+                className="group flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-medium transition-all duration-300"
+                style={{
+                  borderColor: "var(--border)",
+                  backgroundColor: "var(--surface)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = theme.color;
+                  (e.currentTarget as HTMLElement).style.boxShadow = `0 0 20px ${theme.glow}`;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
+                  (e.currentTarget as HTMLElement).style.boxShadow = "none";
+                }}
+              >
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: theme.color }}
+                />
+                {cat.title}
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {/* الأقسام الفرعية — تظهر بس جوه قسم معين */}
+      {children.length > 0 ? (
+        <div className="mb-10 flex flex-wrap justify-center gap-3">
+          {children.map((child) => (
+            <Link
+              key={child.id}
+              href={`/category/${child.slug}`}
+              className="rounded-full border border-border bg-surface px-5 py-2 text-sm font-medium text-foreground transition hover:border-gold hover:text-gold"
+            >
+              {child.title}
+            </Link>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="mb-6 lg:hidden">
+        <FiltersToolbar brands={brands} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
+        <aside className="hidden lg:block space-y-8 border-r border-border pr-8">
+          <BrandFilter brands={brands} />
+          <ConditionFilter />
+          <PriceFilter />
+        </aside>
+
+        <div>
+          {products.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <p className="py-12 text-center text-text-secondary">{t("noProducts")}</p>
+          )}
+        </div>
+      </div>
+
+      {totalPages > 1 ? (
+        <div className="mt-8 flex items-center justify-center gap-2">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+            const params = new URLSearchParams();
+            Object.entries(searchParams ?? {}).forEach(([key, value]) => {
+              if (value) params.set(key, value);
+            });
+            params.set("page", String(page));
+            return (
+              
+                key={page}
+                href={`?${params.toString()}`}
+                className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition ${
+                  page === currentPage
+                    ? "bg-gold text-black shadow-[0_0_14px_rgba(212,175,106,0.5)]"
+                    : "bg-surface-2 text-foreground hover:bg-surface-2/60"
+                }`}
+              >
+                {page}
+              </a>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+ليه الطريقة دي بالذات: الشريحة (chip) هنا مش زرار فلترة فعلي داخل نفس الصفحة (عشان منتجات صفحة "الكل" مش مقسّمة بـ query param للرياضة أصلًا في الكود الحالي)، لكنها رابط تنقل لصفحة القسم المناسب مع توهج بلونه عند الـ hover. ده حل بسيط وصادق مع البنية الموجودة، بدل ما نضيف منطق فلترة جديد في الـ DAL محتاج نتأكد الأول إنه مدعوم.
+
+2) Cart Modal
+
+هنا 3 تحسينات حقيقية:
+
+بادچ الحالة (كسر زيرو بالدهبي) تظهر جنب كل منتج في السلة — نفس الشارة اللي اتفقنا عليها قبل كده، عشان اليوزر يفتكر إيه اللي بيشتريه بالظبط.
+الإجمالي بنفس شكل الـ bubble المتوهج زي الـ checkout بالظبط — اتساق كامل من السلة لحد تأكيد الطلب.
+حالة السلة الفاضية بدل الإيموجي 🛒 نستخدم أيقونة SVG متسقة مع باقي الموقع.
+tsx
+// src/components/cart/cart-modal.tsx
+"use client";
+
+import { useCart } from "@payloadcms/plugin-ecommerce/client/react";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
+import { HiXMark } from "react-icons/hi2";
+
+import {
+  DeleteItemButton,
+  EditItemQuantityButton,
+  OpenCartButton,
+} from "./cart-controls";
+
+import type { Cart, Media } from "@/lib/core/types/payload-types";
+
+import { Price } from "@/components/shared/elements-ssr";
+import ImageVideo from "@/components/shared/image-video";
+import { Button } from "@/components/ui";
+import { buildCartRows, getCartQuantity } from "@/lib/core/adapter";
+import { RoutePath } from "@/lib/core/types/types";
+import { cn } from "@/lib/core/util";
+
+export const CART_OPEN_EVENT = "cart:open";
+
+export const openCart = () => {
+  window.dispatchEvent(new Event(CART_OPEN_EVENT));
+};
+
+const EmptyCartIcon = () => (
+  <svg viewBox="0 0 48 48" className="h-12 w-12 text-text-muted" fill="none">
+    <path
+      d="M6 8h4l3 22a3 3 0 0 0 3 2.6h18a3 3 0 0 0 3-2.5L40 16H12"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <circle cx="18" cy="40" r="2.5" fill="currentColor" />
+    <circle cx="32" cy="40" r="2.5" fill="currentColor" />
+  </svg>
+);
+
+const ItemConditionBadge = ({ product }: { product: any }) => {
+  const ct = product?.conditionType;
+  const cg = product?.conditionGrade;
+  if (!ct) return null;
+
+  const isLikeNew = cg?.code === "like_new";
+  const text = isLikeNew ? "كسر زيرو" : ct.code === "new" ? "جديد" : "مستعمل";
+
+  return (
+    <span
+      className="inline-block w-fit rounded-full px-2 py-0.5 text-[10px] font-medium"
+      style={{
+        backgroundColor: isLikeNew ? "var(--gold)" : "var(--surface-2)",
+        color: isLikeNew ? "#0a0a10" : "var(--text-secondary)",
+        boxShadow: isLikeNew ? "0 0 8px rgba(212,175,106,0.5)" : "none",
+      }}
+    >
+      {text}
+    </span>
+  );
+};
+
+export default function CartModal() {
+  const t = useTranslations("cart");
+  const { cart } = useCart();
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const onOpen = () => setIsOpen(true);
+    window.addEventListener(CART_OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(CART_OPEN_EVENT, onOpen);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  const totalQuantity = useMemo(
+    () => getCartQuantity(cart as Cart | null | undefined),
+    [cart],
+  );
+  const rows = useMemo(() => buildCartRows(cart), [cart]);
+
+  return (
+    <>
+      <OpenCartButton quantity={totalQuantity} onClick={() => setIsOpen(true)} />
+
+      <div
+        aria-hidden="true"
+        onClick={() => setIsOpen(false)}
+        className={cn(
+          "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-300",
+          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+        )}
+      />
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+        className={cn(
+          "cart-drawer fixed inset-y-0 right-0 z-50 flex w-5/6 flex-col gap-4 shadow-lg sm:max-w-sm border-l border-border",
+          "transition-transform duration-300 ease-in-out bg-surface text-foreground",
+          isOpen ? "translate-x-0" : "translate-x-full",
+        )}
+      >
+        <div className="flex flex-col gap-1.5 p-4 border-b border-border">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-foreground">{t("title")}</span>
+
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              aria-label="Close cart"
+              className="rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:outline-none text-foreground hover:text-red-400"
+            >
+              <HiXMark className="h-4 w-4 cursor-pointer" />
+              <span className="sr-only">Close</span>
+            </button>
+          </div>
+
+          <p className="text-sm text-text-secondary">{t("description")}</p>
+        </div>
+
+        {rows.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 px-4 text-center py-8">
+            <EmptyCartIcon />
+            <p className="text-center text-xl font-semibold text-foreground">
+              {t("emptyTitle")}
+            </p>
+            <Link
+              href="/"
+              onClick={() => setIsOpen(false)}
+              className="mt-1 text-sm text-gold underline underline-offset-4 hover:opacity-80"
+            >
+              {t("continueShopping") ?? "تصفح المنتجات"}
+            </Link>
+          </div>
+        ) : (
+          <div className="flex grow min-h-0 px-4">
+            <div className="flex w-full min-h-0 flex-col">
+              <ul className="grow overflow-y-auto py-4 min-h-0">
+                {rows.map(({ item, data }, i) => {
+                  const { product, variant, isVariant, price } = data;
+
+                  return (
+                    <li className="flex w-full flex-col" key={i}>
+                      <div className="relative flex w-full flex-row justify-between px-1 py-4">
+                        <div className="absolute z-40 -mt-2 ml-[55px]">
+                          <DeleteItemButton item={item} />
+                        </div>
+
+                        <Link
+                          className="z-30 flex flex-row space-x-4"
+                          href={`/${RoutePath.product}/${product.slug}`}
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <div className="cart-subtle relative h-16 w-16 cursor-pointer overflow-hidden rounded-md border border-border">
+                            <ImageVideo
+                              className="h-full w-full object-cover"
+                              resource={product.image as Media}
+                            />
+                          </div>
+
+                          <div className="flex flex-1 flex-col gap-1 text-base">
+                            <span className="leading-tight text-foreground">
+                              {product.title}
+                            </span>
+
+                            <ItemConditionBadge product={product} />
+
+                            {isVariant && variant ? (
+                              <p className="cart-muted text-sm capitalize text-text-secondary">
+                                {Array.isArray(variant.options)
+                                  ? variant.options
+                                      .map((o) =>
+                                        typeof o === "object" && o && "label" in o
+                                          ? (o as { label: string }).label
+                                          : null,
+                                      )
+                                      .filter((x): x is string => Boolean(x))
+                                      .join(", ")
+                                  : ""}
+                              </p>
+                            ) : null}
+                          </div>
+                        </Link>
+
+                        <div className="flex h-16 flex-col justify-between">
+                          {typeof price === "number" ? (
+                            <Price
+                              amount={price}
+                              className="flex justify-end space-y-2 text-right text-sm text-foreground"
+                            />
+                          ) : null}
+
+                          <div className="ml-auto flex h-9 flex-row items-center rounded-lg border border-border">
+                            <EditItemQuantityButton item={item} type="minus" />
+                            <p className="w-6 text-center">
+                              <span className="w-full text-sm text-foreground">
+                                {item.quantity}
+                              </span>
+                            </p>
+                            <EditItemQuantityButton item={item} type="plus" />
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="px-4 py-4 border-t border-border">
+                {typeof cart?.subtotal === "number" ? (
+                  <div className="mb-4 flex items-center justify-between">
+                    <p className="text-sm uppercase tracking-wide text-text-secondary">
+                      {t("total")}
+                    </p>
+                    <div
+                      className="rounded-full px-4 py-1 text-lg font-bold"
+                      style={{
+                        backgroundColor: "var(--gold)",
+                        color: "#0a0a10",
+                        boxShadow: "0 0 16px rgba(212,175,106,0.4)",
+                      }}
+                    >
+                      <Price amount={cart.subtotal} />
+                    </div>
+                  </div>
+                ) : null}
+
+                <Button
+                  eventName="begin_checkout"
+                  className="w-full bg-gold text-black hover:bg-gold/80"
+                >
+                  <Link href="/checkout" onClick={() => setIsOpen(false)}>
+                    {t("checkout")}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+نقطة أمانة لازم أقولها: ItemConditionBadge بيفترض إن product.conditionType/product.conditionGrade موجودين جوه بيانات الـ cart item زي ما هما في new-arrivals.tsx. لو الـ buildCartRows (في lib/core/adapter.ts) مش بيرجّع الحقلين دول ضمن data.product، الشارة هتفضل مخفية بهدوء (بسبب if (!ct) return null) بدل ما تكسر الصفحة — لكن لو عايزها تشتغل فعليًا محتاج تتأكد إن الـ query اللي بيجيب الـ cart بيعمل populate لـ conditionType/conditionGrade على مستوى الـ product، وده حاجة في الـ DAL/API مش عندي شوفتها كاملة.
+
+كمان لاحظت إن زرار الـ checkout في النسخة الأصلية كان فيه variant="secondary" مع !border !border-border — استبدلته بـ bg-gold text-black عشان يبقى متسق مع كل أزرار الفعل الرئيسية التانية في الموقع (Add to Cart، Sell، Checkout submit)، مش لون تاني بيشتت.

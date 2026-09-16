@@ -22,6 +22,7 @@ export const Grid = ({
     </div>
   );
 };
+
 export const Price = ({
   amount,
   highestAmount,
@@ -38,9 +39,12 @@ export const Price = ({
 } & ComponentProps<"p">) => {
   const Element = as;
 
+  // ─── Monospace + volt tint for all prices (brand philosophy)
+  const baseClass = cn("mono-num", className);
+
   if (typeof amount === "number")
     return (
-      <Element className={className} {...rest}>
+      <Element className={baseClass} {...rest}>
         {formatPrice(amount)}
       </Element>
     );
@@ -51,14 +55,14 @@ export const Price = ({
     highestAmount !== lowestAmount
   )
     return (
-      <Element className={className} {...rest}>
-        {formatPrice(lowestAmount)} - {formatPrice(highestAmount)}
+      <Element className={baseClass} {...rest}>
+        {formatPrice(lowestAmount)} – {formatPrice(highestAmount)}
       </Element>
     );
 
   if (typeof lowestAmount === "number")
     return (
-      <Element className={className} {...rest}>
+      <Element className={baseClass} {...rest}>
         {formatPrice(lowestAmount)}
       </Element>
     );

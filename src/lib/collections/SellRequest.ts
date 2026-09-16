@@ -143,6 +143,8 @@ export const SellRequest: CollectionConfig = {
       required: true,
     },
     { name: "brand", type: "text" },
+    // ✅ جديد — رقم الهاتف للتواصل
+    { name: "phone", type: "text", required: true },
     { name: "description", type: "textarea", required: true },
     {
       name: "conditionType",

@@ -6,6 +6,7 @@ import {
   DESCRIPTION_FIELD,
   FAQS_FIELD,
   adminOnlyAccess,
+  isAdmin,
   makeAdminPreview,
   patchPricesGroupField,
   mixedSlugField,
@@ -131,6 +132,21 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       admin: {
         description:
           "Original price before discount (optional). Shown as a strikethrough price when set.",
+      },
+    },
+    // ✅ جديد — سعر التكلفة (للأدمن فقط)
+    {
+      name: "costPriceEGP",
+      type: "number",
+      min: 0,
+      admin: {
+        position: "sidebar",
+        description: "سعر التكلفة الفعلي (للأدمن فقط) — يستخدم لحساب الربح.",
+      },
+      access: {
+        read: ({ req: { user } }) => {
+          return Boolean(user && isAdmin({ req: { user } as any }));
+        },
       },
     },
 

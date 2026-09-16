@@ -25,7 +25,7 @@ const ActionItem = ({
       variant="select"
       selected={selected}
       onClick={onClick}
-      className="my-2 flex w-full items-center justify-between text-sm"
+      className="my-1.5 flex w-full items-center justify-between text-sm"
     >
       <span>{label}</span>
       <Icon className="h-4 w-4 shrink-0" />
@@ -68,9 +68,16 @@ export default function AccessibilityBar() {
     const onClickAway = (e: MouseEvent) => {
       if (!panelRef.current?.contains(e.target as Node)) setOpen(false);
     };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
 
     document.addEventListener("mousedown", onClickAway);
-    return () => document.removeEventListener("mousedown", onClickAway);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClickAway);
+      document.removeEventListener("keydown", onKey);
+    };
   }, [open]);
 
   const buttons = createAccessibilityButtons(
@@ -97,20 +104,25 @@ export default function AccessibilityBar() {
   );
 
   return (
-    <div className="fixed bottom-16 left-0 z-[999999] flex items-center">
+    <div className="fixed bottom-6 start-0 z-[999999] flex items-start">
       <Button
         onClick={() => setOpen((v) => !v)}
-        className="h-10 w-10 rounded-r-full rounded-l-none bg-black p-0 text-white shadow-lg"
+        aria-label={t("title")}
+        aria-expanded={open}
+        className="h-11 w-11 rounded-e-full rounded-s-none bg-black p-0 text-white shadow-lg transition hover:opacity-90"
+        style={{ boxShadow: "0 0 20px rgba(0, 0, 0, 0.5)" }}
       >
         <RiWheelchairLine className="h-5 w-5" />
       </Button>
 
-      {open && (
+      {open ? (
         <div
           ref={panelRef}
-          className="ml-2 w-52 rounded-lg border border-neutral-200 bg-white p-3 shadow-xl dark:border-neutral-800 dark:bg-neutral-950"
+          className="ms-2 w-56 rounded-lg border border-border bg-surface p-3 shadow-2xl"
         >
-          <div className="mb-2 font-semibold">{t("title")}</div>
+          <div className="mb-2 font-semibold text-foreground">
+            {t("title")}
+          </div>
 
           {buttons.map(({ id, icon, onClick, selected }) => (
             <ActionItem
@@ -122,7 +134,7 @@ export default function AccessibilityBar() {
             />
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

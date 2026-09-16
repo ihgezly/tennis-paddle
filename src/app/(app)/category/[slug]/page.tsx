@@ -23,10 +23,7 @@ export default async function CategoryPage({
   const category = slug !== "/" ? await DAL.queryCategoryBySlug(slug) : null;
   if (slug !== "/" && !category) return notFound();
 
-  // الأقسام الفرعية
-  const children = category
-    ? await DAL.queryChildCategories(category.id)
-    : [];
+  const children = category ? await DAL.queryChildCategories(category.id) : [];
 
   const page = Math.max(1, Number(filters.page || 1));
   const limit = 12;
@@ -49,7 +46,7 @@ export default async function CategoryPage({
 
   return (
     <CategoryPageLayout
-      title={category ? category.title : "All Products"}
+      title={category ? category.title : "جميع المنتجات"}
       description={category?.description ?? null}
       products={products}
       slug={slug}

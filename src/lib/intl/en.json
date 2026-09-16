@@ -215,6 +215,10 @@
     "createAccount": "Create Account",
     "alreadyHaveAccount": "Already have an account?",
     "needAccount": "Need an account?",
+    "orContinueWith": "Or continue with",
+    "loginWithGoogle": "Continue with Google",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "login": {
       "title": "Welcome Back",
       "subtitle": "Login to continue your journey"

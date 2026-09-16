@@ -5,8 +5,7 @@ import { RefreshRouteOnSave } from "@payloadcms/live-preview-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { FiSun, FiMoon, FiMenu, FiX } from "react-icons/fi";
-import { HiOutlineUser } from "react-icons/hi";
+import { FiSun, FiMoon, FiMenu, FiX, FiUser } from "react-icons/fi";
 
 import type { Media, User, Product } from "@/lib/core/types/payload-types";
 import type { PayloadAdminBarProps } from "@payloadcms/admin-bar";
@@ -15,6 +14,7 @@ import CartModal from "@/components/cart/cart-modal";
 import AccessibilityBar from "@/components/layout/accessibility-bar";
 import Search from "@/components/layout/search";
 import ImageVideo from "@/components/shared/image-video";
+import SignatureLine from "@/components/shared/signature-line";
 import appConfig from "@/lib/core/config";
 import { cn } from "@/lib/core/util";
 import { useTheme } from "@/lib/providers/theme";
@@ -73,9 +73,10 @@ const ThemeToggle = () => {
 
   return (
     <button
+      type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="p-2 rounded-full hover:bg-surface-2 transition"
-      aria-label="Toggle theme"
+      className="rounded-full p-2 text-foreground transition hover:bg-surface-2"
+      aria-label="تبديل الوضع"
     >
       {isDark ? <FiSun size={20} /> : <FiMoon size={20} />}
     </button>
@@ -83,19 +84,20 @@ const ThemeToggle = () => {
 };
 
 const NAV_ITEMS = [
-  { label: "Padel", href: "/category/padel" },
-  { label: "Tennis", href: "/category/tennis" },
-  { label: "Shop", href: "/categories" },
-  { label: "Sell", href: "/sell" },
+  { label: "بادل", href: "/category/padel", sport: "padel" as const },
+  { label: "تنس", href: "/category/tennis", sport: "tennis" as const },
+  { label: "المتجر", href: "/categories", sport: "general" as const },
+  { label: "بِع معداتك", href: "/sell", sport: "general" as const },
 ];
 
 type HeaderProps = {
-  logo: Media;
+  logo?: Media;
   products: Product[];
+  user?: User | null;
   adminBarProps?: PayloadAdminBarProps;
 };
 
-const HeaderBar = ({ logo, products }: HeaderProps) => {
+const HeaderBar = ({ logo, products, user }: HeaderProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -105,75 +107,139 @@ const HeaderBar = ({ logo, products }: HeaderProps) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const isAdmin = user?.roles?.includes("admin");
+  const isLoggedIn = Boolean(user);
+
+  const logoUrl = (logo as Media)?.url;
+
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 transition-all duration-300 border-b",
+        "sticky top-0 z-40 transition-all duration-300",
         isScrolled
-          ? "bg-background/80 backdrop-blur-xl border-border"
-          : "bg-transparent border-transparent",
+          ? "border-b border-border bg-background/90 backdrop-blur-xl"
+          : "bg-background/70 backdrop-blur-md",
       )}
     >
-      <nav className="container flex items-center justify-between py-4">
-        <Link href="/" className="flex items-center gap-2 z-10">
-          <ImageVideo
-            resource={logo}
-            imgClassName="h-10 w-auto object-contain"
-          />
+      <SignatureLine />
+
+      <nav className="container flex items-center justify-between gap-4 py-4">
+        {/* Logo */}
+        <Link href="/" className="flex shrink-0 items-center gap-2">
+          {logoUrl ? (
+            <ImageVideo
+              resource={logo as Media}
+              imgClassName="h-10 w-auto object-contain"
+            />
+          ) : (
+            <span className="text-lg font-bold tracking-tight">
+              Padel<span className="text-volt">.</span>
+            </span>
+          )}
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
+        {/* Desktop Nav */}
+        <div className="hidden items-center gap-7 md:flex">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="text-sm font-medium uppercase tracking-wider text-foreground/80 hover:text-gold transition"
+              data-sport={item.sport}
+              className="sport-nav-link py-2 text-sm font-medium text-foreground/80"
             >
               {item.label}
             </Link>
           ))}
         </div>
 
-        <div className="flex items-center gap-3 z-10">
-          <div className="hidden md:block w-56">
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          <div className="hidden w-56 md:block">
             <Search products={products} />
           </div>
-          <ThemeToggle />
-          <Link
-            href="/account/orders"
-            className="p-2 rounded-full hover:bg-surface-2 transition"
-            aria-label="Account"
-          >
-            <HiOutlineUser size={20} />
-          </Link>
 
-          {/* السلة تظهر فقط لو الدفع الإلكتروني مفعّل */}
-          {appConfig.PAYMENT_ENABLED ? <CartModal /> : null}
+          <ThemeToggle />
+
+          {/* Login / Account */}
+          {isAdmin ? (
+            <Link
+              href="/admin"
+              className="hidden rounded-full border border-volt/40 bg-volt/10 px-4 py-2 text-xs font-semibold text-volt transition hover:bg-volt/20 md:inline-block"
+            >
+              لوحة التحكم
+            </Link>
+          ) : isLoggedIn ? (
+            <Link
+              href="/account/orders"
+              className="hidden items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-medium text-foreground transition hover:border-volt hover:text-volt md:inline-flex"
+            >
+              <FiUser className="h-3.5 w-3.5" />
+              حسابي
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="hidden rounded-full bg-volt px-5 py-2 text-xs font-semibold text-[var(--volt-text)] transition hover:opacity-90 md:inline-block"
+              style={{ boxShadow: "0 0 18px var(--volt-glow)" }}
+            >
+              تسجيل الدخول
+            </Link>
+          )}
+
+          <CartModal />
 
           <button
-            className="md:hidden p-2 rounded-full hover:bg-surface-2 transition"
+            type="button"
+            className="rounded-full p-2 text-foreground transition hover:bg-surface-2 md:hidden"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Menu"
+            aria-label="القائمة"
           >
-            {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+            {mobileMenuOpen ? <FiX size={22} /> : <FiMenu size={22} />}
           </button>
         </div>
       </nav>
 
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background">
-          <div className="container py-4 flex flex-col gap-4">
+        <div className="border-t border-border bg-background md:hidden">
+          <div className="container flex flex-col gap-3 py-5">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-lg font-medium uppercase tracking-wider py-2"
+                data-sport={item.sport}
+                className="sport-nav-link w-fit py-2 text-base font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.label}
               </Link>
             ))}
-            <div className="mt-2">
+
+            <div className="mt-2 border-t border-border pt-4">
+              {isAdmin ? (
+                <Link
+                  href="/admin"
+                  className="block w-full rounded-full bg-volt px-5 py-2.5 text-center text-sm font-semibold text-[var(--volt-text)]"
+                >
+                  لوحة التحكم
+                </Link>
+              ) : isLoggedIn ? (
+                <Link
+                  href="/account/orders"
+                  className="block w-full rounded-full border border-border px-5 py-2.5 text-center text-sm"
+                >
+                  حسابي
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  className="block w-full rounded-full bg-volt px-5 py-2.5 text-center text-sm font-semibold text-[var(--volt-text)]"
+                >
+                  تسجيل الدخول
+                </Link>
+              )}
+            </div>
+
+            <div className="mt-1">
               <Search products={products} />
             </div>
           </div>

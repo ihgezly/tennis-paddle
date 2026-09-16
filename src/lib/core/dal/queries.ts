@@ -618,6 +618,8 @@ export default class Queries {
         conditionNotes: true,
         glbModel: true,
         brand: true,
+        // ✅ جديد — نجيب الأقسام عشان ConditionBadge أو Breadcrumb
+        categories: true,
       } as any,
     );
 
@@ -663,6 +665,8 @@ export default class Queries {
       updatedAt: product.updatedAt,
       gallery: product.gallery,
       faqs: product.faqs,
+      // ✅ جديد — نرجّع الأقسام
+      categories: (product as any).categories ?? [],
       relatedProducts,
       reviews: product.reviews?.docs as Review[],
       purchase_section: buildProductPurchaseSectionData(product, combined),

@@ -11,6 +11,7 @@ import {
   stripAdminFieldComponent,
 } from "@/lib/collections/base-fields";
 import appConfig from "@/lib/core/config";
+import { logAudit } from "@/lib/core/audit";
 import { OrderNotifier } from "@/lib/core/OrderNotifier";
 import {
   CollectionName,
@@ -189,6 +190,67 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
             id: String(id),
             data: { status: nextStatus },
             req,
+          });
+
+          return Response.json(updated);
+        },
+      },
+      // ✅ جديد — endpoint لتعديل سعر الطلب
+      {
+        path: "/:id/adjust-price",
+        method: "post",
+        handler: async (req) => {
+          if (!isAdmin({ req })) {
+            return Response.json({ message: "Forbidden" }, { status: 403 });
+          }
+
+          await addDataAndFileToRequest(req);
+          const id = req.routeParams?.id;
+          const incoming = req.data?.items;
+
+          if (!id || !Array.isArray(incoming)) {
+            return Response.json(
+              { message: "items array required" },
+              { status: 400 },
+            );
+          }
+
+          const order = await req.payload.findByID({
+            collection: "orders",
+            id: String(id),
+          });
+
+          const newItems = order.items.map((originalItem: any) => {
+            const patch = incoming.find(
+              (i: any) =>
+                i.id === originalItem.id ||
+                Number(i.product) === Number(originalItem.product),
+            );
+            if (!patch) return originalItem;
+            const unitPrice = Number(patch.unitPrice);
+            if (!Number.isFinite(unitPrice) || unitPrice < 0) return originalItem;
+            const lineTotal = unitPrice * Number(originalItem.quantity);
+            return { ...originalItem, unitPrice, lineTotal };
+          });
+
+          const newTotal = newItems.reduce(
+            (s: number, i: any) => s + Number(i.lineTotal),
+            0,
+          );
+
+          const updated = await req.payload.update({
+            collection: "orders",
+            id: String(id),
+            data: { items: newItems, amount: newTotal },
+            req,
+          });
+
+          await logAudit(req, {
+            action: "order.price_adjusted",
+            entity: "orders",
+            entityId: String(id),
+            before: { items: order.items, amount: order.amount },
+            after: { items: newItems, amount: newTotal },
           });
 
           return Response.json(updated);

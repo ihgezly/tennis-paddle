@@ -1,11 +1,12 @@
 import { getPayload } from "payload";
 import configPromise from "@payload-config";
 import { NextResponse } from "next/server";
-import { sellRequestSchema, formatZodError } from "@/lib/core/validation";
+
+import { requireUser } from "@/lib/auth/get-current-user";
+import { logAudit } from "@/lib/core/audit";
 import { checkRateLimit, getClientIp, RATE_LIMITS } from "@/lib/core/rate-limit";
 import { CollectionName } from "@/lib/core/types/types";
-import { logAudit } from "@/lib/core/audit";
-import { requireUser } from "@/lib/auth/get-current-user";
+import { sellRequestSchema, formatZodError } from "@/lib/core/validation";
 
 export async function POST(req: Request) {
   const ip = getClientIp(req);
@@ -23,15 +24,16 @@ export async function POST(req: Request) {
 
   const parsed = sellRequestSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ message: formatZodError(parsed.error) }, { status: 400 });
+    return NextResponse.json(
+      { message: formatZodError(parsed.error) },
+      { status: 400 },
+    );
   }
 
   try {
-    // ✅ توحيد الـ Auth
     const user = await requireUser(req);
     const payload = await getPayload({ config: configPromise });
 
-    // منع العميل من تمرير حقول حساسة
     const {
       category,
       conditionType,
@@ -47,14 +49,12 @@ export async function POST(req: Request) {
 
     const data = {
       ...safeData,
-      currencyCode: "EGP" as const, // تأكيد القيمة الحرفية
+      currencyCode: "EGP" as const,
       customer: customerId,
       category: Number(category),
       conditionType: Number(conditionType),
       conditionGrade: conditionGrade ? Number(conditionGrade) : undefined,
-      images: images.map((img) => ({
-        image: Number(img.image),
-      })),
+      images: images.map((img) => ({ image: Number(img.image) })),
       status: "pending" as const,
     };
 
@@ -64,24 +64,19 @@ export async function POST(req: Request) {
       overrideAccess: true,
     });
 
-    await logAudit(
-      { payload } as any,
-      {
-        action: "sell_request.created",
-        entity: CollectionName.sellRequests,
-        entityId: String(sellRequest.id),
-        after: { status: "pending", askingPrice: parsed.data.askingPrice },
-      },
-    );
+    await logAudit({ payload } as any, {
+      action: "sell_request.created",
+      entity: CollectionName.sellRequests,
+      entityId: String(sellRequest.id),
+      after: { status: "pending", askingPrice: parsed.data.askingPrice },
+    });
 
     return NextResponse.json({ doc: sellRequest }, { status: 201 });
   } catch (error: any) {
     console.error("SELL REQUEST ERROR:", error);
-
     if (error?.message === "UNAUTHORIZED") {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
-
     return NextResponse.json(
       { message: error?.message || "Failed to submit sell request" },
       { status: 500 },

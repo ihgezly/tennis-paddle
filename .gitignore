@@ -1,31 +1,28 @@
-
-public/media
-seed/update.sh
-note.txt
-# local env files
-.env
-
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
 
-
+# Node.js
 /node_modules
+package-lock.json
+
+# IDE & Editor
 .idea
 .vscode
 .claude
 .DS_Store
 
+# Environment variables
+.env
 
-
+# Next.js build
 /.next/
 /out/
 /build
+
+# Certificates
 *.pem
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*.env.local
-.env*.local
+# Public build artifacts
+/public
+.env

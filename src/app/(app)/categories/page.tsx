@@ -37,13 +37,14 @@ export default async function AllCategoriesPage({
 
   return (
     <CategoryPageLayout
-      title="All Products"
+      title="جميع المنتجات"
       description={null}
       products={products}
       slug="/"
       currentPage={page}
       totalPages={totalPages}
       searchParams={filters}
+      children={[]}
     />
   );
 }

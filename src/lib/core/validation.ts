@@ -4,6 +4,7 @@ export const sellRequestSchema = z.object({
   title: z.string().trim().min(3).max(120),
   category: z.union([z.string(), z.number()]),
   brand: z.string().trim().max(80).optional(),
+  phone: z.string().trim().regex(/^\+?[0-9]{7,15}$/),
   description: z.string().trim().min(10).max(2000),
   conditionType: z.union([z.string(), z.number()]),
   conditionGrade: z.union([z.string(), z.number()]).optional(),

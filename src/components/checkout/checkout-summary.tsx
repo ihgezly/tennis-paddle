@@ -18,7 +18,7 @@ export default function CheckoutSummary() {
   const t = useTranslations("checkout.page");
 
   return (
-    <div className="w-full p-2 lg:p-8 flex flex-col gap-6 rounded-lg max-w-lg mx-auto">
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 rounded-lg p-2 lg:p-8">
       <h2 className="text-3xl font-medium">{t("yourCart")}</h2>
 
       {cart?.items?.map((item, index) => {
@@ -49,7 +49,7 @@ export default function CheckoutSummary() {
 
         return (
           <div className="flex items-start gap-4" key={index}>
-            <div className="relative flex h-20 w-22 rounded-lg border overflow-hidden">
+            <div className="relative flex h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-border">
               <ImageVideo
                 fill
                 imgClassName="rounded-lg object-cover"
@@ -57,28 +57,46 @@ export default function CheckoutSummary() {
               />
             </div>
 
-            <div className="flex grow justify-between items-center">
+            <div className="flex grow items-center justify-between">
               <div className="flex flex-col gap-1">
-                <p className="font-medium text-lg">{product.title}</p>
+                <p className="text-base font-medium text-foreground">
+                  {product.title}
+                </p>
                 {variantLabels ? (
-                  <p className="text-sm font-mono tracking-widest">
+                  <p className="font-mono text-xs tracking-wide text-text-secondary">
                     {variantLabels}
                   </p>
                 ) : null}
-                <div>x{quantity}</div>
+                <p className="text-sm text-text-muted">× {quantity}</p>
               </div>
 
-              {typeof price === "number" ? <Price amount={price} /> : null}
+              {typeof price === "number" ? (
+                <Price
+                  amount={price}
+                  className="text-base font-semibold text-gold"
+                />
+              ) : null}
             </div>
           </div>
         );
       })}
 
-      <hr />
+      <hr className="border-border" />
 
-      <div className="flex justify-between items-center gap-2">
-        <span className="uppercase">{t("total")}</span>
-        <Price className="text-3xl font-medium" amount={cart?.subtotal ?? 0} />
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-lg font-medium uppercase text-text-secondary">
+          {t("total")}
+        </span>
+        <div
+          className="rounded-full px-5 py-1.5 text-2xl font-bold"
+          style={{
+            backgroundColor: "var(--gold)",
+            color: "#05060a",
+            boxShadow: "0 0 20px rgba(215, 181, 109, 0.4)",
+          }}
+        >
+          <Price amount={cart?.subtotal ?? 0} />
+        </div>
       </div>
     </div>
   );

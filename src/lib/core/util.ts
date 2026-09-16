@@ -178,3 +178,65 @@ export const isValidOrderStatusTransition = (
 ): next is OrderStatus => {
   return (ORDER_STATUS_FLOW[current] || []).includes(next as OrderStatus);
 };
+
+// ═══════════════════════════════════════════════════════════════
+// Sport Themes — نظام ألوان ديناميكي حسب الرياضة/القسم
+// ═══════════════════════════════════════════════════════════════
+
+export type SportKey = "padel" | "tennis" | "shoes" | "general";
+
+export type SportTheme = {
+  key: SportKey;
+  color: string;     // CSS var reference
+  hex: string;       // hex للـThree.js
+  glow: string;      // rgba جاهزة
+  label: string;
+};
+
+const SPORT_THEMES: Record<SportKey, Omit<SportTheme, "key">> = {
+  padel: {
+    color: "var(--padel-blue)",
+    hex: "#29c7ff",
+    glow: "rgba(41, 199, 255, 0.35)",
+    label: "Padel",
+  },
+  tennis: {
+    color: "var(--tennis-orange)",
+    hex: "#ff7a45",
+    glow: "rgba(255, 122, 69, 0.35)",
+    label: "Tennis",
+  },
+  shoes: {
+    color: "var(--shoes-green)",
+    hex: "#3ecf8e",
+    glow: "rgba(62, 207, 142, 0.35)",
+    label: "Shoes",
+  },
+  general: {
+    color: "var(--volt)",
+    hex: "#d4ff00",
+    glow: "rgba(212, 255, 0, 0.35)",
+    label: "Volt",
+  },
+};
+
+export function getSportTheme(slugOrTitle?: string | null): SportTheme {
+  const key = (slugOrTitle || "").toLowerCase();
+
+  let matched: SportKey = "general";
+
+  if (key.includes("padel") || key.includes("بادل")) {
+    matched = "padel";
+  } else if (key.includes("tennis") || key.includes("تنس")) {
+    matched = "tennis";
+  } else if (
+    key.includes("shoe") ||
+    key.includes("حذاء") ||
+    key.includes("احذية") ||
+    key.includes("أحذية")
+  ) {
+    matched = "shoes";
+  }
+
+  return { key: matched, ...SPORT_THEMES[matched] };
+}

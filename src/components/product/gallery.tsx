@@ -38,8 +38,8 @@ export default async function Gallery({
               }
 
               #gallery-radio-${i}:checked ~ .gallery-thumbs .gallery-thumb-${i} {
-                border-width: 2px;
-                border-color: rgb(37 99 235);
+                border-color: var(--product-accent, rgb(215 181 109));
+                box-shadow: 0 0 14px var(--product-glow, transparent);
               }
             `,
           )
@@ -113,7 +113,7 @@ export default async function Gallery({
                   <label
                     key={`${item.image.id}-prev-${i}`}
                     htmlFor={`gallery-radio-${i}`}
-                    className={`gallery-prev-label gallery-prev-${i} inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/95 shadow-md ring-1 ring-black/10 backdrop-blur text-neutral-700 hover:text-blue-500`}
+                    className={`gallery-prev-label gallery-prev-${i} inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/95 text-neutral-700 shadow-md ring-1 ring-black/10 backdrop-blur transition-colors hover:text-[var(--product-accent)]`}
                     aria-label={t("previous")}
                   >
                     <HiChevronLeft className="h-5 w-5" />
@@ -128,7 +128,7 @@ export default async function Gallery({
                   <label
                     key={`${item.image.id}-next-${i}`}
                     htmlFor={`gallery-radio-${i}`}
-                    className={`gallery-next-label gallery-next-${i} inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/95 shadow-md ring-1 ring-black/10 backdrop-blur text-neutral-700 hover:text-blue-500`}
+                    className={`gallery-next-label gallery-next-${i} inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-white/95 text-neutral-700 shadow-md ring-1 ring-black/10 backdrop-blur transition-colors hover:text-[var(--product-accent)]`}
                     aria-label={t("next")}
                   >
                     <HiChevronRight className="h-5 w-5" />
@@ -141,14 +141,14 @@ export default async function Gallery({
       </div>
 
       <div className="gallery-thumbs w-full">
-        <div className="-ml-4 flex flex-wrap">
+        <div className="-ms-4 flex flex-wrap">
           {gallery.map((item, i) => {
             if (typeof item.image !== "object") return null;
 
             return (
               <div
                 key={`${item.image.id}-${i}`}
-                className="pl-4 pt-4 basis-1/5 max-[900px]:basis-1/4 max-[640px]:basis-1/3 max-[420px]:basis-1/2"
+                className="max-[900px]:basis-1/4 max-[640px]:basis-1/3 max-[420px]:basis-1/2 basis-1/5 ps-4 pt-4"
               >
                 <label
                   htmlFor={`gallery-radio-${i}`}
@@ -158,7 +158,7 @@ export default async function Gallery({
                   <div
                     className={cn(
                       `gallery-thumb-${i}`,
-                      "group flex h-full w-full items-center justify-center overflow-hidden rounded-lg border bg-white dark:bg-black border-neutral-200 dark:border-neutral-800",
+                      "group flex h-full w-full items-center justify-center overflow-hidden rounded-lg border border-border bg-surface transition-all duration-300 hover:border-[var(--product-accent)]",
                     )}
                   >
                     <ImageVideo

@@ -197,22 +197,28 @@
   },
 
   "auth": {
+    "loginTitle": "أهلاً بعودتك",
+    "loginSubtitle": "سجّل دخولك لتكمل رحلتك",
+    "registerTitle": "أنشئ حسابك",
+    "registerSubtitle": "انضم للجيل الجديد من اللاعبين",
     "loginLabel": "تسجيل الدخول",
     "registerLabel": "إنشاء حساب",
     "fullName": "الاسم الكامل",
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
-    "loginButton": "دخول",
+    "loginButton": "تسجيل الدخول",
     "createAccount": "إنشاء الحساب",
     "alreadyHaveAccount": "لديك حساب بالفعل؟",
-    "needAccount": "تحتاج حساب؟",
+    "needAccount": "ليس لديك حساب؟",
+    "orContinueWith": "أو",
+    "loginWithGoogle": "متابعة بجوجل",
     "login": {
-      "title": "مرحباً بعودتك",
-      "subtitle": "سجل دخولك للمتابعة"
+      "title": "أهلاً بعودتك",
+      "subtitle": "سجّل دخولك لتكمل رحلتك"
     },
     "register": {
-      "title": "إنشاء حساب",
-      "subtitle": "انضم للجيل القادم من اللاعبين"
+      "title": "أنشئ حسابك",
+      "subtitle": "انضم للجيل الجديد من اللاعبين"
     }
   },
 

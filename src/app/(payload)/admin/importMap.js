@@ -19,6 +19,7 @@ import { PriceCell as PriceCell_e27bf7b8cc50640dcdd584767b8eac3c } from '@payloa
 import { PriceInput as PriceInput_b91672ccd6e8b071c11142ab941fedfb } from '@payloadcms/plugin-ecommerce/rsc'
 import { OrderView as OrderView_91b05abf7430231b7b5f16ff5b82c8b7 } from '@/components/admin/order-view'
 import { RevalidateField as RevalidateField_cab3bd6986fd5f668cc2953a87801592 } from '@/components/shared/elements-client'
+import { default as default_7215358aebef2f123662c81dc8a03dd2 } from '@/components/admin/dashboard'
 import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e } from '@payloadcms/storage-vercel-blob/client'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
@@ -45,6 +46,7 @@ export const importMap = {
   "@payloadcms/plugin-ecommerce/rsc#PriceInput": PriceInput_b91672ccd6e8b071c11142ab941fedfb,
   "@/components/admin/order-view#OrderView": OrderView_91b05abf7430231b7b5f16ff5b82c8b7,
   "@/components/shared/elements-client#RevalidateField": RevalidateField_cab3bd6986fd5f668cc2953a87801592,
+  "@/components/admin/dashboard#default": default_7215358aebef2f123662c81dc8a03dd2,
   "@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler": VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

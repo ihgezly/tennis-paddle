@@ -1,79 +1,76 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 
 import type { Product, Media } from "@/lib/core/types/payload-types";
+
+import ConditionBadge from "@/components/shared/condition-badge";
 import { RoutePath } from "@/lib/core/types/types";
+import { formatPrice } from "@/lib/core/util";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { image, title, slug } = product;
-  const imageUrl = (image as Media)?.url;
+  const media = image as Media;
+  const imageUrl = media?.url || media?.thumbnailURL || "";
 
-  const hasEGPPrice = (product as any).priceInEGP != null;
+  const priceEGP = (product as any).priceInEGP as number | undefined;
+  const originalEGP = (product as any).originalPriceInEGP as number | undefined;
 
-  const price = hasEGPPrice
-    ? (product as any).priceInEGP!
-    : product.priceInUSD ?? 0;
-
-  // استخدام originalPriceInEGP فقط
-  const originalPrice = (product as any).originalPriceInEGP ?? undefined;
-
-  const currency = hasEGPPrice ? "EGP" : "USD";
-
+  const displayPrice = priceEGP ?? product.priceInUSD ?? 0;
   const hasDiscount =
-    originalPrice != null && originalPrice > price;
-
+    originalEGP != null && priceEGP != null && originalEGP > priceEGP;
   const discountPercent = hasDiscount
-    ? Math.round(((originalPrice - price) / originalPrice) * 100)
+    ? Math.round(((originalEGP! - priceEGP!) / originalEGP!) * 100)
     : null;
 
-  const conditionType = (product as any).conditionType;
-  const brand = (product as any).brand;
+  const brand = (product as any).brand as string | null | undefined;
 
   return (
     <Link
       href={`/${RoutePath.product}/${slug}`}
-      className="group relative overflow-hidden rounded-2xl border border-border bg-surface transition-all duration-300 hover:border-gold/50"
+      className="group relative block overflow-hidden rounded-2xl border border-border bg-surface transition-all duration-500 hover:border-gold/40 hover:shadow-[0_0_28px_rgba(215,181,109,0.12)]"
     >
       <div className="relative aspect-square overflow-hidden bg-surface-2">
-        {imageUrl && (
+        {imageUrl ? (
           <Image
             src={imageUrl}
             alt={title}
             fill
-            sizes="(min-width: 1024px) 25vw, 50vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
           />
-        )}
-        {hasDiscount && (
-          <span className="absolute top-3 right-3 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white">
+        ) : null}
+
+        <ConditionBadge
+          conditionType={product.conditionType as any}
+          conditionGrade={product.conditionGrade as any}
+          className="absolute top-2 start-2"
+        />
+
+        {hasDiscount ? (
+          <span className="absolute end-2 top-2 rounded-full bg-red-500 px-2.5 py-1 text-xs font-bold text-white">
             -{discountPercent}%
           </span>
-        )}
-        {conditionType && (
-          <span className="absolute bottom-3 left-3 rounded-full bg-black/70 px-3 py-1 text-xs font-medium text-white backdrop-blur">
-            {conditionType.code === "new" ? "New" : "Used"}
-          </span>
-        )}
+        ) : null}
       </div>
 
       <div className="p-4">
-        {brand && (
-          <p className="text-xs text-text-muted uppercase tracking-wider">
+        {brand ? (
+          <p className="text-[11px] uppercase tracking-wider text-text-muted">
             {brand}
           </p>
-        )}
+        ) : null}
         <h3 className="mt-1 line-clamp-2 text-sm font-medium text-foreground">
           {title}
         </h3>
         <div className="mt-2 flex items-baseline gap-2">
-          {hasDiscount && (
-            <span className="text-sm text-text-muted line-through">
-              {currency} {originalPrice}
-            </span>
-          )}
           <span className="text-lg font-bold text-gold">
-            {currency} {price}
+            {formatPrice(displayPrice)}
           </span>
+          {hasDiscount ? (
+            <span className="text-xs text-text-muted line-through">
+              {formatPrice(originalEGP!)}
+            </span>
+          ) : null}
         </div>
       </div>
     </Link>

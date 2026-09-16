@@ -1,7 +1,9 @@
 import AuthShell from "@/components/auth/auth-shell";
-import { getTranslations } from "next-intl/server";
 
-export default async function LoginPage() {
-  const t = await getTranslations("auth.login");
-  return <AuthShell mode="login" title={t("title")} subtitle={t("subtitle")} />;
+export const dynamic = "force-dynamic";
+
+export const metadata = { title: "تسجيل الدخول" };
+
+export default function LoginPage() {
+  return <AuthShell mode="login" />;
 }

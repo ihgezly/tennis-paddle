@@ -36,6 +36,10 @@ import { plugins } from "@/lib/providers/plugins";
 export default buildConfig({
   admin: {
     user: Users.slug,
+    // ✅ جديد — Dashboard مخصص قبل لوحة التحكم
+    components: {
+      beforeDashboard: ["@/components/admin/dashboard"],
+    },
     livePreview: {
       breakpoints: [
         { label: "Mobile", name: "mobile", width: 375, height: 667 },
@@ -59,16 +63,15 @@ export default buildConfig({
     IntegrationEvent,
     ReturnRequest,
   ],
+
   db: postgresAdapter({
     pool: {
       connectionString: appConfig.DATABASE_URL,
-      // ✅ إصلاح خطأ SELF_SIGNED_CERT_IN_CHAIN مع Supabase
-      ssl:
-        process.env.NODE_ENV === "production"
-          ? { rejectUnauthorized: false }
-          : false,
+      ssl: { rejectUnauthorized: false },
     },
+    push: process.env.NODE_ENV !== "production",
   }),
+
   editor: lexicalEditor({
     features: () => {
       return [
@@ -83,6 +86,7 @@ export default buildConfig({
       ];
     },
   }),
+
   email: appConfig.SEND_EMAIL_WHATSAPP
     ? nodemailerAdapter({
         defaultFromAddress: appConfig.EMAIL_FROM_ADDRESS,
@@ -98,6 +102,7 @@ export default buildConfig({
         },
       })
     : undefined,
+
   cors: [appConfig.BASE_URL],
   plugins,
   secret: appConfig.PAYLOAD_SECRET,

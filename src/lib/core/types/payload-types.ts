@@ -340,6 +340,10 @@ export interface Product {
    * Original price before discount (optional). Shown as a strikethrough price when set.
    */
   originalPriceInEGP?: number | null;
+  /**
+   * سعر التكلفة الفعلي (للأدمن فقط) — يستخدم لحساب الربح.
+   */
+  costPriceEGP?: number | null;
   description: {
     root: {
       type: string;
@@ -492,6 +496,7 @@ export interface SellRequest {
   title: string;
   category: number | Category;
   brand?: string | null;
+  phone: string;
   description: string;
   conditionType: number | ConditionType;
   conditionGrade?: (number | null) | ConditionGrade;
@@ -1024,6 +1029,7 @@ export interface SellRequestsSelect<T extends boolean = true> {
   title?: T;
   category?: T;
   brand?: T;
+  phone?: T;
   description?: T;
   conditionType?: T;
   conditionGrade?: T;
@@ -1178,6 +1184,7 @@ export interface ProductsSelect<T extends boolean = true> {
   priceInUSD?: T;
   priceInEGP?: T;
   originalPriceInEGP?: T;
+  costPriceEGP?: T;
   description?: T;
   gallery?:
     | T

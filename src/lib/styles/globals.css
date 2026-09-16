@@ -14,38 +14,128 @@
   .layout-container {
     @apply w-full mx-auto max-w-container px-4 md:px-8;
   }
+
+  /* Trust/Glassmorphism helper */
+  .glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+  }
+
+  .volt-glow {
+    box-shadow: 0px 10px 40px var(--volt-glow);
+  }
+
+  .volt-glow-sm {
+    box-shadow: 0 0 18px var(--volt-glow);
+  }
+
+  .mono-num {
+    font-family: "Space Grotesk", "JetBrains Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+   Brand Anchor: Neon Volt (#D4FF00 light / #E2FF00 dark)
+   ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  --background: #030405;
-  --foreground: #f5f3ee;
-  --surface: #0a0d10;
-  --surface-2: #11161b;
-  --border: rgba(255, 255, 255, 0.1);
-  --gold: #d7b56d;
-  --padel-blue: #29c7ff;
-  --tennis-orange: #ff6338;
-  --text-secondary: #9299a3;
-  --text-muted: #5c5f66;
-  --success: #22c55e;
-  --warning: #eab308;
-  --error: #ef4444;
+  /* ─── LIGHT MODE — Warm Bone White + Obsidian ─── */
+  --background: #f4f5f0;
+  --foreground: #141a1f;
+
+  --surface: #ffffff;
+  --surface-2: #e8eae3;
+  --surface-elevated: #ffffff;
+
+  --border: #e0e4dc;
+  --border-strong: #cdd2c6;
+
+  /* Brand accents */
+  --volt: #d4ff00;
+  --volt-glow: rgba(212, 255, 0, 0.35);
+  --volt-text: #141a1f; /* نص على خلفية volt */
+
+  --secondary-tactical: #1b2d2a; /* Forest Slate */
+
+  /* Sport identities */
+  --padel-blue: #00b8e6;
+  --padel-blue-glow: rgba(0, 184, 230, 0.35);
+  --tennis-orange: #ff6b2c;
+  --tennis-orange-glow: rgba(255, 107, 44, 0.35);
+  --shoes-green: #2ecc71;
+  --shoes-green-glow: rgba(46, 204, 113, 0.35);
+
+  /* Legacy aliases (نشيلهم لاحقًا) */
+  --gold: var(--volt);
+  --gold-soft: rgba(212, 255, 0, 0.15);
+
+  /* Text */
+  --text-secondary: #5a6167;
+  --text-muted: #8a9199;
+
+  /* Status */
+  --success: #2ecc71;
+  --warning: #f5a623;
+  --error: #e74c3c;
+
+  /* Glass (Trust elements) */
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(20, 26, 31, 0.08);
 }
 
-html[data-theme="light"] {
-  --background: #ffffff;
-  --foreground: #0a0a0a;
-  --surface: #f5f5f5;
-  --surface-2: #ebebeb;
-  --border: rgba(0, 0, 0, 0.1);
-  --gold: #b89545;
-  --padel-blue: #0284c7;
-  --tennis-orange: #ea580c;
-  --text-secondary: #525252;
-  --text-muted: #9ca3af;
-  --success: #16a34a;
-  --warning: #ca8a04;
-  --error: #dc2626;
+html[data-theme="dark"] {
+  /* ─── DARK MODE — Cyber Graphite + Electric Volt ─── */
+  --background: #0c0e12;
+  --foreground: #fafafc;
+
+  --surface: #15181e;         /* Dark Carbon Slate */
+  --surface-2: #1c2028;
+  --surface-elevated: #22262e;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
+
+  /* Volt brighter in dark mode for maximum pop */
+  --volt: #e2ff00;
+  --volt-glow: rgba(226, 255, 0, 0.28);
+  --volt-text: #0c0e12;
+
+  /* Tactical accent (secondary) */
+  --secondary-tactical: #1b2d2a;
+
+  /* Sport identities — same hues, dark-mode-tuned glows */
+  --padel-blue: #29c7ff;
+  --padel-blue-glow: rgba(41, 199, 255, 0.35);
+  --tennis-orange: #ff7a45;
+  --tennis-orange-glow: rgba(255, 122, 69, 0.35);
+  --shoes-green: #3ecf8e;
+  --shoes-green-glow: rgba(62, 207, 142, 0.35);
+
+  /* Cyan tech glow — secondary ambient */
+  --cyan-glow: #00e5ff;
+  --cyan-glow-soft: rgba(0, 229, 255, 0.2);
+
+  /* Legacy aliases */
+  --gold: var(--volt);
+  --gold-soft: rgba(226, 255, 0, 0.12);
+
+  /* Text */
+  --text-secondary: #a8b0b8;
+  --text-muted: #6b7280;
+
+  /* Status */
+  --success: #3ecf8e;
+  --warning: #f5a623;
+  --error: #ef4444;
+
+  /* Glass */
+  --glass-bg: rgba(21, 24, 30, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
 }
 
 @layer base {
@@ -55,19 +145,15 @@ html[data-theme="light"] {
 
   body {
     @apply bg-background text-foreground min-h-screen antialiased;
-    font-family: "Inter", "Cairo", system-ui, -apple-system, sans-serif;
-    font-feature-settings: "ss01" 1, "ss02" 1, "cv01" 1;
+    font-family: "Cairo", "IBM Plex Sans Arabic", "Inter", system-ui, sans-serif;
+    font-feature-settings: "ss01" 1, "cv01" 1;
     text-rendering: optimizeLegibility;
     letter-spacing: -0.01em;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
+    font-family: "Cairo", "IBM Plex Sans Arabic", system-ui, sans-serif;
   }
 
   a {
@@ -75,7 +161,8 @@ html[data-theme="light"] {
   }
 
   ::selection {
-    @apply bg-gold/30 text-foreground;
+    background-color: var(--volt);
+    color: var(--volt-text);
   }
 
   ::-webkit-scrollbar {
@@ -97,4 +184,146 @@ html[data-theme="light"] {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   KEYFRAMES
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes logo-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes racket-reveal {
+  from { opacity: 0; transform: scale(0.88) translateY(16px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+@keyframes circle-draw {
+  from { stroke-dashoffset: 151; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes check-draw {
+  from { stroke-dashoffset: 40; opacity: 1; }
+  to   { stroke-dashoffset: 0; opacity: 1; }
+}
+
+@keyframes card-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes volt-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px var(--volt-glow);
+  }
+  50% {
+    box-shadow: 0 0 40px var(--volt-glow);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SPORT CARDS — hover glow (بدون JS)
+   ═══════════════════════════════════════════════════════════════ */
+
+[data-sport="padel"] {
+  --sport-color: var(--padel-blue);
+  --sport-glow: var(--padel-blue-glow);
+}
+[data-sport="tennis"] {
+  --sport-color: var(--tennis-orange);
+  --sport-glow: var(--tennis-orange-glow);
+}
+[data-sport="shoes"] {
+  --sport-color: var(--shoes-green);
+  --sport-glow: var(--shoes-green-glow);
+}
+[data-sport="general"],
+[data-sport="volt"] {
+  --sport-color: var(--volt);
+  --sport-glow: var(--volt-glow);
+}
+
+.sport-card {
+  transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease;
+}
+
+.sport-card:hover,
+.sport-card:focus-visible {
+  border-color: var(--sport-color);
+  box-shadow: 0 0 36px var(--sport-glow);
+  outline: none;
+}
+
+.sport-nav-link {
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.sport-nav-link::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -2px;
+  height: 2px;
+  border-radius: 9999px;
+  background-color: var(--sport-color, var(--volt));
+  box-shadow: 0 0 8px var(--sport-color, var(--volt));
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+.sport-nav-link:hover,
+.sport-nav-link:focus-visible {
+  color: var(--sport-color, var(--volt));
+  outline: none;
+}
+
+.sport-nav-link:hover::after,
+.sport-nav-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VOLT GLOW — CTA buttons & prices
+   ═══════════════════════════════════════════════════════════════ */
+
+.volt-cta {
+  background-color: var(--volt);
+  color: var(--volt-text);
+  transition: transform 0.25s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0 24px var(--volt-glow);
+}
+
+.volt-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 36px var(--volt-glow), 0 0 0 1px var(--volt);
+}
+
+.volt-price {
+  color: var(--volt);
+  font-family: "Space Grotesk", "JetBrains Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ACCESSIBILITY
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

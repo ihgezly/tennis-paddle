@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 
 import type { ProductSinglePage } from "@/lib/core/types/types";
+import { getSportTheme } from "@/lib/core/util";
 
 import Gallery from "@/components/product/gallery";
 import ProductGridItem from "@/components/product/grid/product-grid-item";
@@ -20,13 +21,22 @@ export default async function ProductPageLayout({
   const t = await getTranslations("product");
   const glbUrl = (product.glbModel as any)?.url as string | undefined;
 
+  // ✅ جديد — نحسب الـ theme من أول قسم في المنتج
+  const firstCategory = product.categories?.[0];
+  const categoryIdentifier =
+    firstCategory && typeof firstCategory === "object"
+      ? firstCategory.slug || firstCategory.title
+      : undefined;
+  const theme = getSportTheme(categoryIdentifier);
+
   return (
     <div className="container pb-2">
       <BackButton />
 
       <div className="flex flex-col gap-12 rounded-lg border border-t-0 p-8 lg:flex-row lg:gap-8">
         <div className="basis-full lg:basis-1/2">
-          <ProductDescription product={product} />
+          {/* ✅ نمرر الـ theme */}
+          <ProductDescription product={product} theme={theme} />
         </div>
         <div className="h-full w-full basis-full lg:basis-1/2">
           <div className="min-h-[32rem] w-full">
@@ -41,7 +51,8 @@ export default async function ProductPageLayout({
             {t("view3d") || "معاينة ثلاثية الأبعاد"}
           </h3>
           <div className="overflow-hidden rounded-lg">
-            <GlbViewerClient url={glbUrl} />
+            {/* ✅ نمرر accentHex كمان لو GlbViewer يدعمه */}
+            <GlbViewerClient url={glbUrl} accentHex={theme.hex} />
           </div>
         </div>
       ) : null}

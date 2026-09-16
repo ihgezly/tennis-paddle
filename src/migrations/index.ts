@@ -10,6 +10,6 @@ export const migrations = [
   {
     up: migration_20260913_032445_add_category_parent.up,
     down: migration_20260913_032445_add_category_parent.down,
-    name: '20260913_032445_add_category_parent'
+    name: '20260913_032445_add_category_parent',
   },
 ];

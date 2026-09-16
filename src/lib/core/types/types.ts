@@ -215,6 +215,8 @@ export type ProductSinglePage = Pick<
   Product,
   "title" | "description" | "updatedAt" | "gallery" | "faqs" | "id"
 > & {
+  // ✅ جديد — الأقسام اللي المنتج ينتمي ليها
+  categories?: Product["categories"];
   purchase_section: ProductPurchaseSectionData;
   relatedProducts: Product[];
   reviews: Review[];

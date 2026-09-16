@@ -14,9 +14,9 @@ import {
 
 import type { Cart, Media } from "@/lib/core/types/payload-types";
 
+import ConditionBadge from "@/components/shared/condition-badge";
 import { Price } from "@/components/shared/elements-ssr";
 import ImageVideo from "@/components/shared/image-video";
-import { Button } from "@/components/ui";
 import { buildCartRows, getCartQuantity } from "@/lib/core/adapter";
 import { RoutePath } from "@/lib/core/types/types";
 import { cn } from "@/lib/core/util";
@@ -27,22 +27,55 @@ export const openCart = () => {
   window.dispatchEvent(new Event(CART_OPEN_EVENT));
 };
 
+const EmptyCartIcon = () => (
+  <svg viewBox="0 0 48 48" className="h-14 w-14 text-text-muted" fill="none">
+    <path
+      d="M6 8h4l3 22a3 3 0 0 0 3 2.6h18a3 3 0 0 0 3-2.5L40 16H12"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <circle cx="18" cy="40" r="2.5" fill="currentColor" />
+    <circle cx="32" cy="40" r="2.5" fill="currentColor" />
+  </svg>
+);
+
 export default function CartModal() {
   const t = useTranslations("cart");
   const { cart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // فتح من خارج (add-to-cart)
   useEffect(() => {
     const onOpen = () => setIsOpen(true);
     window.addEventListener(CART_OPEN_EVENT, onOpen);
     return () => window.removeEventListener(CART_OPEN_EVENT, onOpen);
   }, []);
 
+  // قفل السكرول
   useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "";
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = prev;
     };
+  }, [isOpen]);
+
+  // Escape يقفل
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   }, [isOpen]);
 
   const totalQuantity = useMemo(
@@ -51,92 +84,115 @@ export default function CartModal() {
   );
   const rows = useMemo(() => buildCartRows(cart), [cart]);
 
+  if (!mounted) return null;
+
   return (
     <>
+      {/* Trigger */}
       <OpenCartButton
         quantity={totalQuantity}
         onClick={() => setIsOpen(true)}
       />
 
-      <div
-        aria-hidden="true"
-        onClick={() => setIsOpen(false)}
-        className={cn(
-          "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-300",
-          isOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none",
-        )}
-      />
+      {/* Overlay — فقط لما يفتح */}
+      {isOpen ? (
+        <div
+          aria-hidden="true"
+          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+          style={{ animation: "fade-in 0.2s ease-out" }}
+        />
+      ) : null}
 
+      {/* Drawer */}
       <div
         role="dialog"
         aria-modal="true"
+        aria-hidden={!isOpen}
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "cart-drawer fixed inset-y-0 right-0 z-50 flex w-5/6 flex-col gap-4 shadow-lg sm:max-w-sm border-l border-border",
-          "transition-transform duration-300 ease-in-out bg-surface text-foreground",
-          isOpen ? "translate-x-0" : "translate-x-full",
+          "cart-drawer fixed inset-y-0 end-0 z-50 flex w-5/6 flex-col gap-4 border-s border-border bg-surface text-foreground shadow-2xl sm:max-w-sm",
+          "transition-transform duration-300 ease-in-out",
+          isOpen
+            ? "translate-x-0"
+            : "ltr:translate-x-full rtl:-translate-x-full",
         )}
+        style={{
+          visibility: isOpen ? "visible" : "hidden",
+          transitionProperty: "transform, visibility",
+        }}
       >
-        <div className="flex flex-col gap-1.5 p-4 border-b border-border">
+        {/* Header */}
+        <div className="flex flex-col gap-1.5 border-b border-border p-4">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-foreground">{t("title")}</span>
-
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              aria-label="Close cart"
-              className="rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:outline-none text-foreground hover:text-red-400"
+              aria-label="إغلاق السلة"
+              className="rounded p-1 text-foreground/70 transition-colors hover:bg-surface-2 hover:text-foreground"
             >
-              <HiXMark className="h-4 w-4 cursor-pointer" />
-              <span className="sr-only">Close</span>
+              <HiXMark className="h-5 w-5" />
             </button>
           </div>
-
           <p className="text-sm text-text-secondary">{t("description")}</p>
         </div>
 
         {rows.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-4 text-center">
-            <div className="text-5xl leading-none">🛒</div>
-            <p className="text-center text-2xl font-bold text-foreground">
+          <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
+            <EmptyCartIcon />
+            <p className="text-lg font-semibold text-foreground">
               {t("emptyTitle")}
             </p>
+            <Link
+              href="/"
+              onClick={() => setIsOpen(false)}
+              className="text-sm text-gold underline underline-offset-4 hover:opacity-80"
+            >
+              تصفح المنتجات
+            </Link>
           </div>
         ) : (
-          <div className="flex grow min-h-0 px-4">
-            <div className="flex w-full min-h-0 flex-col">
-              <ul className="grow overflow-y-auto py-4 min-h-0">
+          <div className="flex min-h-0 grow px-4">
+            <div className="flex min-h-0 w-full flex-col">
+              <ul className="min-h-0 grow overflow-y-auto py-4">
                 {rows.map(({ item, data }, i) => {
                   const { product, variant, isVariant, price } = data;
+                  const productAny = product as any;
 
                   return (
                     <li className="flex w-full flex-col" key={i}>
-                      <div className="relative flex w-full flex-row justify-between px-1 py-4">
-                        <div className="absolute z-40 -mt-2 ml-[55px]">
+                      <div className="relative flex w-full flex-row justify-between gap-2 px-1 py-4">
+                        <div className="absolute z-40 -mt-2 ms-[55px]">
                           <DeleteItemButton item={item} />
                         </div>
 
                         <Link
-                          className="z-30 flex flex-row space-x-4"
+                          className="z-30 flex flex-1 flex-row gap-4"
                           href={`/${RoutePath.product}/${product.slug}`}
                           onClick={() => setIsOpen(false)}
                         >
-                          <div className="cart-subtle relative h-16 w-16 cursor-pointer overflow-hidden rounded-md">
+                          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-border bg-surface-2">
                             <ImageVideo
                               className="h-full w-full object-cover"
                               resource={product.image as Media}
                             />
                           </div>
 
-                          <div className="flex flex-1 flex-col text-base">
-                            <span className="leading-tight text-foreground">
+                          <div className="flex flex-1 flex-col gap-1.5 text-base">
+                            <span className="line-clamp-2 leading-tight text-foreground">
                               {product.title}
                             </span>
 
+                            <ConditionBadge
+                              conditionType={productAny.conditionType}
+                              conditionGrade={productAny.conditionGrade}
+                              size="sm"
+                              className="w-fit"
+                            />
+
                             {isVariant && variant ? (
-                              <p className="cart-muted text-sm capitalize text-text-secondary">
+                              <p className="text-xs capitalize text-text-secondary">
                                 {Array.isArray(variant.options)
                                   ? variant.options
                                       .map((o) =>
@@ -154,15 +210,15 @@ export default function CartModal() {
                           </div>
                         </Link>
 
-                        <div className="flex h-16 flex-col justify-between">
+                        <div className="flex h-16 shrink-0 flex-col justify-between">
                           {typeof price === "number" ? (
                             <Price
                               amount={price}
-                              className="flex justify-end space-y-2 text-right text-sm text-foreground"
+                              className="text-right text-sm text-foreground"
                             />
                           ) : null}
 
-                          <div className="ml-auto flex h-9 flex-row items-center rounded-lg border border-border">
+                          <div className="ms-auto flex h-9 flex-row items-center rounded-lg border border-border">
                             <EditItemQuantityButton item={item} type="minus" />
                             <p className="w-6 text-center">
                               <span className="w-full text-sm text-foreground">
@@ -178,26 +234,32 @@ export default function CartModal() {
                 })}
               </ul>
 
-              <div className="px-4 py-4 border-t border-border">
+              <div className="border-t border-border px-1 py-4">
                 {typeof cart?.subtotal === "number" ? (
-                  <div className="mb-3 flex items-center justify-between border-b border-border pb-2">
-                    <p className="text-sm text-text-secondary">{t("total")}</p>
-                    <Price
-                      amount={cart.subtotal}
-                      className="text-right text-base text-gold"
-                    />
+                  <div className="mb-4 flex items-center justify-between">
+                    <p className="text-sm uppercase tracking-wide text-text-secondary">
+                      {t("total")}
+                    </p>
+                    <div
+                      className="rounded-full px-4 py-1 text-lg font-bold"
+                      style={{
+                        backgroundColor: "var(--gold)",
+                        color: "#05060a",
+                        boxShadow: "0 0 16px rgba(215, 181, 109, 0.4)",
+                      }}
+                    >
+                      <Price amount={cart.subtotal} />
+                    </div>
                   </div>
                 ) : null}
 
-                <Button
-                  eventName="begin_checkout"
-                  variant="secondary"
-                  className="w-full !border !border-border"
+                <Link
+                  href="/checkout"
+                  onClick={() => setIsOpen(false)}
+                  className="flex w-full items-center justify-center rounded-full bg-gold px-6 py-3 font-semibold text-black transition hover:bg-gold/85"
                 >
-                  <Link href="/checkout" onClick={() => setIsOpen(false)}>
-                    {t("checkout")}
-                  </Link>
-                </Button>
+                  {t("checkout")}
+                </Link>
               </div>
             </div>
           </div>
