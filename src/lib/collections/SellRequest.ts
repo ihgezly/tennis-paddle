@@ -42,6 +42,7 @@ export const SellRequest: CollectionConfig = {
           throw new Error(`Please upload at least ${MIN_IMAGES} images.`);
         }
 
+        // ✅ التحقق من conditionGrade بس لو conditionType موجود
         if (data.conditionType) {
           const conditionTypeId =
             typeof data.conditionType === "object"
@@ -136,27 +137,43 @@ export const SellRequest: CollectionConfig = {
       admin: { readOnly: true, position: "sidebar" },
     },
     { name: "title", type: "text", required: true },
+
+    // ✅ القسم — بقى اختياري (الأدمن يحدده لاحقًا)
     {
       name: "category",
       type: "relationship",
       relationTo: CollectionName.category,
-      required: true,
+      admin: {
+        position: "sidebar",
+        description: "القسم — يتم تحديده من الأدمن لاحقًا",
+      },
     },
+
     { name: "brand", type: "text" },
-    // ✅ جديد — رقم الهاتف للتواصل
+
+    // ✅ رقم الهاتف للتواصل
     { name: "phone", type: "text", required: true },
+
     { name: "description", type: "textarea", required: true },
+
+    // ✅ نوع الحالة — بقى اختياري
     {
       name: "conditionType",
       type: "relationship",
       relationTo: CollectionName.conditionTypes,
-      required: true,
+      admin: {
+        position: "sidebar",
+        description: "نوع الحالة — يتم تحديده من الأدمن لاحقًا",
+      },
     },
+
     {
       name: "conditionGrade",
       type: "relationship",
       relationTo: CollectionName.conditionGrades,
+      admin: { position: "sidebar" },
     },
+
     {
       name: "askingPrice",
       type: "number",

@@ -36,7 +36,7 @@ import { plugins } from "@/lib/providers/plugins";
 export default buildConfig({
   admin: {
     user: Users.slug,
-    // ✅ جديد — Dashboard مخصص قبل لوحة التحكم
+    // ✅ Dashboard مخصص قبل لوحة التحكم
     components: {
       beforeDashboard: ["@/components/admin/dashboard"],
     },

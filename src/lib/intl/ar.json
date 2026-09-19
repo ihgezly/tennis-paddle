@@ -212,6 +212,8 @@
     "needAccount": "ليس لديك حساب؟",
     "orContinueWith": "أو",
     "loginWithGoogle": "متابعة بجوجل",
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور",
     "login": {
       "title": "أهلاً بعودتك",
       "subtitle": "سجّل دخولك لتكمل رحلتك"

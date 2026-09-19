@@ -206,6 +206,10 @@
   },
 
   "auth": {
+    "loginTitle": "Welcome Back",
+    "loginSubtitle": "Login to continue your journey",
+    "registerTitle": "Create Account",
+    "registerSubtitle": "Join the next generation of players",
     "loginLabel": "Login",
     "registerLabel": "Register",
     "fullName": "Full Name",
@@ -215,7 +219,7 @@
     "createAccount": "Create Account",
     "alreadyHaveAccount": "Already have an account?",
     "needAccount": "Need an account?",
-    "orContinueWith": "Or continue with",
+    "orContinueWith": "Or",
     "loginWithGoogle": "Continue with Google",
     "showPassword": "Show password",
     "hidePassword": "Hide password",

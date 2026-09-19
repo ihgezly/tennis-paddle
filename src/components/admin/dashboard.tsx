@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+// ✅ استيراد الـCSS المخصص للأدمن
+import "@/app/(payload)/custom-admin.css";
+
 import appConfig from "@/lib/core/config";
 
 type Stats = {

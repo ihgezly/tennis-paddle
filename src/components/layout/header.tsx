@@ -3,9 +3,16 @@
 import { PayloadAdminBar } from "@payloadcms/admin-bar";
 import { RefreshRouteOnSave } from "@payloadcms/live-preview-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { FiSun, FiMoon, FiMenu, FiX, FiUser } from "react-icons/fi";
+import {
+  FiSun,
+  FiMoon,
+  FiMenu,
+  FiX,
+  FiUser,
+  FiLogOut,
+} from "react-icons/fi";
 
 import type { Media, User, Product } from "@/lib/core/types/payload-types";
 import type { PayloadAdminBarProps } from "@payloadcms/admin-bar";
@@ -97,9 +104,37 @@ type HeaderProps = {
   adminBarProps?: PayloadAdminBarProps;
 };
 
-const HeaderBar = ({ logo, products, user }: HeaderProps) => {
+const HeaderBar = ({ logo, products }: HeaderProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // ═══ حالة المستخدم — بتتحدث من الـclient ═══
+  const [user, setUser] = useState<User | null>(null);
+  const [userLoaded, setUserLoaded] = useState(false);
+  const pathname = usePathname();
+
+  // كل مرة الـroute يتغير، نعيد جلب المستخدم
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch("/api/users/me?depth=0", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        setUser(data?.user ?? null);
+        setUserLoaded(true);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setUser(null);
+          setUserLoaded(true);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -111,6 +146,16 @@ const HeaderBar = ({ logo, products, user }: HeaderProps) => {
   const isLoggedIn = Boolean(user);
 
   const logoUrl = (logo as Media)?.url;
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/users/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {}
+    window.location.href = "/";
+  };
 
   return (
     <header
@@ -124,7 +169,6 @@ const HeaderBar = ({ logo, products, user }: HeaderProps) => {
       <SignatureLine />
 
       <nav className="container flex items-center justify-between gap-4 py-4">
-        {/* Logo */}
         <Link href="/" className="flex shrink-0 items-center gap-2">
           {logoUrl ? (
             <ImageVideo
@@ -138,7 +182,6 @@ const HeaderBar = ({ logo, products, user }: HeaderProps) => {
           )}
         </Link>
 
-        {/* Desktop Nav */}
         <div className="hidden items-center gap-7 md:flex">
           {NAV_ITEMS.map((item) => (
             <Link
@@ -152,7 +195,6 @@ const HeaderBar = ({ logo, products, user }: HeaderProps) => {
           ))}
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-2">
           <div className="hidden w-56 md:block">
             <Search products={products} />
@@ -160,22 +202,46 @@ const HeaderBar = ({ logo, products, user }: HeaderProps) => {
 
           <ThemeToggle />
 
-          {/* Login / Account */}
-          {isAdmin ? (
-            <Link
-              href="/admin"
-              className="hidden rounded-full border border-volt/40 bg-volt/10 px-4 py-2 text-xs font-semibold text-volt transition hover:bg-volt/20 md:inline-block"
-            >
-              لوحة التحكم
-            </Link>
+          {/* ═══ حالة المستخدم — بتتحدث لايف ═══ */}
+          {!userLoaded ? (
+            <div className="hidden h-8 w-20 animate-pulse rounded-full bg-surface-2 md:block" />
+          ) : isAdmin ? (
+            <div className="hidden items-center gap-1 md:flex">
+              <Link
+                href="/admin"
+                className="rounded-full border border-volt/40 bg-volt/10 px-4 py-2 text-xs font-semibold text-volt transition hover:bg-volt/20"
+              >
+                لوحة التحكم
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-full p-2 text-foreground/70 transition hover:text-red-500"
+                aria-label="تسجيل الخروج"
+                title="تسجيل الخروج"
+              >
+                <FiLogOut className="h-4 w-4" />
+              </button>
+            </div>
           ) : isLoggedIn ? (
-            <Link
-              href="/account/orders"
-              className="hidden items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-medium text-foreground transition hover:border-volt hover:text-volt md:inline-flex"
-            >
-              <FiUser className="h-3.5 w-3.5" />
-              حسابي
-            </Link>
+            <div className="hidden items-center gap-1 md:flex">
+              <Link
+                href="/account/orders"
+                className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-medium text-foreground transition hover:border-volt hover:text-volt"
+              >
+                <FiUser className="h-3.5 w-3.5" />
+                حسابي
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-full p-2 text-foreground/70 transition hover:text-red-500"
+                aria-label="تسجيل الخروج"
+                title="تسجيل الخروج"
+              >
+                <FiLogOut className="h-4 w-4" />
+              </button>
+            </div>
           ) : (
             <Link
               href="/login"
@@ -216,19 +282,37 @@ const HeaderBar = ({ logo, products, user }: HeaderProps) => {
 
             <div className="mt-2 border-t border-border pt-4">
               {isAdmin ? (
-                <Link
-                  href="/admin"
-                  className="block w-full rounded-full bg-volt px-5 py-2.5 text-center text-sm font-semibold text-[var(--volt-text)]"
-                >
-                  لوحة التحكم
-                </Link>
+                <div className="flex gap-2">
+                  <Link
+                    href="/admin"
+                    className="flex-1 rounded-full bg-volt px-5 py-2.5 text-center text-sm font-semibold text-[var(--volt-text)]"
+                  >
+                    لوحة التحكم
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="rounded-full border border-border px-4 py-2.5 text-sm text-red-500"
+                  >
+                    خروج
+                  </button>
+                </div>
               ) : isLoggedIn ? (
-                <Link
-                  href="/account/orders"
-                  className="block w-full rounded-full border border-border px-5 py-2.5 text-center text-sm"
-                >
-                  حسابي
-                </Link>
+                <div className="flex gap-2">
+                  <Link
+                    href="/account/orders"
+                    className="flex-1 rounded-full border border-border px-5 py-2.5 text-center text-sm"
+                  >
+                    حسابي
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="rounded-full border border-border px-4 py-2.5 text-sm text-red-500"
+                  >
+                    خروج
+                  </button>
+                </div>
               ) : (
                 <Link
                   href="/login"

@@ -1,0 +1,199 @@
+/* ═══════════════════════════════════════════════════════════════
+   PAYLOAD ADMIN — Custom Theme (Volt Brand)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── CSS Variables (Dark + Volt) ─── */
+:root {
+  --theme-bg: #0c0e12;
+  --theme-input-bg: #15181e;
+  --theme-elevation-0: #0c0e12;
+  --theme-elevation-50: #15181e;
+  --theme-elevation-100: #1c2028;
+  --theme-elevation-150: #22262e;
+  --theme-elevation-200: #2a2f38;
+  --theme-elevation-250: #333944;
+  --theme-elevation-300: #3d444f;
+  --theme-elevation-400: #4d545f;
+  --theme-elevation-500: #6b7280;
+  --theme-elevation-600: #8b9199;
+  --theme-elevation-700: #a8b0b8;
+  --theme-elevation-800: #c8cdd3;
+  --theme-elevation-900: #e0e3e7;
+  --theme-elevation-1000: #fafafc;
+
+  --theme-text: #fafafc;
+  --theme-text-secondary: #a8b0b8;
+  --theme-text-muted: #6b7280;
+
+  --theme-success-500: #d4ff00;
+  --theme-success-600: #e2ff00;
+  --theme-error-500: #ef4444;
+  --theme-warning-500: #f5a623;
+  --theme-border-color: rgba(255, 255, 255, 0.08);
+
+  --theme-font-body:
+    "Cairo", "IBM Plex Sans Arabic", "Inter", system-ui, sans-serif;
+  --theme-font-heading:
+    "Cairo", "IBM Plex Sans Arabic", system-ui, sans-serif;
+}
+
+/* ─── Body & Fonts ─── */
+body {
+  font-family: var(--theme-font-body) !important;
+  background-color: var(--theme-bg) !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--theme-font-heading) !important;
+}
+
+/* ─── Primary Buttons (Volt) ─── */
+.btn--style-primary {
+  background-color: #d4ff00 !important;
+  color: #05060a !important;
+  font-weight: 600 !important;
+  border-color: #d4ff00 !important;
+  box-shadow: 0 0 20px rgba(212, 255, 0, 0.25) !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn--style-primary:hover {
+  background-color: #e2ff00 !important;
+  box-shadow: 0 0 28px rgba(212, 255, 0, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+/* ─── Secondary Buttons ─── */
+.btn--style-secondary {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: var(--theme-text) !important;
+}
+
+.btn--style-secondary:hover {
+  border-color: #d4ff00 !important;
+  color: #d4ff00 !important;
+}
+
+/* ─── Links & Headers ─── */
+a {
+  color: #d4ff00;
+}
+
+a:hover {
+  color: #e2ff00;
+}
+
+.nav__header h1,
+.dashboard__label,
+.doc-header__title {
+  color: #d4ff00 !important;
+}
+
+/* ─── Sidebar / Nav ─── */
+.nav {
+  background-color: #0c0e12 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.nav__link {
+  transition: all 0.2s ease;
+}
+
+.nav__link:hover,
+.nav__link--active {
+  color: #d4ff00 !important;
+  background-color: rgba(212, 255, 0, 0.08) !important;
+}
+
+/* ─── Inputs ─── */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="password"],
+input[type="tel"],
+input[type="url"],
+textarea,
+select {
+  background-color: var(--theme-input-bg) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: var(--theme-text) !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #d4ff00 !important;
+  box-shadow: 0 0 0 3px rgba(212, 255, 0, 0.15) !important;
+  outline: none !important;
+}
+
+/* ─── Cards / Blocks ─── */
+.card,
+.collection-list__wrap,
+.dashboard__wrap,
+.doc-controls {
+  background-color: #15181e !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ─── Tables ─── */
+.table {
+  background-color: #15181e !important;
+}
+
+.table thead {
+  background-color: #1c2028 !important;
+}
+
+.table thead th {
+  color: #d4ff00 !important;
+  font-weight: 600 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.table tbody tr {
+  border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+  transition: background-color 0.15s ease;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(212, 255, 0, 0.04) !important;
+}
+
+/* ─── Modal ─── */
+.popup__content,
+.drawer__content {
+  background-color: #15181e !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0c0e12;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333944;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4d545f;
+}
+
+/* ─── Selection ─── */
+::selection {
+  background-color: #d4ff00;
+  color: #0c0e12;
+}
+
+/* ─── Focus Ring ─── */
+*:focus-visible {
+  outline: 2px solid #d4ff00;
+  outline-offset: 2px;
+}

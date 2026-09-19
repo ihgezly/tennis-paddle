@@ -7,22 +7,6 @@ import { toast } from "sonner";
 
 import appConfig from "@/lib/core/config";
 
-type Category = { id: number; title: string; slug: string };
-type ConditionType = {
-  id: number;
-  code: string;
-  nameAr: string;
-  nameEn: string;
-  requiresGrade?: boolean;
-};
-type ConditionGrade = {
-  id: number;
-  code: string;
-  nameAr: string;
-  nameEn: string;
-  conditionType: number | { id: number };
-};
-
 const FIELD_CLASS =
   "w-full rounded-lg border border-border bg-surface-2 px-4 py-2.5 text-sm text-foreground placeholder:text-text-muted transition focus:border-volt focus:outline-none focus:ring-2 focus:ring-volt/20";
 
@@ -32,51 +16,7 @@ export default function SellEquipmentForm() {
   const [images, setImages] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [conditionTypes, setConditionTypes] = useState<ConditionType[]>([]);
-  const [conditionGrades, setConditionGrades] = useState<ConditionGrade[]>([]);
-  const [selectedConditionType, setSelectedConditionType] = useState<
-    number | ""
-  >("");
-  const [loadingMeta, setLoadingMeta] = useState(true);
-
   // ⚠️ كل الـhooks فوق أي return
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [catRes, ctRes, cgRes] = await Promise.all([
-          fetch(
-            `${appConfig.SERVER_URL}/api/category?where[_status][equals]=published&limit=200`,
-            { credentials: "include" },
-          ),
-          fetch(`${appConfig.SERVER_URL}/api/condition-types?limit=50`, {
-            credentials: "include",
-          }),
-          fetch(`${appConfig.SERVER_URL}/api/condition-grades?limit=50`, {
-            credentials: "include",
-          }),
-        ]);
-
-        const catData = await catRes.json();
-        const ctData = await ctRes.json();
-        const cgData = await cgRes.json();
-
-        setCategories(catData.docs ?? []);
-        setConditionTypes(
-          (ctData.docs ?? []).filter((c: any) => c.isActive !== false),
-        );
-        setConditionGrades(
-          (cgData.docs ?? []).filter((g: any) => g.isActive !== false),
-        );
-      } catch {
-        setError("فشل تحميل البيانات الأساسية");
-      } finally {
-        setLoadingMeta(false);
-      }
-    };
-    load();
-  }, []);
-
   const previews = useMemo(
     () => images.map((file) => ({ file, url: URL.createObjectURL(file) })),
     [images],
@@ -87,16 +27,6 @@ export default function SellEquipmentForm() {
       previews.forEach((p) => URL.revokeObjectURL(p.url));
     };
   }, [previews]);
-
-  const gradesForType = conditionGrades.filter((g) => {
-    const tId =
-      typeof g.conditionType === "object" ? g.conditionType.id : g.conditionType;
-    return tId === selectedConditionType;
-  });
-
-  const requiresGrade =
-    conditionTypes.find((c) => c.id === selectedConditionType)?.requiresGrade ??
-    false;
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -141,14 +71,8 @@ export default function SellEquipmentForm() {
       const formData = new FormData(e.currentTarget);
       const payload = {
         title: formData.get("title"),
-        category: Number(formData.get("category")),
-        brand: formData.get("brand") || undefined,
         phone: formData.get("phone"),
         description: formData.get("description"),
-        conditionType: Number(formData.get("conditionType")),
-        conditionGrade: formData.get("conditionGrade")
-          ? Number(formData.get("conditionGrade"))
-          : undefined,
         askingPrice: Number(formData.get("askingPrice")),
         currencyCode: "EGP",
         images: imageIds.map((id) => ({ image: id })),
@@ -180,15 +104,6 @@ export default function SellEquipmentForm() {
     }
   };
 
-  // ⚠️ الـreturn الشرطي بعد كل الـhooks
-  if (loadingMeta) {
-    return (
-      <div className="py-20 text-center text-text-secondary">
-        جاري التحميل...
-      </div>
-    );
-  }
-
   return (
     <form
       onSubmit={handleSubmit}
@@ -214,35 +129,6 @@ export default function SellEquipmentForm() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium">القسم *</label>
-            <select
-              name="category"
-              required
-              className={FIELD_CLASS}
-              defaultValue=""
-            >
-              <option value="">اختر القسم</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">الماركة</label>
-            <input
-              name="brand"
-              maxLength={80}
-              className={FIELD_CLASS}
-              placeholder="اختياري"
-            />
-          </div>
-        </div>
-
         <div>
           <label className="mb-2 block text-sm font-medium">
             رقم الهاتف *
@@ -256,58 +142,6 @@ export default function SellEquipmentForm() {
             className={FIELD_CLASS + " mono-num"}
             dir="ltr"
           />
-        </div>
-      </section>
-
-      {/* ═══ الحالة ═══ */}
-      <section className="flex flex-col gap-5 border-t border-border pt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-volt">
-          الحالة
-        </h2>
-
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              نوع الحالة *
-            </label>
-            <select
-              name="conditionType"
-              required
-              value={selectedConditionType}
-              onChange={(e) =>
-                setSelectedConditionType(
-                  e.target.value ? Number(e.target.value) : "",
-                )
-              }
-              className={FIELD_CLASS}
-            >
-              <option value="">اختر الحالة</option>
-              {conditionTypes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nameAr || c.nameEn || c.code}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              تصنيف الحالة {requiresGrade ? "*" : ""}
-            </label>
-            <select
-              name="conditionGrade"
-              required={requiresGrade}
-              disabled={!requiresGrade}
-              className={FIELD_CLASS + " disabled:opacity-50"}
-            >
-              <option value="">اختر التصنيف</option>
-              {gradesForType.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.nameAr || g.nameEn || g.code}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
       </section>
 

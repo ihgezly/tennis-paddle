@@ -190,6 +190,13 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  /**
+   * اسم العميل الكامل
+   */
+  name?: string | null;
+  /**
+   * صلاحيات المستخدم. الأدمن يقدر يدخل /admin
+   */
   roles?: ('admin' | 'customer')[] | null;
   updatedAt: string;
   createdAt: string;
@@ -494,11 +501,17 @@ export interface SellRequest {
   id: number;
   customer: number | User;
   title: string;
-  category: number | Category;
+  /**
+   * القسم — يتم تحديده من الأدمن لاحقًا
+   */
+  category?: (number | null) | Category;
   brand?: string | null;
   phone: string;
   description: string;
-  conditionType: number | ConditionType;
+  /**
+   * نوع الحالة — يتم تحديده من الأدمن لاحقًا
+   */
+  conditionType?: (number | null) | ConditionType;
   conditionGrade?: (number | null) | ConditionGrade;
   /**
    * Set by the customer.
@@ -901,6 +914,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  name?: T;
   roles?: T;
   updatedAt?: T;
   createdAt?: T;
