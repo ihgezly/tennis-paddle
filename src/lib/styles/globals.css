@@ -7,6 +7,7 @@
 @import "./cart.css";
 @import "./faq.css";
 @import "./gallery.css";
+@import "./3d-effects.css";  /* ✅ السطر الجديد */
 
 @plugin "@tailwindcss/typography";
 
