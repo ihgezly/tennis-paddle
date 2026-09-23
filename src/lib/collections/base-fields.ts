@@ -17,6 +17,7 @@ type AdminConfig = {
   components?: Record<string, unknown>;
 } & Record<string, unknown>;
 
+// ─── Helpers ───
 const pickString = (v: unknown): string => {
   if (typeof v === "string") return v;
 
@@ -52,92 +53,88 @@ export const mixedSlugField = () =>
     slugify: slugifyMixed,
   });
 
-export const stripAdminFieldComponent = (
-  admin?: AdminConfig,
-): AdminConfig | undefined => {
-  if (!admin?.components) return admin;
-
-  const components = { ...admin.components };
-  delete components["Field"];
-  return { ...admin, components };
-};
-
 const lowerName = (f: Field) => {
   const name = (f as { name?: unknown }).name;
   return typeof name === "string" ? name.toLowerCase() : "";
 };
 
-export const patchPriceRowFields = (fields: Field[]): Field[] => {
-  return fields.map((row) => {
-    if (
-      row.type !== "row" ||
-      !Array.isArray((row as { fields?: Field[] }).fields)
-    )
-      return row;
+// ═══════════════════════════════════════════════════════════════
+// ✅ USD Removal — نشيل حقول USD من الـplugin-Ecommerce
+// ═══════════════════════════════════════════════════════════════
+const USD_FIELDS = [
+  "priceInUSDEnabled",
+  "priceInUSD",
+  "originalPriceInUSD",
+];
 
-    const rowFields = (row as { fields: Field[] }).fields;
+/**
+ * يشيل حقول USD بشكل recursive من أي field tree.
+ * بيرجع `null` لو الـfield نفسه اتشال (USD field أو row/group فاضي).
+ */
+export const stripUSD = (field: Field): Field | null => {
+  const name = (field as { name?: string }).name;
 
-    const patched = rowFields.map((sub) => {
-      const name = lowerName(sub);
+  // حقول USD مباشرة → شيل
+  if (name && USD_FIELDS.includes(name)) {
+    return null;
+  }
 
-      if (
-        sub.type === "checkbox" &&
-        name.includes("enable") &&
-        name.includes("price")
-      ) {
-        return {
-          ...sub,
-          defaultValue: true,
-          admin: {
-            ...((sub as { admin?: Record<string, unknown> }).admin || {}),
-            hidden: true,
-            condition: () => false,
-            readOnly: true,
-            disabled: true,
-          },
-        } as Field;
-      }
+  // Row — نعالج sub-fields
+  if (field.type === "row") {
+    const subFields = ((field as { fields?: Field[] }).fields || []) as Field[];
+    const filtered = subFields
+      .map((f) => stripUSD(f))
+      .filter((f): f is Field => f !== null);
 
-      if (sub.type === "number" && name.includes("price")) {
-        return {
-          ...sub,
-          required: true,
-          min: 0,
-          admin: stripAdminFieldComponent(sub.admin),
-        } as Field;
-      }
+    if (filtered.length === 0) return null;
+    return { ...field, fields: filtered } as Field;
+  }
 
-      return sub;
-    });
+  // Group — نعالج (لو بقى فاضي بعد الفلترة نشيله)
+  if (field.type === "group") {
+    const subFields = ((field as { fields?: Field[] }).fields || []) as Field[];
+    const filtered = subFields
+      .map((f) => stripUSD(f))
+      .filter((f): f is Field => f !== null);
 
-    return { ...row, fields: patched } as Field;
-  });
+    if (filtered.length === 0) return null;
+    return { ...field, fields: filtered } as Field;
+  }
+
+  // Array — نعالج
+  if (field.type === "array") {
+    const subFields = ((field as { fields?: Field[] }).fields || []) as Field[];
+    const filtered = subFields
+      .map((f) => stripUSD(f))
+      .filter((f): f is Field => f !== null);
+
+    return { ...field, fields: filtered } as Field;
+  }
+
+  // Collapsible — نعالج
+  if (field.type === "collapsible") {
+    const subFields = ((field as { fields?: Field[] }).fields || []) as Field[];
+    const filtered = subFields
+      .map((f) => stripUSD(f))
+      .filter((f): f is Field => f !== null);
+
+    if (filtered.length === 0) return null;
+    return { ...field, fields: filtered } as Field;
+  }
+
+  return field;
 };
 
-export const patchPricesGroupField = (group: Field): Field => {
-  if (group.type !== "group") return group;
-
-  const fields = Array.isArray((group as { fields?: Field[] }).fields)
-    ? (group as { fields: Field[] }).fields
-    : [];
-  return { ...group, fields: patchPriceRowFields(fields) } as Field;
-};
-export const DESCRIPTION_FIELD: Field = {
-  name: "description",
-  type: "richText",
-  editor: lexicalEditor({
-    features: ({ rootFeatures }) => [
-      ...rootFeatures,
-      HeadingFeature({ enabledHeadingSizes: ["h1", "h2", "h3", "h4"] }),
-      FixedToolbarFeature(),
-      InlineToolbarFeature(),
-      HorizontalRuleFeature(),
-    ],
-  }),
-  label: false,
-  required: true,
+/**
+ * بيطبق stripUSD على array كامل من الحقول
+ */
+export const stripUSDFromFields = (fields: Field[]): Field[] => {
+  return fields
+    .map((f) => stripUSD(f))
+    .filter((f): f is Field => f !== null);
 };
 
+// ─── Admin Preview ───
 export function makeAdminPreview(
   collection: RoutePath,
 ): Pick<NonNullable<CollectionAdminOptions>, "livePreview" | "preview"> {
@@ -157,6 +154,8 @@ export function makeAdminPreview(
       }),
   };
 }
+
+// ─── Access ───
 const checkRole = (
   allRoles: User["roles"] = [],
   user?: User | null,
@@ -184,6 +183,23 @@ export const adminOnlyAccess = {
   admin: isAdmin,
 };
 
+// ─── Shared Fields ───
+export const DESCRIPTION_FIELD: Field = {
+  name: "description",
+  type: "richText",
+  editor: lexicalEditor({
+    features: ({ rootFeatures }) => [
+      ...rootFeatures,
+      HeadingFeature({ enabledHeadingSizes: ["h1", "h2", "h3", "h4"] }),
+      FixedToolbarFeature(),
+      InlineToolbarFeature(),
+      HorizontalRuleFeature(),
+    ],
+  }),
+  label: false,
+  required: true,
+};
+
 export const FAQS_FIELD: Field = {
   name: "faqs",
   label: "FAQs",
@@ -208,4 +224,24 @@ export const FAQS_FIELD: Field = {
       localized: true,
     },
   ],
+};
+
+// ─── Legacy helpers (للتوافق مع الكود القديم) ───
+export const stripAdminFieldComponent = (
+  admin?: AdminConfig,
+): AdminConfig | undefined => {
+  if (!admin?.components) return admin;
+
+  const components = { ...admin.components };
+  delete components["Field"];
+  return { ...admin, components };
+};
+
+export const patchPriceRowFields = (fields: Field[]): Field[] => {
+  return stripUSDFromFields(fields);
+};
+
+export const patchPricesGroupField = (group: Field): Field => {
+  const stripped = stripUSD(group);
+  return (stripped ?? group) as Field;
 };

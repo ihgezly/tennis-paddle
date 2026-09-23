@@ -15,7 +15,8 @@ export const SiteSettings: GlobalConfig = {
     read: () => true,
   },
 
-  admin: { group: "Content" },
+  // ✅ التعديل الوحيد — group بالعربي
+  admin: { group: "الإعدادات" },
   hooks: {
     beforeValidate: [
       ({ data }) => {

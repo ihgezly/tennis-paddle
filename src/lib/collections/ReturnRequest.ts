@@ -13,7 +13,7 @@ export const ReturnRequest: CollectionConfig = {
   slug: CollectionName.returnRequests,
   admin: {
     useAsTitle: "id",
-    group: "Sell Requests",
+    group: "الطلبات",
     defaultColumns: ["order", "status", "createdAt"],
   },
   access: {

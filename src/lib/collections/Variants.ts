@@ -3,25 +3,30 @@ import type { Field } from "payload";
 
 import {
   adminOnlyAccess,
-  patchPricesGroupField,
+  stripUSDFromFields,
 } from "@/lib/collections/base-fields";
 
 export const Variants: CollectionOverride = ({ defaultCollection }) => {
-  const fields = (defaultCollection.fields ?? []).map((f): Field => {
-    if (f.type !== "group") return f;
-    return patchPricesGroupField(f);
-  });
+  const fields: Field[] = stripUSDFromFields(
+    (defaultCollection.fields ?? []) as Field[],
+  );
 
   fields.push({
     name: "priceInEGP",
     type: "number",
     min: 0,
+    admin: {
+      description: "سعر الـvariant بالجنيه المصري",
+    },
   });
 
   fields.push({
     name: "originalPriceInEGP",
     type: "number",
     min: 0,
+    admin: {
+      description: "السعر قبل الخصم (اختياري)",
+    },
   });
 
   return {
@@ -32,6 +37,7 @@ export const Variants: CollectionOverride = ({ defaultCollection }) => {
     },
     admin: {
       ...(defaultCollection.admin ?? {}),
+      group: "الكتالوج",
       defaultColumns: Array.from(
         new Set([
           ...(defaultCollection.admin?.defaultColumns ?? []),

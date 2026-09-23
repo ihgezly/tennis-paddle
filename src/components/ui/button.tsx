@@ -1,10 +1,17 @@
+"use client";
+
 import type { ButtonHTMLAttributes, MouseEvent } from "react";
 
 import { trackPixelEvent } from "@/components/layout/analytics";
 import { cn } from "@/lib/core/util";
 
 type ButtonVariant =
-  "default" | "outline" | "secondary" | "ghost" | "nav" | "select";
+  | "default"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "nav"
+  | "select";
 type ButtonSize = "default" | "icon" | "clear";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -46,18 +53,20 @@ export default function Button({
   selected = false,
   type = "button",
   eventName,
+  onClick,
   ...props
 }: ButtonProps) {
+  // ✅ نجمع الـonClick الخارجي + الـtracking في handler واحد
   const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
     if (eventName) trackPixelEvent(eventName);
-    props.onClick?.(e);
+    onClick?.(e);
   };
 
   return (
     <button
       data-slot="button"
       type={type}
-      onClick={typeof window !== "undefined" ? handleClick : undefined}
+      onClick={handleClick}
       className={cn(
         base,
         sizeClass[size],

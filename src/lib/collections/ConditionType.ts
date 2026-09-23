@@ -6,7 +6,7 @@ export const ConditionType: CollectionConfig = {
   slug: CollectionName.conditionTypes,
   admin: {
     useAsTitle: "code",
-    group: "Catalog",
+    group: "الإعدادات",
     defaultColumns: ["code", "nameEn", "requiresGrade", "isActive", "sortOrder"],
   },
   access: {

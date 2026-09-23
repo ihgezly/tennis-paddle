@@ -1,0 +1,378 @@
+/* ═══════════════════════════════════════════════════════════════
+   3D EFFECTS — Flags + Brand Logos
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Perspective containers ─── */
+.perspective-container {
+  perspective: 1400px;
+  perspective-origin: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FLAG 3D
+   ═══════════════════════════════════════════════════════════════ */
+
+.flag-3d {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: flag-float 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+.flag-3d:nth-child(1) {
+  animation-delay: 0s;
+}
+.flag-3d:nth-child(2) {
+  animation-delay: 0.6s;
+}
+.flag-3d:nth-child(3) {
+  animation-delay: 1.2s;
+}
+
+.flag-3d:hover {
+  animation-play-state: paused;
+  transform: rotateY(-18deg) rotateX(10deg) translateZ(40px) scale(1.05);
+}
+
+/* ─── Flag card ─── */
+.flag-3d__card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #0c0e12;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: box-shadow 0.5s ease;
+}
+
+.flag-3d:hover .flag-3d__card {
+  box-shadow:
+    0 30px 60px rgba(0, 0, 0, 0.55),
+    0 0 40px var(--flag-glow, rgba(212, 255, 0, 0.3)),
+    0 0 0 1px var(--flag-accent, #d4ff00);
+}
+
+/* ─── Flag SVG ─── */
+.flag-3d__svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform: translateZ(15px);
+}
+
+/* ─── Shine sweep ─── */
+.flag-3d__card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  transition: left 0.9s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.flag-3d:hover .flag-3d__card::before {
+  left: 150%;
+}
+
+/* ─── Label overlay ─── */
+.flag-3d__label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
+  background: linear-gradient(
+    to top,
+    rgba(5, 6, 10, 0.95) 0%,
+    rgba(5, 6, 10, 0.7) 60%,
+    transparent 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 3;
+  transform: translateZ(25px);
+}
+
+.flag-3d__country {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fafafc;
+  letter-spacing: -0.01em;
+}
+
+.flag-3d__emoji {
+  font-size: 24px;
+}
+
+/* ─── Glow behind card ─── */
+.flag-3d__glow {
+  position: absolute;
+  inset: 10%;
+  background: var(--flag-accent, #d4ff00);
+  filter: blur(60px);
+  opacity: 0.4;
+  z-index: -1;
+  transform: translateZ(-30px);
+  animation: flag-glow-pulse 4s ease-in-out infinite;
+  transition: opacity 0.5s ease;
+}
+
+.flag-3d:hover .flag-3d__glow {
+  opacity: 0.7;
+}
+
+@keyframes flag-float {
+  0%,
+  100% {
+    transform: translateY(0) rotateY(0deg) rotateX(0deg);
+  }
+  33% {
+    transform: translateY(-6px) rotateY(2deg) rotateX(1deg);
+  }
+  66% {
+    transform: translateY(-3px) rotateY(-2deg) rotateX(-1deg);
+  }
+}
+
+@keyframes flag-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BRAND LOGO 3D ENTRANCE
+   ═══════════════════════════════════════════════════════════════ */
+
+.brand-logo {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 28px 20px;
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: brand-entrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform;
+}
+
+/* stagger */
+.brand-logo:nth-child(1) { animation-delay: 0.05s; }
+.brand-logo:nth-child(2) { animation-delay: 0.1s; }
+.brand-logo:nth-child(3) { animation-delay: 0.15s; }
+.brand-logo:nth-child(4) { animation-delay: 0.2s; }
+.brand-logo:nth-child(5) { animation-delay: 0.25s; }
+.brand-logo:nth-child(6) { animation-delay: 0.3s; }
+.brand-logo:nth-child(7) { animation-delay: 0.35s; }
+.brand-logo:nth-child(8) { animation-delay: 0.4s; }
+.brand-logo:nth-child(9) { animation-delay: 0.45s; }
+
+.brand-logo:hover {
+  transform: translateY(-8px) rotateX(6deg);
+  border-color: var(--brand-accent, var(--volt));
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.25),
+    0 0 30px var(--brand-glow, var(--volt-glow)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ─── Background glow ─── */
+.brand-logo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    var(--brand-glow, var(--volt-glow)) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.brand-logo:hover::before {
+  opacity: 0.6;
+}
+
+/* ─── Shine ─── */
+.brand-logo::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    transparent 0deg,
+    rgba(255, 255, 255, 0.08) 90deg,
+    transparent 180deg,
+    transparent 360deg
+  );
+  animation: brand-shine 6s linear infinite;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.brand-logo:hover::after {
+  opacity: 1;
+}
+
+/* ─── Content ─── */
+.brand-logo__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-logo__name {
+  font-family: var(--brand-font, inherit);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+  text-transform: uppercase;
+  transition: color 0.4s ease;
+  line-height: 1;
+}
+
+.brand-logo:hover .brand-logo__name {
+  color: var(--brand-accent, var(--volt));
+}
+
+.brand-logo__tagline {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ─── Colored underline ─── */
+.brand-logo__line {
+  width: 0;
+  height: 2px;
+  background: var(--brand-accent, var(--volt));
+  border-radius: 9999px;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 8px var(--brand-glow, var(--volt-glow));
+}
+
+.brand-logo:hover .brand-logo__line {
+  width: 40px;
+}
+
+@keyframes brand-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9) rotateX(-25deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateX(0deg);
+  }
+}
+
+@keyframes brand-shine {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION TITLES (shared)
+   ═══════════════════════════════════════════════════════════════ */
+
+.section-title-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.section-title {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--foreground);
+  line-height: 1.1;
+}
+
+@media (max-width: 640px) {
+  .section-title {
+    font-size: 32px;
+  }
+}
+
+.section-subtitle {
+  margin-top: 12px;
+  font-size: 16px;
+  color: var(--text-secondary);
+  max-width: 500px;
+}
+
+.section-signature {
+  margin-top: 20px;
+  height: 2px;
+  width: 96px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--section-accent, var(--volt)) 50%,
+    transparent 100%
+  );
+  box-shadow: 0 0 12px var(--section-glow, var(--volt-glow));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ACCESSIBILITY
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .flag-3d,
+  .flag-3d__glow,
+  .brand-logo,
+  .brand-logo::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

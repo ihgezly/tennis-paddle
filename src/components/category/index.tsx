@@ -4,10 +4,8 @@ import { getTranslations } from "next-intl/server";
 import type { Category, Product } from "@/lib/core/types/payload-types";
 
 import ProductCard from "@/components/shop/product-card/product-card";
+import FiltersSidebar from "@/components/shop/filters/filters-sidebar";
 import FiltersToolbar from "@/components/shop/filters/filters-toolbar";
-import BrandFilter from "@/components/shop/filters/brand-filter";
-import ConditionFilter from "@/components/shop/filters/condition-filter";
-import PriceFilter from "@/components/shop/filters/price-filter";
 import { RichText } from "@/components/ui";
 import DAL from "@/lib/core/dal";
 import { getSportTheme } from "@/lib/core/util";
@@ -99,15 +97,17 @@ export default async function CategoryPageLayout({
         </div>
       ) : null}
 
-      <div className="mb-6 lg:hidden">
-        <FiltersToolbar brands={brands} />
-      </div>
+      {/* ✅ Filters Toolbar */}
+      <FiltersToolbar
+        brands={brands}
+        totalCount={products.length}
+        displayedCount={products.length}
+      />
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[240px_1fr]">
-        <aside className="hidden space-y-8 border-e border-border pe-8 lg:block">
-          <BrandFilter brands={brands} />
-          <ConditionFilter />
-          <PriceFilter />
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
+        {/* ✅ Sidebar — Desktop only */}
+        <aside className="hidden lg:block">
+          <FiltersSidebar brands={brands} />
         </aside>
 
         <div>

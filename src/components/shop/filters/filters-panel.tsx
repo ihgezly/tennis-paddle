@@ -1,47 +1,120 @@
 "use client";
 
+import { useEffect } from "react";
 import { FiX } from "react-icons/fi";
-import BrandFilter from "./brand-filter";
-import ConditionFilter from "./condition-filter";
-import PriceFilter from "./price-filter";
+
+import { useFilters } from "@/lib/core/hooks/use-filters";
+
+import FiltersSidebar from "./filters-sidebar";
+
+type ProductType = {
+  id: number;
+  title: string;
+  slug: string;
+};
+
+type Props = {
+  isOpen: boolean;
+  onClose: () => void;
+  brands: string[];
+  productTypes?: ProductType[];
+  hideSportFilter?: boolean;
+  hideTypeFilter?: boolean;
+  baseSport?: string;
+};
 
 export default function FiltersPanel({
   isOpen,
   onClose,
   brands,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  brands: string[];
-}) {
+  productTypes,
+  hideSportFilter,
+  hideTypeFilter,
+  baseSport,
+}: Props) {
+  const { activeCount, clearAll } = useFilters();
+
+  // قفل السكرول
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
+  // Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
   return (
     <>
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
-          onClick={onClose}
-        />
-      )}
+      <div
+        className="filters-drawer-overlay"
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
       <div
-        className={`fixed inset-y-0 right-0 z-50 w-80 max-w-full bg-surface p-6 overflow-y-auto transition-transform duration-300 lg:hidden ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className="filters-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="الفلاتر"
       >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold">Filters</h3>
+        <div className="filters-drawer__header">
+          <div className="filters-drawer__title">
+            <span>الفلاتر</span>
+            {activeCount > 0 ? (
+              <span className="filter-section__badge">{activeCount}</span>
+            ) : null}
+          </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-surface-2"
+            className="filters-drawer__close"
+            aria-label="إغلاق"
           >
-            <FiX size={20} />
+            <FiX size={18} />
           </button>
         </div>
 
-        <div className="space-y-8">
-          <BrandFilter brands={brands} />
-          <ConditionFilter />
-          <PriceFilter />
+        <div className="filters-drawer__body">
+          <FiltersSidebar
+            brands={brands}
+            productTypes={productTypes}
+            hideSportFilter={hideSportFilter}
+            hideTypeFilter={hideTypeFilter}
+            baseSport={baseSport}
+          />
+        </div>
+
+        <div className="filters-drawer__footer">
+          <button
+            type="button"
+            onClick={() => {
+              clearAll();
+              onClose();
+            }}
+            className="filters-drawer__btn-clear"
+          >
+            مسح الكل
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="filters-drawer__btn-apply"
+          >
+            عرض النتائج
+          </button>
         </div>
       </div>
     </>

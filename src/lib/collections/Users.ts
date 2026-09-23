@@ -1,11 +1,8 @@
+import { sql } from "@payloadcms/db-postgres/drizzle";
 import type { CollectionConfig, CollectionBeforeChangeHook } from "payload";
 
 import { isAdmin } from "@/lib/collections/base-fields";
 
-/**
- * أول مستخدم يتم إنشاؤه في النظام يبقى admin تلقائيًا.
- * باقي المستخدمين customer افتراضيًا.
- */
 const ensureFirstUserIsAdmin: CollectionBeforeChangeHook = async ({
   data,
   operation,
@@ -14,14 +11,18 @@ const ensureFirstUserIsAdmin: CollectionBeforeChangeHook = async ({
   if (operation !== "create" || !data) return data;
 
   try {
-    const count = await req.payload.count({
-      collection: "users",
-      overrideAccess: true,
-    });
+    await req.payload.db.drizzle.transaction(async (tx) => {
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(918273645)`);
 
-    if (count.totalDocs === 0) {
-      data.roles = ["admin"];
-    }
+      const result = await tx.execute(
+        sql`SELECT COUNT(*)::int AS c FROM users`,
+      );
+      const total = Number((result.rows?.[0] as { c: number })?.c ?? 0);
+
+      if (total === 0) {
+        data.roles = ["admin"];
+      }
+    });
   } catch (err) {
     console.error("ensureFirstUserIsAdmin failed:", err);
   }
@@ -32,9 +33,8 @@ const ensureFirstUserIsAdmin: CollectionBeforeChangeHook = async ({
 export const Users: CollectionConfig = {
   slug: "users",
   admin: {
-    // ✅ شيلنا hidden — عشان تقدر تدير المستخدمين من /admin
     useAsTitle: "email",
-    group: "Internal",
+    group: "المستخدمين",
     defaultColumns: ["email", "name", "roles", "createdAt"],
   },
   auth: true,
@@ -44,7 +44,6 @@ export const Users: CollectionConfig = {
       if (isAdmin({ req: { user } as any })) return true;
       return { id: { equals: user.id } };
     },
-    // ✅ السماح بالتسجيل العام
     create: () => true,
     delete: isAdmin,
     update: ({ req: { user } }) => {
@@ -55,17 +54,13 @@ export const Users: CollectionConfig = {
     admin: isAdmin,
   },
   hooks: {
-    // ✅ أول مستخدم = admin تلقائي
     beforeChange: [ensureFirstUserIsAdmin],
   },
   fields: [
-    // ✅ حقل الاسم — جديد
     {
       name: "name",
       type: "text",
-      admin: {
-        description: "اسم العميل الكامل",
-      },
+      admin: { description: "اسم العميل الكامل" },
     },
     {
       name: "roles",
@@ -76,18 +71,14 @@ export const Users: CollectionConfig = {
         { label: "Admin", value: "admin" },
         { label: "Customer", value: "customer" },
       ],
-      // ✅ شيلنا hidden — عشان تقدر تعدل الأدوار من /admin
       admin: {
         description: "صلاحيات المستخدم. الأدمن يقدر يدخل /admin",
       },
-      // ⚠️ حماية أمنية: الأدمن بس اللي يقدر يعدل الأدوار
-      // (العميل العادي يقدر يشوف دوره بس مش يعدله)
       access: {
         create: ({ req: { user } }) =>
           Boolean(user && isAdmin({ req: { user } as any })),
         update: ({ req: { user } }) =>
           Boolean(user && isAdmin({ req: { user } as any })),
-        // read بدون قيد — عشان /api/users/me يرجع الـrole للفرونت
       },
     },
   ],

@@ -197,3 +197,9 @@ select:focus {
   outline: 2px solid #d4ff00;
   outline-offset: 2px;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR POLISH — استيراد ملف الـsidebar
+   ═══════════════════════════════════════════════════════════════ */
+
+@import "../../../src/lib/styles/admin-sidebar.css";

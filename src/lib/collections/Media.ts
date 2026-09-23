@@ -9,7 +9,7 @@ import appConfig from "@/lib/core/config";
 
 export const Media: CollectionConfig = {
   admin: {
-    group: "Content",
+    group: "المحتوى",
   },
   slug: "media",
   access: {

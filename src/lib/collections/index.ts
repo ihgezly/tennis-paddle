@@ -7,6 +7,9 @@ export { SiteSettings } from "./SiteSettings";
 export { Transactions } from "./Transactions";
 export { Users } from "./Users";
 export { Variants } from "./Variants";
+export { ProductType } from "./ProductType";
+export { Carts } from "./Carts";
+export { Addresses } from "./Addresses";
 
 // New collections
 export { ConditionType } from "./ConditionType";

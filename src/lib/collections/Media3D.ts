@@ -40,7 +40,7 @@ const validateGlbUpload: CollectionBeforeChangeHook = async ({ req, data }) => {
 
 export const Media3D: CollectionConfig = {
   slug: CollectionName.media3d,
-  admin: { group: "Content" },
+  admin: { group: "المحتوى" },
   access: {
     ...adminOnlyAccess,
     read: () => true,

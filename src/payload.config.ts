@@ -29,6 +29,7 @@ import {
   IntegrationEvent,
   ReturnRequest,
   Media3D,
+  ProductType,
 } from "@/lib/collections";
 import appConfig from "@/lib/core/config";
 import { plugins } from "@/lib/providers/plugins";
@@ -36,7 +37,6 @@ import { plugins } from "@/lib/providers/plugins";
 export default buildConfig({
   admin: {
     user: Users.slug,
-    // ✅ Dashboard مخصص قبل لوحة التحكم
     components: {
       beforeDashboard: ["@/components/admin/dashboard"],
     },
@@ -50,18 +50,32 @@ export default buildConfig({
   },
   globals: [SiteSettings],
 
+  // ✅ ترتيب الـsidebar:
+  // الكتالوج → الطلبات → المحتوى → الإعدادات → المستخدمين → مخفي
   collections: [
-    Users,
+    // ─── الكتالوج ───
     Category,
+    ProductType,
+
+    // ─── الطلبات ───
+    SellRequest,
+    ReturnRequest,
+
+    // ─── المحتوى ───
     Media,
     Media3D,
     Reviews,
+
+    // ─── الإعدادات ───
     ConditionType,
     ConditionGrade,
-    SellRequest,
+
+    // ─── المستخدمين ───
+    Users,
+
+    // ─── مخفي (Payload يضيفهم آخر الـsidebar لكن تحت "مخفي") ───
     AuditLog,
     IntegrationEvent,
-    ReturnRequest,
   ],
 
   db: postgresAdapter({

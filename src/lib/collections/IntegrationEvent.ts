@@ -6,7 +6,8 @@ export const IntegrationEvent: CollectionConfig = {
   slug: CollectionName.integrationEvents,
   admin: {
     useAsTitle: "eventId",
-    group: "Internal",
+    group: "مخفي",
+    hidden: true, // ✅ مخفي
     defaultColumns: ["provider", "eventType", "status", "resourceId", "createdAt"],
   },
   access: {

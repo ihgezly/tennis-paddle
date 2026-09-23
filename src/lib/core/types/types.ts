@@ -8,14 +8,23 @@ import type {
   User,
 } from "@/lib/core/types/payload-types";
 
+// ═══════════════════════════════════════════════════════════════
+// ROUTES
+// ═══════════════════════════════════════════════════════════════
+
 export enum RoutePath {
   product = "product",
   category = "category",
 }
 
+// ═══════════════════════════════════════════════════════════════
+// COLLECTIONS
+// ═══════════════════════════════════════════════════════════════
+
 export enum CollectionName {
   products = "products",
   category = "category",
+  productTypes = "product-types",
   conditionTypes = "condition-types",
   conditionGrades = "condition-grades",
   sellRequests = "sell-requests",
@@ -27,6 +36,48 @@ export enum CollectionName {
   inventoryReservations = "inventory-reservations",
   inventoryMovements = "inventory-movements",
 }
+
+// ═══════════════════════════════════════════════════════════════
+// SPORT & PRODUCT TYPES
+// ═══════════════════════════════════════════════════════════════
+
+export enum SportType {
+  PADEL = "padel",
+  TENNIS = "tennis",
+  SHOES = "shoes",
+  GENERAL = "general",
+}
+
+// ─── Product Status ───
+export enum ProductStatus {
+  AVAILABLE = "available", // متاح للبيع
+  PENDING = "pending",     // محجوز (عميل طلب ولسه الأدمن ما أكدش)
+  SOLD = "sold",           // تم البيع
+  DRAFT = "draft",         // مسودة (مش ظاهر)
+}
+
+// ✅ RacketShape — للمضارب
+export enum RacketShape {
+  ROUND = "round",
+  TEARDROP = "teardrop",
+  DIAMOND = "diamond",
+}
+
+export type ProductType = {
+  id: number;
+  title: string;
+  slug: string;
+  sportTypes: SportType[];
+  icon: string | null;
+  position: number;
+  isActive: boolean;
+  updatedAt: string;
+  createdAt: string;
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ORDER STATUS
+// ═══════════════════════════════════════════════════════════════
 
 export enum OrderStatus {
   NEW = "new",
@@ -48,6 +99,10 @@ export enum PaymentStatus {
   REFUNDED = "refunded",
 }
 
+// ═══════════════════════════════════════════════════════════════
+// CONDITION
+// ═══════════════════════════════════════════════════════════════
+
 export enum ConditionTypeCode {
   NEW = "new",
   USED = "used",
@@ -67,6 +122,10 @@ export enum InspectionStatus {
   APPROVED = "approved",
   REJECTED = "rejected",
 }
+
+// ═══════════════════════════════════════════════════════════════
+// SELL REQUEST
+// ═══════════════════════════════════════════════════════════════
 
 export enum SellRequestStatus {
   PENDING = "pending",
@@ -130,6 +189,10 @@ export const isValidSellRequestStatusTransition = (
   );
 };
 
+// ═══════════════════════════════════════════════════════════════
+// RETURN REQUEST
+// ═══════════════════════════════════════════════════════════════
+
 export enum ReturnStatus {
   REQUESTED = "requested",
   APPROVED = "approved",
@@ -157,6 +220,10 @@ export const isValidReturnStatusTransition = (
   return (RETURN_STATUS_FLOW[current] || []).includes(next as ReturnStatus);
 };
 
+// ═══════════════════════════════════════════════════════════════
+// INTEGRATION
+// ═══════════════════════════════════════════════════════════════
+
 export enum IntegrationEventStatus {
   RECEIVED = "received",
   PROCESSING = "processing",
@@ -164,10 +231,19 @@ export enum IntegrationEventStatus {
   FAILED = "failed",
 }
 
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════
+
 export const AppConst = {
   CACHE_TAG_BOOTSTRAP: "bootstrap",
   CACHE_TAG_SITEMAP: "sitemap",
+  CACHE_TAG_PRODUCT_TYPES: "product-types",
 } as const;
+
+// ═══════════════════════════════════════════════════════════════
+// COMMON TYPES
+// ═══════════════════════════════════════════════════════════════
 
 export type PropsSlug = { params: Promise<{ slug: string }> };
 
@@ -180,8 +256,14 @@ export type SitemapData = {
 export type CartItem = NonNullable<Cart["items"]>[number];
 export type OrderItem = NonNullable<Order["items"]>[number];
 
+// ═══════════════════════════════════════════════════════════════
+// PRODUCT
+// ═══════════════════════════════════════════════════════════════
+
 export type ProductPurchaseSectionData = {
   id: Product["id"];
+  title: string;           // ✅ جديد — للـQuickOrderButton
+  image?: any;             // ✅ جديد — للـQuickOrderButton
   inventory: number;
   price: number;
   originalPrice?: number;
@@ -204,8 +286,8 @@ export type CombinedVariantData = {
     id: number;
     options: number[];
     inventory: number;
-    priceInUSD: number;
-    originalPriceInUSD?: number;
+    priceInEGP: number;
+    originalPriceInEGP?: number;
   }[];
   variantTypes: { id: number; label: string }[];
   options: { id: number; variantType: number; label: string }[];
@@ -215,7 +297,6 @@ export type ProductSinglePage = Pick<
   Product,
   "title" | "description" | "updatedAt" | "gallery" | "faqs" | "id"
 > & {
-  // ✅ جديد — الأقسام اللي المنتج ينتمي ليها
   categories?: Product["categories"];
   purchase_section: ProductPurchaseSectionData;
   relatedProducts: Product[];
@@ -227,11 +308,18 @@ export type ProductSinglePage = Pick<
   brand?: string | null;
 };
 
+// ═══════════════════════════════════════════════════════════════
+// DAL STATIC INTERFACE
+// ═══════════════════════════════════════════════════════════════
+
 export type DalStatic = {
   queryAllProducts(): Promise<Product[]>;
   queryCategoryBySlug(slug: string): Promise<Category | null>;
   queryProductBySlug(slug: string): Promise<ProductSinglePage | null>;
   queryCategoriesBasic(): Promise<Category[]>;
+  queryChildCategories(parentId: number): Promise<Category[]>;
+  queryProductTypes(): Promise<ProductType[]>;
+  queryProductTypesBySport(sportType: SportType | null): Promise<ProductType[]>;
   querySiteSettings(): Promise<SiteSetting>;
   querySitemapData(): Promise<SitemapData>;
   queryCurrentUser(req: Request): Promise<User | null>;
@@ -243,6 +331,8 @@ export type DalStatic = {
       limit?: number;
       brand?: string;
       condition?: string;
+      sport?: string;
+      type?: string;
       minPrice?: number;
       maxPrice?: number;
       search?: string;
@@ -254,5 +344,19 @@ export type DalStatic = {
     conditionTypes: { id: number; code: string }[];
     conditionGrades: { id: number; code: string }[];
   }>;
-  queryChildCategories(parentId: number): Promise<Category[]>;
+  runSportProducts(
+    payload: any,
+    options: {
+      sportType?: SportType | null;
+      productTypeId?: number | null;
+      brand?: string;
+      condition?: string;
+      minPrice?: number;
+      maxPrice?: number;
+      search?: string;
+      sort?: string;
+      page?: number;
+      limit?: number;
+    },
+  ): Promise<{ products: Product[]; totalCount: number }>;
 };

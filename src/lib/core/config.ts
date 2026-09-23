@@ -35,6 +35,14 @@ export type AppConfig = {
   CONTACT_PHONE: string;
   CONTACT_EMAIL: string;
 
+  // ✅ Google Forms
+  SELL_FORM_URL: string;
+  CUSTOM_FORM_URL: string;
+
+  // ✅ Phase 7 — Quick Order
+  PAYMENT_INSTRUCTIONS: string;
+  ORDER_THANK_YOU_MESSAGE: string;
+
   SEND_EMAIL_WHATSAPP: boolean;
   EMAIL_FROM_ADDRESS: string;
   EMAIL_SMTP_HOST: string;
@@ -96,6 +104,21 @@ export const appConfig: AppConfig = {
   ).trim(),
   CONTACT_PHONE: (process.env.NEXT_PUBLIC_CONTACT_PHONE || "").trim(),
   CONTACT_EMAIL: (process.env.NEXT_PUBLIC_CONTACT_EMAIL || "").trim(),
+
+  // ✅ Google Forms
+  SELL_FORM_URL: (process.env.NEXT_PUBLIC_SELL_FORM_URL || "").trim(),
+  CUSTOM_FORM_URL: (process.env.NEXT_PUBLIC_CUSTOM_FORM_URL || "").trim(),
+
+  // ✅ Phase 7 — Quick Order
+  PAYMENT_INSTRUCTIONS: (
+    process.env.NEXT_PUBLIC_PAYMENT_INSTRUCTIONS ||
+    "💳 الدفع عند الاستلام أو تحويل بنكي — تواصل معنا على واتساب لتأكيد طلبك."
+  ).trim(),
+
+  ORDER_THANK_YOU_MESSAGE: (
+    process.env.NEXT_PUBLIC_ORDER_THANK_YOU_MESSAGE ||
+    "شكراً لك! سنتواصل معك خلال 24 ساعة لتأكيد الطلب."
+  ).trim(),
 
   SEND_EMAIL_WHATSAPP: truthy(process.env.SEND_EMAIL_WHATSAPP),
   EMAIL_FROM_ADDRESS: (process.env.EMAIL_FROM_ADDRESS || "") as string,

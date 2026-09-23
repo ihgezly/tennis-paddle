@@ -1,46 +1,55 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback } from "react";
+
+import { useFilters } from "@/lib/core/hooks/use-filters";
+
+import FilterSection from "./filter-section";
+import PriceSlider from "./price-slider";
+
+const MIN_PRICE = 0;
+const MAX_PRICE = 50000;
+const STEP = 50;
 
 export default function PriceFilter() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const [min, setMin] = useState(searchParams.get("minPrice") || "");
-  const [max, setMax] = useState(searchParams.get("maxPrice") || "");
+  const { minPrice, maxPrice, setSingle, clearKey } = useFilters();
 
-  const applyPrice = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (min) params.set("minPrice", min);
-    else params.delete("minPrice");
-    if (max) params.set("maxPrice", max);
-    else params.delete("maxPrice");
-    router.push(`?${params.toString()}`);
-  };
+  const currentMin = Number(minPrice ?? MIN_PRICE);
+  const currentMax = Number(maxPrice ?? MAX_PRICE);
+
+  const hasPriceFilter = Boolean(minPrice || maxPrice);
+
+  const handleChange = useCallback(
+    (min: number, max: number) => {
+      if (min <= MIN_PRICE) {
+        clearKey("minPrice");
+      } else {
+        setSingle("minPrice", String(min));
+      }
+
+      if (max >= MAX_PRICE) {
+        clearKey("maxPrice");
+      } else {
+        setSingle("maxPrice", String(max));
+      }
+    },
+    [setSingle, clearKey],
+  );
 
   return (
-    <div className="space-y-3">
-      <h4 className="text-sm font-semibold uppercase tracking-wider text-gold">
-        Price Range
-      </h4>
-      <div className="flex gap-3">
-        <input
-          type="number"
-          placeholder="Min"
-          value={min}
-          onChange={(e) => setMin(e.target.value)}
-          onBlur={applyPrice}
-          className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-text-muted focus:outline-none focus:border-gold"
-        />
-        <input
-          type="number"
-          placeholder="Max"
-          value={max}
-          onChange={(e) => setMax(e.target.value)}
-          onBlur={applyPrice}
-          className="w-full rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-text-muted focus:outline-none focus:border-gold"
-        />
-      </div>
-    </div>
+    <FilterSection
+      title="السعر"
+      activeCount={hasPriceFilter ? 1 : 0}
+      defaultOpen={false}
+    >
+      <PriceSlider
+        min={MIN_PRICE}
+        max={MAX_PRICE}
+        step={STEP}
+        valueMin={currentMin}
+        valueMax={currentMax}
+        onChange={handleChange}
+      />
+    </FilterSection>
   );
 }

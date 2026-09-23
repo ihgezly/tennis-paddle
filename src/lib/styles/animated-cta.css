@@ -1,0 +1,232 @@
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATED CTA CARDS
+   ═══════════════════════════════════════════════════════════════ */
+
+.cta-card {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 28px;
+  isolation: isolate;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.cta-card:hover {
+  transform: translateY(-6px);
+}
+
+/* ── Animated conic border ── */
+.cta-card__border {
+  position: absolute;
+  inset: -1px;
+  border-radius: 28px;
+  z-index: -2;
+  background: conic-gradient(
+    from 0deg,
+    var(--cta-accent) 0deg,
+    transparent 90deg,
+    transparent 180deg,
+    var(--cta-accent) 270deg,
+    transparent 360deg
+  );
+  opacity: 0.5;
+  animation: cta-spin 8s linear infinite;
+  transition: opacity 0.4s ease;
+}
+
+.cta-card:hover .cta-card__border {
+  opacity: 1;
+  animation-duration: 4s;
+}
+
+.cta-card__border-mask {
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  z-index: -1;
+  background: var(--cta-bg, #0c0e12);
+}
+
+/* ── Background layer ── */
+.cta-card__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.35;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: opacity 0.5s ease, transform 0.8s ease;
+  will-change: transform;
+}
+
+.cta-card:hover .cta-card__bg {
+  opacity: 0.5;
+  transform: scale(1.08);
+}
+
+/* ── Overlay gradient ── */
+.cta-card__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ── Content ── */
+.cta-card__content {
+  position: relative;
+  z-index: 2;
+  padding: 40px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 280px;
+  justify-content: space-between;
+}
+
+@media (max-width: 640px) {
+  .cta-card__content {
+    padding: 32px 24px;
+    min-height: 240px;
+  }
+}
+
+/* ── Icon ── */
+.cta-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  color: #05060a;
+  background: linear-gradient(
+    135deg,
+    var(--cta-accent) 0%,
+    var(--cta-accent-2) 100%
+  );
+  box-shadow: 0 0 30px var(--cta-glow);
+  animation: cta-icon-pulse 3s ease-in-out infinite;
+  transition: transform 0.5s ease;
+}
+
+.cta-card:hover .cta-card__icon {
+  transform: rotate(-8deg) scale(1.08);
+}
+
+/* ── Text ── */
+.cta-card__title {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #fafafc;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 640px) {
+  .cta-card__title {
+    font-size: 24px;
+  }
+}
+
+.cta-card__subtitle {
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(250, 250, 252, 0.75);
+  max-width: 380px;
+}
+
+/* ── CTA button ── */
+.cta-card__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  border-radius: 9999px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #05060a;
+  background: var(--cta-accent);
+  border: none;
+  cursor: pointer;
+  align-self: flex-start;
+  box-shadow: 0 0 24px var(--cta-glow);
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.cta-card__button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 40px var(--cta-glow);
+}
+
+.cta-card__button svg {
+  transition: transform 0.3s ease;
+}
+
+.cta-card__button:hover svg {
+  transform: translateX(-4px);
+}
+
+/* ── Shimmer line (bottom) ── */
+.cta-card__shimmer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 3;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--cta-accent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: cta-shimmer 3s linear infinite;
+  opacity: 0.9;
+}
+
+/* ═══ Keyframes ═══ */
+
+@keyframes cta-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes cta-icon-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 30px var(--cta-glow);
+  }
+  50% {
+    box-shadow: 0 0 48px var(--cta-glow);
+  }
+}
+
+@keyframes cta-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ═══ Accessibility ═══ */
+@media (prefers-reduced-motion: reduce) {
+  .cta-card,
+  .cta-card__bg,
+  .cta-card__icon,
+  .cta-card__border {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { FiArrowRight, FiEye, FiEyeOff } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { useTranslations } from "next-intl";
@@ -27,7 +26,6 @@ const FIELD_CLASS =
 
 export default function AuthShell({ mode }: AuthShellProps) {
   const t = useTranslations("auth");
-  const router = useRouter();
 
   const [isRegister, setIsRegister] = useState(mode === "register");
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -98,8 +96,10 @@ export default function AuthShell({ mode }: AuthShellProps) {
 
       toast.success(isRegister ? "تم إنشاء الحساب بنجاح" : "تم تسجيل الدخول");
       redirectAfterAuth(data.user?.roles);
-    } catch (error: any) {
-      toast.error(error.message || "حدث خطأ");
+    } catch (error: unknown) {
+      const msg =
+        error instanceof Error ? error.message : "حدث خطأ";
+      toast.error(msg);
       setLoading(false);
     }
   };

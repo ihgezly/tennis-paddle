@@ -104,19 +104,18 @@ const OrderViewInner = () => {
     if (!id) return;
     let isCurrent = true;
 
-    BaseApi.fetchApi<Pick<Order, "phone" | "email" | "status" | "items" | "amount">>(
-      `orders/${id}`,
-      {
-        expect: "json",
-        select: {
-          phone: true,
-          email: true,
-          status: true,
-          items: true,
-          amount: true,
-        } as any,
-      },
-    ).then((data) => {
+    BaseApi.fetchApi<
+      Pick<Order, "phone" | "email" | "status" | "items" | "amount">
+    >(`orders/${id}`, {
+      expect: "json",
+      select: {
+        phone: true,
+        email: true,
+        status: true,
+        items: true,
+        amount: true,
+      } as any,
+    }).then((data) => {
       if (!isCurrent) return;
       setOrder({
         id,
@@ -133,7 +132,7 @@ const OrderViewInner = () => {
     };
   }, [id, refreshKey]);
 
-  // ✅ تم التعديل — null check صريح عشان TypeScript
+  // ✅ null check صريح عشان TypeScript
   if (!id || !order || order.id !== id) return null;
 
   return (
@@ -179,7 +178,7 @@ const OrderStatusPanelInner = ({
       await postJson(`orders/${id}/status`, { status: nextStatus });
       setStatus(nextStatus);
       toast.success(t("updateSuccess"));
-    } catch (err: unknown) {
+    } catch {
       toast.error(t("updateError"));
     } finally {
       setPending(null);
@@ -189,7 +188,10 @@ const OrderStatusPanelInner = ({
   return (
     <div className="order-status-vars flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="font-semibold text-gray-500" style={{ marginInlineEnd: 6 }}>
+        <h3
+          className="font-semibold text-gray-500"
+          style={{ marginInlineEnd: 6 }}
+        >
           {t("title")}
         </h3>
         <OrderStatusChip status={status} />
@@ -207,7 +209,9 @@ const OrderStatusPanelInner = ({
                 className={cn(
                   "border-none bg-transparent p-0 transition-opacity",
                   pending ? "cursor-default" : "cursor-pointer",
-                  pending && pending !== nextStatus ? "opacity-50" : "opacity-100",
+                  pending && pending !== nextStatus
+                    ? "opacity-50"
+                    : "opacity-100",
                 )}
               >
                 <OrderStatusChip status={nextStatus} />
@@ -259,8 +263,10 @@ const PriceEditor = ({
       toast.success("تم تعديل الأسعار");
       setEditing(false);
       onSaved();
-    } catch (err: any) {
-      toast.error(err.message || "فشل تعديل الأسعار");
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : "فشل تعديل الأسعار";
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

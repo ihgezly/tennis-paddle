@@ -9,13 +9,17 @@ import { buildCategoryHref } from "@/lib/core/util";
 
 export async function Categories({ currentSlug }: { currentSlug: string }) {
   const t = await getTranslations("general");
-  const categories = await DAL.queryCategoriesBasic();
-  categories.unshift({
+  const rawCategories = await DAL.queryCategoriesBasic();
+
+// ✅ نعمل array جديدة — منعدّلش على الـcached array من unstable_cache
+const categories: Category[] = [
+  {
     id: 0,
     title: t("category_all"),
     slug: "/",
-  } as unknown as Category);
-
+  } as unknown as Category,
+  ...rawCategories,
+];
   return (
     <nav className="text-start">
       <h3 className="text-lg mb-2 font-semibold tracking-tight">

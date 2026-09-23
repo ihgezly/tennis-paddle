@@ -1,4 +1,19 @@
 {
+  "sport": {
+    "home": "Home",
+    "productsCount": "{count} products",
+    "showingCount": "Showing {count} of {total}",
+    "noProducts": "No products available",
+    "noProductsHint": "Try changing filters or browse other categories",
+    "resetFilters": "Reset filters",
+    "shoesTitle": "Shoes",
+    "shoesSubtitle": "All padel & tennis shoes — from top brands.",
+    "padelShoes": "Padel Shoes",
+    "padelShoesSubtitle": "Shoes designed for padel courts",
+    "tennisShoes": "Tennis Shoes",
+    "tennisShoesSubtitle": "Shoes designed for tennis courts"
+  },
+
   "review_form": {
     "open_button": "Write a review",
     "title": "Add a review",
@@ -202,6 +217,33 @@
       "title": "Sell Your Equipment",
       "subtitle": "Have gear you no longer use? Turn it into credit or cash.",
       "button": "Start Selling"
+    },
+    "ctaPair": {
+      "sectionTitle": "Our Services",
+      "sectionSubtitle": "Sell your gear or order your custom product",
+      "sell": {
+        "title": "Sell Your Equipment",
+        "subtitle": "Have gear you don't use? Sell it to us and get its value.",
+        "cta": "Start Selling"
+      },
+      "custom": {
+        "title": "Order Your Custom Product",
+        "subtitle": "Can't find what you're looking for? Request a custom product.",
+        "cta": "Request Now"
+      }
+    },
+    "sources": {
+      "title": "Our Sources",
+      "subtitle": "We source from the world's best suppliers with authentic quality guarantee",
+      "items": {
+        "uae": { "country": "Dubai" },
+        "china": { "country": "China" },
+        "usa": { "country": "USA" }
+      }
+    },
+    "brands": {
+      "title": "Our Products From",
+      "subtitle": "The world's top brands in tennis and padel"
     }
   },
 

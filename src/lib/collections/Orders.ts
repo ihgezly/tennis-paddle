@@ -26,6 +26,7 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
 
     admin: {
       ...(defaultCollection.admin || {}),
+      group: "الطلبات",
       useAsTitle: "name",
       defaultColumns: ["name", "phone", "email", "status", "paymentStatus", "createdAt"],
     },
@@ -195,7 +196,6 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
           return Response.json(updated);
         },
       },
-      // ✅ جديد — endpoint لتعديل سعر الطلب
       {
         path: "/:id/adjust-price",
         method: "post",

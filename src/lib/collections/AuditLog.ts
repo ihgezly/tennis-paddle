@@ -6,7 +6,8 @@ export const AuditLog: CollectionConfig = {
   slug: CollectionName.auditLogs,
   admin: {
     useAsTitle: "action",
-    group: "Internal",
+    group: "مخفي",
+    hidden: true, // ✅ مخفي من الـsidebar
     defaultColumns: ["action", "entity", "entityId", "actor", "createdAt"],
   },
   access: {

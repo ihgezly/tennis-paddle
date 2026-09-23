@@ -2,7 +2,14 @@ import { ecommercePlugin } from "@payloadcms/plugin-ecommerce";
 import { vercelBlobStorage } from "@payloadcms/storage-vercel-blob";
 import { Plugin } from "payload";
 
-import { Products, Transactions, Variants, Orders } from "@/lib/collections";
+import {
+  Products,
+  Transactions,
+  Variants,
+  Orders,
+  Carts,
+  Addresses,
+} from "@/lib/collections";
 import { isAdmin } from "@/lib/collections/base-fields";
 import appConfig from "@/lib/core/config";
 
@@ -44,5 +51,9 @@ export const plugins: Plugin[] = [
 
     orders: { ordersCollectionOverride: Orders },
     transactions: { transactionsCollectionOverride: Transactions },
+
+    // ✅ إخفاء carts + addresses من الـsidebar
+    carts: { cartsCollectionOverride: Carts },
+    addresses: { addressesCollectionOverride: Addresses },
   }),
 ];

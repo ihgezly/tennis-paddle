@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui";
@@ -37,12 +38,12 @@ export default function Error({
           {t("tryAgain")}
         </Button>
 
-        <a
+        <Link
           href="/"
           className="mt-4 block text-sm text-text-secondary underline underline-offset-4 hover:text-gold"
         >
           العودة للرئيسية
-        </a>
+        </Link>
       </div>
     </div>
   );

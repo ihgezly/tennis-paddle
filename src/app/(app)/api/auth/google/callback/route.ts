@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPayload } from "payload";
 import configPromise from "@payload-config";
+import jwt from "jsonwebtoken";
 import { randomBytes } from "crypto";
 
 import appConfig from "@/lib/core/config";
@@ -86,50 +87,44 @@ export async function GET(req: Request) {
 
   let user = existing.docs[0];
 
+  // ✅ لو اليوزر جديد بس: ننشئه بـpassword عشوائي (مش هنستخدمه تاني)
+  // لو موجود من قبل → منلمسش الـpassword خالص
   if (!user) {
-    // Create with a random password (user won't use it — they use Google)
     const randomPass = randomBytes(32).toString("hex") + "Aa1!";
     user = await payload.create({
       collection: "users",
       data: {
         email: googleUser.email,
         password: randomPass,
+        name: googleUser.name ?? undefined,
         roles: ["customer"],
       } as any,
     });
   }
 
-  // 4) Rotate password and call Payload's official login to get a valid JWT
-  const tempPassword = randomBytes(32).toString("hex") + "Aa1!";
-  await payload.update({
-    collection: "users",
-    id: user.id,
-    data: { password: tempPassword } as any,
-    overrideAccess: true,
-  });
-
-  const loginResult = await payload.login({
-    collection: "users",
-    data: { email: googleUser.email, password: tempPassword },
-  });
-
-  if (!loginResult?.token) {
-    return NextResponse.redirect(
-      `${appConfig.BASE_URL}/login?error=session_failed`,
-    );
-  }
+  // 4) Sign JWT يدوياً بنفس توقيع Payload
+  // (نتجنب payload.login لما اليوزر مش عنده password معروف)
+  const token = jwt.sign(
+    {
+      id: user.id,
+      collection: "users",
+      email: user.email,
+    },
+    process.env.PAYLOAD_SECRET!,
+    { expiresIn: "30d" },
+  );
 
   // 5) Determine destination
   const isAdmin = Array.isArray(user.roles) && user.roles.includes("admin");
   const dest = isAdmin ? "/admin" : "/account/orders";
 
   const res = NextResponse.redirect(`${appConfig.BASE_URL}${dest}`);
-  res.cookies.set("payload-token", loginResult.token, {
+  res.cookies.set("payload-token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 30, // 30 days
+    maxAge: 60 * 60 * 24 * 30,
   });
 
   return res;

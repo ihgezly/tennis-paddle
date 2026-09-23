@@ -23,6 +23,8 @@ import {
   CollectionName,
   type CombinedVariantData,
   type ProductSinglePage,
+  type ProductType,
+  SportType,
 } from "@/lib/core/types/types";
 import { getRevalidateTag } from "@/lib/core/util";
 
@@ -173,8 +175,6 @@ export default class Queries {
         },
         select: {
           inventory: true,
-          priceInUSD: true,
-          originalPriceInUSD: true,
           priceInEGP: true,
           originalPriceInEGP: true,
           options: true,
@@ -245,28 +245,71 @@ export default class Queries {
     return types[0]?.id ?? null;
   }
 
-  private static buildProductWhere(
+  /**
+   * ✅ يحوّل قيمة URL (string أو string[] أو undefined) إلى array
+   * يدعم: "Nike,Adidas" أو "Nike" أو undefined
+   */
+  private static parseMultiValue(
+    value: string | string[] | undefined,
+  ): string[] {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.filter(Boolean);
+
+    return value
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
+  /**
+   * ✅ where builder — يستبعد المنتجات اللي تم بيعها
+   * يدعم multi-value للـbrands والـconditions
+   */
+  private static async buildProductWhere(
     categoryId: number | null,
     filters: {
-      brand?: string;
-      conditionId?: number | null;
+      brands?: string[];
+      conditions?: string[];
+      sportTypes?: SportType[];
+      productTypeIds?: number[];
       minPrice?: number;
       maxPrice?: number;
       search?: string;
     },
   ) {
-    const conditions: any[] = [{ _status: { equals: "published" } }];
+    const conditions: any[] = [
+      { _status: { equals: "published" } },
+      { status: { equals: "available" } },
+    ];
 
     if (categoryId != null) {
       conditions.push({ categories: { in: [categoryId] } });
     }
 
-    if (filters.conditionId != null) {
-      conditions.push({ conditionType: { equals: filters.conditionId } });
+    if (filters.sportTypes && filters.sportTypes.length > 0) {
+      conditions.push({ sportTypes: { in: filters.sportTypes } });
     }
 
-    if (filters.brand) {
-      conditions.push({ brand: { equals: filters.brand } });
+    if (filters.productTypeIds && filters.productTypeIds.length > 0) {
+      conditions.push({ productType: { in: filters.productTypeIds } });
+    }
+
+    // ✅ multi-condition
+    if (filters.conditions && filters.conditions.length > 0) {
+      const conditionTypeIds: number[] = [];
+      for (const code of filters.conditions) {
+        if (code !== "new" && code !== "used") continue;
+        const id = await Queries.getConditionTypeIdByCode(code);
+        if (id) conditionTypeIds.push(id);
+      }
+      if (conditionTypeIds.length > 0) {
+        conditions.push({ conditionType: { in: conditionTypeIds } });
+      }
+    }
+
+    // ✅ multi-brand
+    if (filters.brands && filters.brands.length > 0) {
+      conditions.push({ brand: { in: filters.brands } });
     }
 
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
@@ -292,7 +335,10 @@ export default class Queries {
   static async queryDistinctBrands(
     categoryId?: number | null,
   ): Promise<string[]> {
-    const where: any = { _status: { equals: "published" } };
+    const where: any = {
+      _status: { equals: "published" },
+      status: { equals: "available" },
+    };
     if (categoryId != null) {
       where.categories = { in: [categoryId] };
     }
@@ -326,6 +372,8 @@ export default class Queries {
       limit?: number;
       brand?: string;
       condition?: string;
+      sport?: string;
+      type?: string;
       minPrice?: number;
       maxPrice?: number;
       search?: string;
@@ -346,28 +394,42 @@ export default class Queries {
       slug && slug !== "/" ? await Queries.queryCategoryBySlug(slug) : null;
     const categoryId = category?.id ?? null;
 
-    const validCondition =
-      options.condition === "new" || options.condition === "used"
-        ? options.condition
-        : undefined;
+    // ✅ multi-value parsing
+    const conditionsArray = Queries.parseMultiValue(options.condition);
+    const brandsArray = Queries.parseMultiValue(options.brand);
+    const sportsArray = Queries.parseMultiValue(options.sport);
+    const typesArray = Queries.parseMultiValue(options.type);
 
-    const conditionId = validCondition
-      ? await Queries.getConditionTypeIdByCode(validCondition)
-      : null;
+    const validSportTypes: SportType[] = sportsArray.filter((s): s is SportType =>
+      Object.values(SportType).includes(s as SportType),
+    );
 
-    const where = Queries.buildProductWhere(categoryId, {
-      brand: options.brand,
-      conditionId,
+    // نحوّل type slugs إلى IDs
+    let productTypeIds: number[] = [];
+    if (typesArray.length > 0) {
+      const allTypes = await Queries.queryProductTypes();
+      productTypeIds = allTypes
+        .filter((pt) => typesArray.includes(pt.slug))
+        .map((pt) => pt.id);
+    }
+
+    const where = await Queries.buildProductWhere(categoryId, {
+      brands: brandsArray,
+      conditions: conditionsArray,
+      sportTypes: validSportTypes,
+      productTypeIds,
       minPrice: options.minPrice,
       maxPrice: options.maxPrice,
       search: options.search,
     });
 
-    const cacheKey = `${slug}-${page}-${limit}-${options.brand ?? "all"}-${
-      validCondition ?? "all"
-    }-${options.minPrice ?? "min"}-${options.maxPrice ?? "max"}-${
-      options.search ?? "none"
-    }-${options.sort ?? "default"}`;
+    const cacheKey = `${slug}-${page}-${limit}-${
+      brandsArray.join("-") || "all"
+    }-${conditionsArray.join("-") || "all"}-${
+      validSportTypes.join("-") || "all"
+    }-${productTypeIds.join("-") || "all"}-${options.minPrice ?? "min"}-${
+      options.maxPrice ?? "max"
+    }-${options.search ?? "none"}-${options.sort ?? "default"}`;
 
     const products = await Queries.runPayloadFind<Product>({
       collection: CollectionName.products,
@@ -375,7 +437,7 @@ export default class Queries {
       params: {
         draft: false,
         overrideAccess: false,
-        page, // استخدام page بدلاً من offset
+        page,
         limit,
         pagination: true,
         sort: options.sort || "-createdAt",
@@ -387,11 +449,12 @@ export default class Queries {
           image: true,
           priceInEGP: true,
           originalPriceInEGP: true,
-          priceInUSD: true,
-          originalPriceInUSD: true,
           brand: true,
           conditionType: true,
           conditionGrade: true,
+          sportTypes: true,
+          productType: true,
+          status: true,
         } as any,
       },
     });
@@ -447,15 +510,16 @@ export default class Queries {
         sort: "-updatedAt",
         depth: 0,
         where: {
-          _status: { equals: "published" },
+          and: [
+            { _status: { equals: "published" } },
+            { status: { equals: "available" } },
+          ],
         },
         select: {
           title: true,
           slug: true,
           image: true,
           categories: true,
-          priceInUSD: true,
-          originalPriceInUSD: true,
           priceInEGP: true,
           originalPriceInEGP: true,
           brand: true,
@@ -463,6 +527,10 @@ export default class Queries {
           conditionGrade: true,
           conditionNotes: true,
           glbModel: true,
+          productType: true,
+          sportTypes: true,
+          status: true,
+          inventory: true,
         } as any,
       },
     });
@@ -499,7 +567,6 @@ export default class Queries {
     })) as Product[];
   }
 
-  // ✅ queryHomeProducts
   static async queryHomeProducts(limit = 10): Promise<{
     products: Product[];
     conditionTypes: { id: number; code: string }[];
@@ -526,7 +593,7 @@ export default class Queries {
       }),
     ]);
 
-    const products = await Queries.runPayloadFind<Product>({
+    const rawProducts = await Queries.runPayloadFind<Product>({
       collection: CollectionName.products,
       tag: "home-products",
       params: {
@@ -539,6 +606,7 @@ export default class Queries {
         where: {
           and: [
             { _status: { equals: "published" } },
+            { status: { equals: "available" } },
             { inventory: { greater_than: 0 } },
           ],
         },
@@ -549,19 +617,22 @@ export default class Queries {
           brand: true,
           priceInEGP: true,
           originalPriceInEGP: true,
-          priceInUSD: true,
-          originalPriceInUSD: true,
           conditionType: true,
           conditionGrade: true,
           inventory: true,
           updatedAt: true,
+          sportTypes: true,
+          productType: true,
+          status: true,
         } as any,
       },
     });
 
     const imageIds = Array.from(
-      new Set(products.map((p) => Number(p.image)).filter(Boolean)),
+      new Set(rawProducts.map((p) => Number(p.image)).filter(Boolean)),
     );
+
+    let products = rawProducts;
 
     if (imageIds.length) {
       const media = await Queries.runPayloadFind<Media>({
@@ -578,12 +649,10 @@ export default class Queries {
       const mediaById = new Map<number, Media>();
       for (const m of media) mediaById.set(Number(m.id), m);
 
-      products.forEach((p, i) => {
-        products[i] = {
-          ...p,
-          image: (mediaById.get(Number(p.image)) ?? p.image) as any,
-        };
-      });
+      products = rawProducts.map((p) => ({
+        ...p,
+        image: (mediaById.get(Number(p.image)) ?? p.image) as any,
+      }));
     }
 
     return {
@@ -605,8 +674,6 @@ export default class Queries {
         description: true,
         updatedAt: true,
         gallery: true,
-        priceInUSD: true,
-        originalPriceInUSD: true,
         priceInEGP: true,
         originalPriceInEGP: true,
         inventory: true,
@@ -618,8 +685,12 @@ export default class Queries {
         conditionNotes: true,
         glbModel: true,
         brand: true,
-        // ✅ جديد — نجيب الأقسام عشان ConditionBadge أو Breadcrumb
         categories: true,
+        sportTypes: true,
+        productType: true,
+        status: true,
+        specs: true,
+        availableSizes: true,
       } as any,
     );
 
@@ -665,7 +736,6 @@ export default class Queries {
       updatedAt: product.updatedAt,
       gallery: product.gallery,
       faqs: product.faqs,
-      // ✅ جديد — نرجّع الأقسام
       categories: (product as any).categories ?? [],
       relatedProducts,
       reviews: product.reviews?.docs as Review[],
@@ -731,7 +801,6 @@ export default class Queries {
     });
   }
 
-  // ✅ معدّلة — بترجّع الأقسام الرئيسية فقط (parent غير موجود)
   static queryCategoriesBasic(): Promise<Category[]> {
     return Queries.runPayloadFind<Category>({
       collection: CollectionName.category,
@@ -757,7 +826,6 @@ export default class Queries {
     });
   }
 
-  // ✅ queryChildCategories — الأقسام الفرعية لقسم رئيسي
   static async queryChildCategories(parentId: number): Promise<Category[]> {
     return Queries.runPayloadFind<Category>({
       collection: CollectionName.category,
@@ -781,5 +849,179 @@ export default class Queries {
         } as any,
       },
     });
+  }
+
+  // ✅ أنواع المنتجات — مؤقتًا بـ "product-types" as any
+  static async queryProductTypes(): Promise<ProductType[]> {
+    const result = await Queries.runPayloadFind<any>({
+      collection: "product-types" as any, // ✅ مؤقت — بعد generate:types هنشيل as any
+      tag: AppConst.CACHE_TAG_PRODUCT_TYPES,
+      params: {
+        depth: 1,
+        limit: 0,
+        pagination: false,
+        sort: "position",
+        where: {
+          isActive: { equals: true },
+        },
+      },
+    });
+
+    return result.map((pt: any) => ({
+      id: pt.id,
+      title: pt.title,
+      slug: pt.slug,
+      sportTypes: pt.sportTypes ?? [],
+      icon: pt.icon ?? null,
+      position: pt.position ?? 0,
+      isActive: pt.isActive ?? true,
+      updatedAt: pt.updatedAt,
+      createdAt: pt.createdAt,
+    }));
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // ✅ Phase 2 — Sport-based Queries
+  // ═══════════════════════════════════════════════════════════════
+
+  /**
+   * Helper عام — يرجّع instance الـpayload (للاستخدام من ملفات خارجية)
+   */
+  static async getPayloadPublic() {
+    return Queries.getPayload();
+  }
+
+  /**
+   * يجيب منتجات حسب (sport + productType + filters) مع pagination
+   */
+  static async runSportProducts(
+    _payload: any,
+    options: {
+      sportType?: SportType | null;
+      productTypeId?: number | null;
+      brand?: string;
+      condition?: string;
+      minPrice?: number;
+      maxPrice?: number;
+      search?: string;
+      sort?: string;
+      page?: number;
+      limit?: number;
+    },
+  ): Promise<{ products: Product[]; totalCount: number }> {
+    const rawPage = Number(options.page);
+    const page =
+      Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
+
+    const rawLimit = Number(options.limit);
+    const limit =
+      Number.isFinite(rawLimit) && rawLimit > 0
+        ? Math.min(Math.floor(rawLimit), 48)
+        : 12;
+
+    const conditionsArray = Queries.parseMultiValue(options.condition);
+    const brandsArray = Queries.parseMultiValue(options.brand);
+
+    const where = await Queries.buildProductWhere(null, {
+      brands: brandsArray,
+      conditions: conditionsArray,
+      sportTypes: options.sportType ? [options.sportType] : [],
+      productTypeIds: options.productTypeId ? [options.productTypeId] : [],
+      minPrice: options.minPrice,
+      maxPrice: options.maxPrice,
+      search: options.search,
+    });
+
+    const cacheKey = `sport-${
+      options.sportType ?? "all"
+    }-type-${options.productTypeId ?? "all"}-${page}-${limit}-${
+      brandsArray.join("-") || "all"
+    }-${conditionsArray.join("-") || "all"}-${options.minPrice ?? "min"}-${
+      options.maxPrice ?? "max"
+    }-${options.search ?? "none"}-${options.sort ?? "default"}`;
+
+    const products = await Queries.runPayloadFind<Product>({
+      collection: CollectionName.products,
+      tag: cacheKey,
+      params: {
+        draft: false,
+        overrideAccess: false,
+        page,
+        limit,
+        pagination: true,
+        sort: options.sort || "-createdAt",
+        depth: 1,
+        where,
+        select: {
+          title: true,
+          slug: true,
+          image: true,
+          priceInEGP: true,
+          originalPriceInEGP: true,
+          brand: true,
+          conditionType: true,
+          conditionGrade: true,
+          sportTypes: true,
+          productType: true,
+          status: true,
+        } as any,
+      },
+    });
+
+    const imageIds = products.map((p) => Number(p.image)).filter(Boolean);
+    if (imageIds.length) {
+      const media = await Queries.runPayloadFind<Media>({
+        collection: "media",
+        tag: `${cacheKey}-media`,
+        params: {
+          depth: 0,
+          limit: 0,
+          pagination: false,
+          where: { id: { in: imageIds } },
+        },
+      });
+
+      const mediaById = new Map<number, Media>();
+      for (const m of media) mediaById.set(Number(m.id), m);
+
+      products.forEach((p, i) => {
+        (products[i] as any).image =
+          mediaById.get(Number(p.image)) ?? (p.image as any);
+      });
+    }
+
+    const countResult = await Queries.runPayloadFind<{ id: number }>({
+      collection: CollectionName.products,
+      tag: `${cacheKey}-count`,
+      params: {
+        draft: false,
+        overrideAccess: false,
+        limit: 0,
+        pagination: false,
+        depth: 0,
+        where,
+        select: { id: true } as any,
+      },
+    });
+
+    return { products, totalCount: countResult.length };
+  }
+
+  /**
+   * يجيب Product Types مفلترة بالـsport
+   */
+  static async queryProductTypesBySport(
+    sportType: SportType | null,
+  ): Promise<ProductType[]> {
+    const all = await Queries.queryProductTypes();
+
+    if (!sportType) return all;
+
+    return all.filter(
+      (pt) =>
+        pt.sportTypes?.includes(sportType) ||
+        pt.sportTypes?.includes(SportType.GENERAL) ||
+        !pt.sportTypes?.length,
+    );
   }
 }

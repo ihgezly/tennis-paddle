@@ -1,61 +1,58 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  FiPackage,
+  FiShoppingBag,
+  FiTrendingUp,
+  FiPlus,
+  FiRefreshCw,
+  FiAlertCircle,
+} from "react-icons/fi";
 
-// ✅ استيراد الـCSS المخصص للأدمن
-import "@/app/(payload)/custom-admin.css";
+import CallmebotWidget from "@/components/admin/callmebot-widget";
+import OrderRow from "@/components/admin/order-row";
+import StatsCard from "@/components/admin/stats-card";
+import ToastContainer, {
+  type ToastMessage,
+  type ToastType,
+} from "@/components/admin/toast";
+import "@/lib/styles/admin-dashboard.css";
 
-import appConfig from "@/lib/core/config";
+export type AdminOrder = {
+  id: number;
+  name: string;
+  phone: string;
+  email: string;
+  amount: number;
+  status: string;
+  createdAt: string;
+  itemCount: number;
+};
 
 type Stats = {
-  orders: { pending: number; ready: number; done: number; total: number };
-  revenue: { total: number; last30Days: number };
+  orders: {
+    new: number;
+    pendingPayment: number;
+    ready: number;
+    done: number;
+    total: number;
+  };
+  revenue: {
+    total: number;
+    last30Days: number;
+  };
   products: {
     published: number;
+    sold: number;
     lowStock: number;
     inventoryCost: number;
     inventoryRetail: number;
     potentialProfit: number;
   };
+  recentOrders: AdminOrder[];
 };
-
-const Card = ({
-  label,
-  value,
-  hint,
-  color,
-}: {
-  label: string;
-  value: string | number;
-  hint?: string;
-  color?: string;
-}) => (
-  <div
-    style={{
-      border: "1px solid var(--theme-elevation-150)",
-      borderRadius: 8,
-      padding: "16px 20px",
-      background: "var(--theme-elevation-50)",
-      minWidth: 160,
-      flex: 1,
-    }}
-  >
-    <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>{label}</div>
-    <div
-      style={{
-        fontSize: 24,
-        fontWeight: 700,
-        color: color ?? "inherit",
-        marginBottom: 4,
-      }}
-    >
-      {value}
-    </div>
-    {hint ? (
-      <div style={{ fontSize: 11, opacity: 0.6 }}>{hint}</div>
-    ) : null}
-  </div>
-);
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("ar-EG", {
@@ -66,82 +63,268 @@ const fmt = (n: number) =>
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  useEffect(() => {
-    fetch(`${appConfig.SERVER_URL}/api/admin/stats`, {
-      credentials: "include",
-    })
-      .then((r) => (r.ok ? r.json() : null))
-      .then(setStats)
-      .catch(() => {});
+  const notify = useCallback((type: ToastType, message: string) => {
+    setToasts((prev) => [
+      ...prev,
+      { id: Date.now() + Math.random(), type, message },
+    ]);
   }, []);
 
-  if (!stats) return null;
+  const dismissToast = useCallback((id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const loadStats = useCallback(
+    async (isRefresh = false) => {
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
+
+      try {
+        const res = await fetch("/api/admin/stats", {
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch stats");
+
+        const data = (await res.json()) as Stats;
+        setStats(data);
+      } catch (err) {
+        console.error(err);
+        notify("error", "فشل تحميل الإحصائيات");
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [notify],
+  );
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  const handleMarkedSold = useCallback(() => {
+    // refresh stats after marking an order as sold
+    setTimeout(() => loadStats(true), 500);
+  }, [loadStats]);
+
+  if (loading || !stats) {
+    return (
+      <div className="admin-dashboard">
+        <div className="admin-header">
+          <div className="admin-header__title">
+            <span className="admin-header__dot" />
+            جارٍ التحميل...
+          </div>
+        </div>
+        <div className="admin-stats-grid">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="admin-skeleton" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const { orders, revenue, products, recentOrders } = stats;
 
   return (
-    <div style={{ marginBottom: 24 }}>
-      <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>
-        نظرة عامة
-      </h2>
+    <div className="admin-dashboard">
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <Card
-          label="طلبات معلقة"
-          value={stats.orders.pending}
-          hint="بحاجة لتأكيد"
-          color="#f59e0b"
+      {/* ═══════════ HEADER ═══════════ */}
+      <div className="admin-header">
+        <h1 className="admin-header__title">
+          <span className="admin-header__dot" />
+          لوحة التحكم
+        </h1>
+
+        <div className="admin-header__actions">
+          <button
+            type="button"
+            onClick={() => loadStats(true)}
+            disabled={refreshing}
+            className="admin-btn admin-btn--ghost"
+          >
+            <FiRefreshCw
+              size={14}
+              style={{
+                animation: refreshing ? "admin-spin 1s linear infinite" : "none",
+              }}
+            />
+            {refreshing ? "جارٍ التحديث..." : "تحديث"}
+          </button>
+
+          <Link
+            href="/admin/collections/products/create"
+            className="admin-btn admin-btn--primary"
+          >
+            <FiPlus size={16} />
+            إضافة منتج
+          </Link>
+        </div>
+      </div>
+
+      {/* ═══════════ STATS ═══════════ */}
+      <div className="admin-stats-grid">
+        <StatsCard
+          label="طلبات جديدة"
+          value={orders.new + orders.pendingPayment}
+          hint="تحتاج متابعة"
+          accent="#f59e0b"
+          icon={<FiShoppingBag />}
         />
-        <Card
-          label="طلبات جاهزة"
-          value={stats.orders.ready}
+        <StatsCard
+          label="قيد التنفيذ"
+          value={orders.ready}
           hint="جاهزة للتسليم"
-          color="#10b981"
+          accent="#3b82f6"
+          icon={<FiPackage />}
         />
-        <Card
-          label="طلبات مكتملة"
-          value={stats.orders.done}
-          hint="آخر 30 يوم غير مبيّن"
-          color="#3b82f6"
+        <StatsCard
+          label="مكتملة"
+          value={orders.done}
+          hint="تم البيع"
+          accent="#10b981"
+          icon={<FiPackage />}
         />
-        <Card label="إجمالي الطلبات" value={stats.orders.total} />
+        <StatsCard
+          label="إجمالي الطلبات"
+          value={orders.total}
+          accent="var(--admin-volt)"
+          icon={<FiShoppingBag />}
+        />
       </div>
 
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 12 }}>
-        <Card
+      <div className="admin-stats-grid">
+        <StatsCard
           label="إجمالي الإيرادات"
-          value={fmt(stats.revenue.total)}
-          color="#10b981"
+          value={fmt(revenue.total)}
+          accent="#10b981"
+          icon={<FiTrendingUp />}
         />
-        <Card
-          label="إيرادات آخر 30 يوم"
-          value={fmt(stats.revenue.last30Days)}
-          color="#10b981"
+        <StatsCard
+          label="إيرادات 30 يوم"
+          value={fmt(revenue.last30Days)}
+          accent="#10b981"
         />
-        <Card
-          label="منتجات منشورة"
-          value={stats.products.published}
+        <StatsCard
+          label="منتجات معروضة"
+          value={products.published}
+          accent="#3b82f6"
         />
-        <Card
-          label="مخزون منخفض (< 3)"
-          value={stats.products.lowStock}
-          color={stats.products.lowStock > 0 ? "#ef4444" : "#10b981"}
+        <StatsCard
+          label="منتجات مبيعة"
+          value={products.sold}
+          accent="#6b7280"
         />
       </div>
 
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 12 }}>
-        <Card
-          label="قيمة المخزون (تكلفة)"
-          value={fmt(stats.products.inventoryCost)}
-        />
-        <Card
-          label="قيمة المخزون (بيع)"
-          value={fmt(stats.products.inventoryRetail)}
-        />
-        <Card
-          label="ربح محتمل من المخزون"
-          value={fmt(stats.products.potentialProfit)}
-          color="#10b981"
-        />
+      {/* ─── Low stock alert ─── */}
+      {products.lowStock > 0 ? (
+        <div
+          className="admin-callmebot"
+          style={{
+            borderColor: "rgba(239, 68, 68, 0.35)",
+            background:
+              "linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, transparent 60%)",
+            marginBottom: 28,
+          }}
+        >
+          <div className="admin-callmebot__info">
+            <div
+              className="admin-callmebot__icon"
+              style={{
+                background: "#ef4444",
+                boxShadow: "0 0 20px rgba(239, 68, 68, 0.35)",
+              }}
+            >
+              <FiAlertCircle />
+            </div>
+            <div className="admin-callmebot__text">
+              <div className="admin-callmebot__title">تنبيه مخزون</div>
+              <div className="admin-callmebot__status admin-callmebot__status--error">
+                {products.lowStock} منتج بمخزون منخفض (أقل من 3)
+              </div>
+            </div>
+          </div>
+
+          <Link
+            href="/admin/collections/products?where[inventory][less_than]=3"
+            className="admin-btn admin-btn--ghost"
+          >
+            عرض المنتجات
+          </Link>
+        </div>
+      ) : null}
+
+      {/* ═══════════ RECENT ORDERS ═══════════ */}
+      <div className="admin-section">
+        <div className="admin-section__header">
+          <h2 className="admin-section__title">آخر الطلبات</h2>
+          <Link
+            href="/admin/collections/orders"
+            className="admin-section__link"
+          >
+            عرض الكل →
+          </Link>
+        </div>
+
+        {recentOrders.length === 0 ? (
+          <div className="admin-empty">
+            <FiShoppingBag className="admin-empty__icon" />
+            <div className="admin-empty__text">لا توجد طلبات بعد</div>
+          </div>
+        ) : (
+          <div className="admin-orders">
+            {recentOrders.map((order) => (
+              <OrderRow
+                key={order.id}
+                order={order}
+                onMarkedSold={handleMarkedSold}
+                onNotify={notify}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ═══════════ CALLMEBOT ═══════════ */}
+      <div className="admin-section">
+        <div className="admin-section__header">
+          <h2 className="admin-section__title">الإشعارات</h2>
+        </div>
+        <CallmebotWidget onNotify={notify} />
+      </div>
+
+      {/* ═══════════ INVENTORY VALUE ═══════════ */}
+      <div className="admin-section">
+        <div className="admin-section__header">
+          <h2 className="admin-section__title">قيمة المخزون</h2>
+        </div>
+
+        <div className="admin-stats-grid">
+          <StatsCard
+            label="تكلفة المخزون"
+            value={fmt(products.inventoryCost)}
+            accent="#6b7280"
+          />
+          <StatsCard
+            label="قيمة البيع المتوقعة"
+            value={fmt(products.inventoryRetail)}
+            accent="#3b82f6"
+          />
+          <StatsCard
+            label="ربح محتمل"
+            value={fmt(products.potentialProfit)}
+            accent="#10b981"
+          />
+        </div>
       </div>
     </div>
   );

@@ -29,37 +29,61 @@ export default async function Hero() {
 
   return (
     <section className="relative min-h-[88vh] overflow-hidden">
+      {/* ✅ keyframes محلية للـhero */}
+      <style>{`
+        @keyframes gradient-shift {
+          0%, 100% { background-position: 0% 50%; }
+          50%      { background-position: 100% 50%; }
+        }
+      `}</style>
+
       <HeroVideo />
 
       <div className="container relative z-10 py-12 lg:py-20">
         <div className="flex flex-col items-center gap-12 lg:flex-row lg:items-center lg:gap-16">
           {/* ═══════════ LEFT ═══════════ */}
           <div className="flex-1 space-y-8 text-center lg:text-start">
-            {/* Rating badge */}
+            {/* ✅ Rating badge — جديد */}
             <div
-              className="inline-flex items-center gap-3 rounded-full border border-border bg-surface/70 px-4 py-1.5 text-xs text-text-secondary backdrop-blur-sm"
-              style={{ animation: "logo-in 0.6s ease-out both" }}
+              className="inline-flex items-center gap-3 rounded-full border border-volt/20 bg-surface/70 px-5 py-2 text-xs text-text-secondary backdrop-blur-md"
+              style={{
+                animation: "logo-in 0.6s ease-out both",
+                boxShadow: "0 0 24px rgba(212, 255, 0, 0.15)",
+              }}
             >
               <div className="flex items-center gap-1">
-                <FiStar className="h-3.5 w-3.5 fill-gold text-gold" />
-                <span className="font-medium text-foreground">4.9</span>
+                <FiStar className="h-3.5 w-3.5 fill-volt text-volt" />
+                <span className="font-bold text-foreground">4.9</span>
               </div>
               <span className="h-3 w-px bg-border" />
-              <span>معدات أصلية 100%</span>
+              <span className="font-medium">معدات أصلية 100%</span>
+              <span
+                className="ms-1 h-2 w-2 rounded-full bg-volt"
+                style={{
+                  boxShadow: "0 0 8px var(--volt-glow)",
+                  animation: "pulse-glow 2s ease-in-out infinite",
+                }}
+                aria-hidden="true"
+              />
             </div>
 
-            {/* ✅ Title — gradient على الجملة كلها */}
+            {/* ✅ Title — gradient متحرك */}
             <div className="space-y-4">
               <h1
                 className="text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl lg:text-7xl"
                 style={{
-                  animation: "logo-in 0.8s 0.1s ease-out both",
                   backgroundImage:
                     "linear-gradient(135deg, var(--padel-blue) 0%, var(--volt) 45%, var(--tennis-orange) 100%)",
                   WebkitBackgroundClip: "text",
                   backgroundClip: "text",
                   color: "transparent",
                   WebkitTextFillColor: "transparent",
+                  backgroundSize: "200% 200%",
+                  animationName: "logo-in, gradient-shift",
+                  animationDuration: "0.8s, 6s",
+                  animationTimingFunction: "ease-out, ease-in-out",
+                  animationIterationCount: "1, infinite",
+                  animationFillMode: "both, none",
                 }}
               >
                 <span className="block">العب بشكل</span>

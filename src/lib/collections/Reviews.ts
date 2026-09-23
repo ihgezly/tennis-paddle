@@ -33,7 +33,7 @@ export const Reviews: CollectionConfig = {
   },
   admin: {
     useAsTitle: "title",
-    group: "Content",
+    group: "المحتوى",
     defaultColumns: ["title", "product", "rating", "authorName", "createdAt"],
   },
   fields: [

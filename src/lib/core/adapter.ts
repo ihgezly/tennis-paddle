@@ -12,23 +12,14 @@ export const getCartQuantity = (
   return cart.items.reduce((sum, it) => sum + Number(it?.quantity ?? 0), 0);
 };
 
+// ✅ EGP فقط — مفيش USD
 const pickPrice = (product: any, variant: any): number | undefined => {
-  return (
-    variant?.priceInEGP ??
-    product?.priceInEGP ??
-    variant?.priceInUSD ??
-    product?.priceInUSD ??
-    undefined
-  );
+  return variant?.priceInEGP ?? product?.priceInEGP ?? undefined;
 };
 
 const pickOriginalPrice = (product: any, variant: any): number | undefined => {
   return (
-    variant?.originalPriceInEGP ??
-    product?.originalPriceInEGP ??
-    variant?.originalPriceInUSD ??
-    product?.originalPriceInUSD ??
-    undefined
+    variant?.originalPriceInEGP ?? product?.originalPriceInEGP ?? undefined
   );
 };
 
@@ -77,9 +68,12 @@ export const buildProductPurchaseSectionData = (
 } => {
   const basePrice = pickPrice(product, null) ?? 0;
 
+  // ✅ base_ans — محدّث بـtitle و image
   const base_ans = {
     id: product.id,
-    inventory: product.inventory!,
+    title: product.title,             // ✅ جديد — للـQuickOrderButton
+    image: product.image ?? null,     // ✅ جديد — للـQuickOrderButton
+    inventory: product.inventory ?? 0,
     price: basePrice,
     originalPrice: pickOriginalPrice(product, null),
     variants: [],
@@ -110,14 +104,8 @@ export const buildProductPurchaseSectionData = (
           if (!v) return null;
 
           const vAny = v as any;
-          const price =
-            vAny.priceInEGP ??
-            vAny.priceInUSD ??
-            basePrice;
-          const originalPrice =
-            vAny.originalPriceInEGP ??
-            vAny.originalPriceInUSD ??
-            undefined;
+          const price = vAny.priceInEGP ?? basePrice;
+          const originalPrice = vAny.originalPriceInEGP ?? undefined;
 
           return {
             id: String(v.id),

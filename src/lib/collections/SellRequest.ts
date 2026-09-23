@@ -14,7 +14,7 @@ export const SellRequest: CollectionConfig = {
   slug: CollectionName.sellRequests,
   admin: {
     useAsTitle: "title",
-    group: "Sell Requests",
+    group: "الطلبات",
     defaultColumns: ["title", "customer", "askingPrice", "status", "createdAt"],
   },
   access: {
@@ -42,7 +42,6 @@ export const SellRequest: CollectionConfig = {
           throw new Error(`Please upload at least ${MIN_IMAGES} images.`);
         }
 
-        // ✅ التحقق من conditionGrade بس لو conditionType موجود
         if (data.conditionType) {
           const conditionTypeId =
             typeof data.conditionType === "object"
@@ -138,7 +137,6 @@ export const SellRequest: CollectionConfig = {
     },
     { name: "title", type: "text", required: true },
 
-    // ✅ القسم — بقى اختياري (الأدمن يحدده لاحقًا)
     {
       name: "category",
       type: "relationship",
@@ -151,12 +149,10 @@ export const SellRequest: CollectionConfig = {
 
     { name: "brand", type: "text" },
 
-    // ✅ رقم الهاتف للتواصل
     { name: "phone", type: "text", required: true },
 
     { name: "description", type: "textarea", required: true },
 
-    // ✅ نوع الحالة — بقى اختياري
     {
       name: "conditionType",
       type: "relationship",

@@ -6,7 +6,7 @@ import { useMemo } from "react";
 
 import type { ProductPurchaseSectionData } from "@/lib/core/types/types";
 
-import AddToCart from "@/components/cart/add-to-cart";
+import QuickOrderButton from "@/components/product/quick-order-button";
 import { Price } from "@/components/shared/elements-ssr";
 import { Button } from "@/components/ui";
 import { cn, createUrl } from "@/lib/core/util";
@@ -51,8 +51,25 @@ export default function ProductPurchaseSectionClient({
         <StockIndicator product={product} />
       </div>
 
+      {/* ✅ QuickOrderButton بدل AddToCart */}
       <div className="flex items-center justify-center pb-2">
-        <AddToCart product={product} />
+        <QuickOrderButton
+          product={{
+            id: product.id,
+            title: product.title ?? "",
+            price:
+              product.variants.length > 0
+                ? product.priceRange.min
+                : product.price,
+            image: product.image ?? null,
+            inStock:
+              product.variants.length > 0
+                ? product.variants.some((v) =>
+                    v.options.some((o) => o.inventory > 0),
+                  )
+                : product.inventory > 0,
+          }}
+        />
       </div>
     </>
   );

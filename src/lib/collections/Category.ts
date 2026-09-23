@@ -26,7 +26,7 @@ export const Category: CollectionConfig = {
 
   admin: {
     useAsTitle: "title",
-    group: "Content",
+    group: "الكتالوج",
     defaultColumns: ["title", "parent", "position", "slug", "updatedAt"],
     ...makeAdminPreview(RoutePath.category),
   },

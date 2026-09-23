@@ -31,10 +31,9 @@ export default function NewArrivalsCarousel({ children }: Props) {
   }, [emblaApi, onSelect]);
 
   return (
-    <div className="overflow-hidden" ref={emblaRef}>
+    <div className="overflow-hidden py-4" ref={emblaRef}>
       <div className="flex gap-4">
         {children.map((child, i) => {
-          const isActive = i === selected;
           const distance = Math.abs(i - selected);
 
           return (
@@ -42,8 +41,11 @@ export default function NewArrivalsCarousel({ children }: Props) {
               key={i}
               className="min-w-0 flex-[0_0_70%] sm:flex-[0_0_45%] md:flex-[0_0_32%] lg:flex-[0_0_22%] xl:flex-[0_0_19%] transition-all duration-500"
               style={{
-                transform: isActive ? "scale(1)" : "scale(0.96)",
                 opacity: distance > 2 ? 0.55 : distance > 1 ? 0.85 : 1,
+                transform: `perspective(1200px) rotateY(${
+                  distance > 0 ? (i < selected ? 8 : -8) : 0
+                }deg) scale(${distance > 0 ? 0.97 : 1})`,
+                transformOrigin: i < selected ? "right center" : "left center",
               }}
             >
               {child}

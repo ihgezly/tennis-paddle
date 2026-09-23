@@ -91,9 +91,10 @@ const ThemeToggle = () => {
 };
 
 const NAV_ITEMS = [
-  { label: "بادل", href: "/category/padel", sport: "padel" as const },
-  { label: "تنس", href: "/category/tennis", sport: "tennis" as const },
-  { label: "المتجر", href: "/categories", sport: "general" as const },
+  { label: "بادل", href: "/padel", sport: "padel" as const },
+  { label: "تنس", href: "/tennis", sport: "tennis" as const },
+  { label: "الأحذية", href: "/shoes", sport: "shoes" as const },
+  { label: "كل المنتجات", href: "/categories", sport: "general" as const },
   { label: "بِع معداتك", href: "/sell", sport: "general" as const },
 ];
 
@@ -108,12 +109,10 @@ const HeaderBar = ({ logo, products }: HeaderProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // ═══ حالة المستخدم — بتتحدث من الـclient ═══
   const [user, setUser] = useState<User | null>(null);
   const [userLoaded, setUserLoaded] = useState(false);
   const pathname = usePathname();
 
-  // كل مرة الـroute يتغير، نعيد جلب المستخدم
   useEffect(() => {
     let cancelled = false;
 
@@ -202,7 +201,6 @@ const HeaderBar = ({ logo, products }: HeaderProps) => {
 
           <ThemeToggle />
 
-          {/* ═══ حالة المستخدم — بتتحدث لايف ═══ */}
           {!userLoaded ? (
             <div className="hidden h-8 w-20 animate-pulse rounded-full bg-surface-2 md:block" />
           ) : isAdmin ? (

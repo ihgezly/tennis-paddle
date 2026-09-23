@@ -3,7 +3,7 @@ import { getPayload } from "payload";
 import configPromise from "@payload-config";
 
 import { getCurrentUser } from "@/lib/auth/get-current-user";
-import { OrderStatus } from "@/lib/core/types/types";
+import { OrderStatus, ProductStatus } from "@/lib/core/types/types";
 
 export const dynamic = "force-dynamic";
 
@@ -15,27 +15,48 @@ export async function GET(req: Request) {
 
   const payload = await getPayload({ config: configPromise });
 
-  const [pending, ready, done, allProducts, allOrders] = await Promise.all([
-    payload.find({
+  // ✅ نجيب كل الإحصائيات في parallel
+  const [
+    newOrders,
+    pendingPaymentOrders,
+    readyOrders,
+    doneOrders,
+    totalOrders,
+    publishedProducts,
+    soldProducts,
+    allProductsData,
+    allOrdersData,
+    recentOrders,
+  ] = await Promise.all([
+    payload.count({
+      collection: "orders",
+      where: { status: { equals: OrderStatus.NEW } },
+    }),
+    payload.count({
       collection: "orders",
       where: { status: { equals: OrderStatus.PENDING_PAYMENT } },
-      limit: 0,
-      pagination: false,
-      depth: 0,
     }),
-    payload.find({
+    payload.count({
       collection: "orders",
       where: { status: { equals: OrderStatus.READY } },
-      limit: 0,
-      pagination: false,
-      depth: 0,
     }),
-    payload.find({
+    payload.count({
       collection: "orders",
       where: { status: { equals: OrderStatus.DONE } },
-      limit: 0,
-      pagination: false,
-      depth: 0,
+    }),
+    payload.count({ collection: "orders" }),
+    payload.count({
+      collection: "products",
+      where: {
+        and: [
+          { _status: { equals: "published" } },
+          { status: { equals: ProductStatus.AVAILABLE } },
+        ],
+      },
+    }),
+    payload.count({
+      collection: "products",
+      where: { status: { equals: ProductStatus.SOLD } },
     }),
     payload.find({
       collection: "products",
@@ -43,57 +64,100 @@ export async function GET(req: Request) {
       limit: 0,
       pagination: false,
       depth: 0,
-      select: { costPriceEGP: true, priceInEGP: true, inventory: true } as any,
+      select: {
+        costPriceEGP: true,
+        priceInEGP: true,
+        inventory: true,
+        status: true,
+      } as any,
+      overrideAccess: true,
     }),
     payload.find({
       collection: "orders",
       limit: 0,
       pagination: false,
       depth: 0,
-      select: { amount: true, createdAt: true } as any,
+      select: { amount: true, createdAt: true, status: true } as any,
+      overrideAccess: true,
+    }),
+    payload.find({
+      collection: "orders",
+      sort: "-createdAt",
+      limit: 8,
+      depth: 0,
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        email: true,
+        amount: true,
+        status: true,
+        createdAt: true,
+        items: true,
+      } as any,
+      overrideAccess: true,
     }),
   ]);
 
-  // إيرادات إجمالية
-  const totalRevenue = allOrders.docs.reduce(
-    (s, o: any) => s + Number(o.amount ?? 0),
+  // ─── الإيرادات ───
+  const totalRevenue = (allOrdersData.docs as any[]).reduce(
+    (s, o) => s + Number(o.amount ?? 0),
     0,
   );
 
-  // إيرادات آخر 30 يوم
   const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-  const last30 = allOrders.docs
-    .filter((o: any) => new Date(o.createdAt).getTime() > thirtyDaysAgo)
-    .reduce((s, o: any) => s + Number(o.amount ?? 0), 0);
+  const last30Revenue = (allOrdersData.docs as any[])
+    .filter((o) => new Date(o.createdAt).getTime() > thirtyDaysAgo)
+    .reduce((s, o) => s + Number(o.amount ?? 0), 0);
 
-  // قيمة المخزون + تكلفة
+  // ─── المخزون ───
   let totalCostValue = 0;
   let totalSaleValue = 0;
   let lowStockCount = 0;
-  for (const p of allProducts.docs as any[]) {
+
+  for (const p of allProductsData.docs as any[]) {
+    if (p.status === ProductStatus.SOLD) continue;
+
     const stock = Number(p.inventory ?? 0);
+    if (stock <= 0) continue;
+
     totalCostValue += Number(p.costPriceEGP ?? 0) * stock;
     totalSaleValue += Number(p.priceInEGP ?? 0) * stock;
-    if (stock > 0 && stock < 3) lowStockCount++;
+    if (stock < 3) lowStockCount++;
   }
+
+  // ─── آخر الطلبات (مع تفاصيل مصغّرة) ───
+  const recent = (recentOrders.docs as any[]).map((o) => ({
+    id: o.id,
+    name: o.name,
+    phone: o.phone,
+    email: o.email,
+    amount: Number(o.amount ?? 0),
+    status: o.status,
+    createdAt: o.createdAt,
+    itemCount: Array.isArray(o.items) ? o.items.length : 0,
+  }));
 
   return NextResponse.json({
     orders: {
-      pending: pending.totalDocs,
-      ready: ready.totalDocs,
-      done: done.totalDocs,
-      total: allOrders.totalDocs,
+      new: newOrders.totalDocs,
+      pendingPayment: pendingPaymentOrders.totalDocs,
+      ready: readyOrders.totalDocs,
+      done: doneOrders.totalDocs,
+      total: totalOrders.totalDocs,
     },
     revenue: {
       total: totalRevenue,
-      last30Days: last30,
+      last30Days: last30Revenue,
     },
     products: {
-      published: allProducts.totalDocs,
+      published: publishedProducts.totalDocs,
+      sold: soldProducts.totalDocs,
       lowStock: lowStockCount,
       inventoryCost: totalCostValue,
       inventoryRetail: totalSaleValue,
       potentialProfit: totalSaleValue - totalCostValue,
     },
+    recentOrders: recent,
   });
 }
