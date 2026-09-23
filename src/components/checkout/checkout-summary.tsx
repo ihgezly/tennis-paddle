@@ -33,11 +33,9 @@ export default function CheckoutSummary() {
 
         if (!quantity) return null;
 
+        // ✅ EGP فقط
         const price =
-          (variant as any)?.priceInEGP ??
-          (product as any).priceInEGP ??
-          variant?.priceInUSD ??
-          product.priceInUSD;
+          (variant as any)?.priceInEGP ?? (product as any).priceInEGP;
 
         const variantLabels =
           variant?.options

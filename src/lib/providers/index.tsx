@@ -19,10 +19,10 @@ export default function Providers({ children }: { children: ReactNode }) {
                 slug: true,
                 title: true,
                 image: true,
-                priceInUSD: true,
+                priceInEGP: true, // ✅ كان priceInUSD
               },
               variants: {
-                priceInUSD: true,
+                priceInEGP: true, // ✅ كان priceInUSD
                 options: true,
               },
             },

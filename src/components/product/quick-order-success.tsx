@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { FaCheck, FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp } from "react-icons/fa";
 
-import { getPaymentInstructions, getThankYouMessage } from "@/lib/core/quick-order";
+import {
+  getPaymentInstructions,
+  getThankYouMessage,
+} from "@/lib/core/quick-order";
 
 type Props = {
   orderId: number;
@@ -15,19 +18,11 @@ type Props = {
 
 export default function QuickOrderSuccess({
   orderId,
-  productTitle,
   amount,
   whatsappLink,
-  onClose,
 }: Props) {
   const paymentInstructions = getPaymentInstructions();
   const thankYouMessage = getThankYouMessage();
-
-  const formattedAmount = new Intl.NumberFormat("ar-EG", {
-    style: "currency",
-    currency: "EGP",
-    maximumFractionDigits: 0,
-  }).format(amount);
 
   return (
     <div className="quick-order-success">
@@ -58,9 +53,7 @@ export default function QuickOrderSuccess({
 
       <p className="quick-order-success__subtitle">{thankYouMessage}</p>
 
-      <div className="quick-order-success__order-id">
-        طلب #{orderId}
-      </div>
+      <div className="quick-order-success__order-id">طلب #{orderId}</div>
 
       <div className="quick-order-success__instructions">
         {paymentInstructions}

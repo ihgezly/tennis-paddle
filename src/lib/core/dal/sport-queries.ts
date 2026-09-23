@@ -1,9 +1,8 @@
-import type { Media, Product } from "@/lib/core/types/payload-types";
+import type { Product } from "@/lib/core/types/payload-types";
 
 import Queries from "@/lib/core/dal/queries";
 import {
   CollectionName,
-  ProductStatus,
   SportType,
   type ProductType,
 } from "@/lib/core/types/types";

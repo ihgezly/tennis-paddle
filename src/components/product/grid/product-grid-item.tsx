@@ -8,12 +8,14 @@ import ImageVideo from "@/components/shared/image-video";
 import { RoutePath } from "@/lib/core/types/types";
 
 export default function ProductGridItem({ product }: { product: Product }) {
-  const { image, priceInUSD, title, slug } = product;
+  // ✅ شيلنا priceInUSD من الـdestructuring
+  const { image, title, slug } = product;
 
   const priceEGP = (product as any).priceInEGP as number | undefined;
   const originalEGP = (product as any).originalPriceInEGP as number | undefined;
 
-  const displayPrice = priceEGP ?? priceInUSD ?? 0;
+  // ✅ EGP فقط
+  const displayPrice = priceEGP ?? 0;
   const hasDiscount =
     originalEGP != null && priceEGP != null && originalEGP > priceEGP;
   const discountPercent = hasDiscount

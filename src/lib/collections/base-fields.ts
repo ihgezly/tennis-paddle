@@ -53,11 +53,6 @@ export const mixedSlugField = () =>
     slugify: slugifyMixed,
   });
 
-const lowerName = (f: Field) => {
-  const name = (f as { name?: unknown }).name;
-  return typeof name === "string" ? name.toLowerCase() : "";
-};
-
 // ═══════════════════════════════════════════════════════════════
 // ✅ USD Removal — نشيل حقول USD من الـplugin-Ecommerce
 // ═══════════════════════════════════════════════════════════════
@@ -226,7 +221,7 @@ export const FAQS_FIELD: Field = {
   ],
 };
 
-// ─── Legacy helpers (للتوافق مع الكود القديم) ───
+// ─── Legacy helpers ───
 export const stripAdminFieldComponent = (
   admin?: AdminConfig,
 ): AdminConfig | undefined => {

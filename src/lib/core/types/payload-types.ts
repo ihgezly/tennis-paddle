@@ -72,17 +72,18 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    users: User;
     category: Category;
+    'product-types': ProductType;
+    'sell-requests': SellRequest;
+    'return-requests': ReturnRequest;
     media: Media;
     media3d: Media3D;
     reviews: Review;
     'condition-types': ConditionType;
     'condition-grades': ConditionGrade;
-    'sell-requests': SellRequest;
+    users: User;
     'audit-logs': AuditLog;
     'integration-events': IntegrationEvent;
-    'return-requests': ReturnRequest;
     addresses: Address;
     variants: Variant;
     variantTypes: VariantType;
@@ -106,17 +107,18 @@ export interface Config {
     };
   };
   collectionsSelect: {
-    users: UsersSelect<false> | UsersSelect<true>;
     category: CategorySelect<false> | CategorySelect<true>;
+    'product-types': ProductTypesSelect<false> | ProductTypesSelect<true>;
+    'sell-requests': SellRequestsSelect<false> | SellRequestsSelect<true>;
+    'return-requests': ReturnRequestsSelect<false> | ReturnRequestsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     media3d: Media3DSelect<false> | Media3DSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     'condition-types': ConditionTypesSelect<false> | ConditionTypesSelect<true>;
     'condition-grades': ConditionGradesSelect<false> | ConditionGradesSelect<true>;
-    'sell-requests': SellRequestsSelect<false> | SellRequestsSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
     'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
     'integration-events': IntegrationEventsSelect<false> | IntegrationEventsSelect<true>;
-    'return-requests': ReturnRequestsSelect<false> | ReturnRequestsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
     variants: VariantsSelect<false> | VariantsSelect<true>;
     variantTypes: VariantTypesSelect<false> | VariantTypesSelect<true>;
@@ -186,39 +188,6 @@ export interface UserAuthOperations {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  /**
-   * اسم العميل الكامل
-   */
-  name?: string | null;
-  /**
-   * صلاحيات المستخدم. الأدمن يقدر يدخل /admin
-   */
-  roles?: ('admin' | 'customer')[] | null;
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "category".
  */
 export interface Category {
@@ -281,214 +250,37 @@ export interface Media {
   focalY?: number | null;
 }
 /**
+ * أنواع المنتجات — تُستخدم لتصنيف كل منتج
+ *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media3d".
+ * via the `definition` "product-types".
  */
-export interface Media3D {
+export interface ProductType {
   id: number;
-  alt: string;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "reviews".
- */
-export interface Review {
-  id: number;
-  product: number | Product;
-  authorName: string;
-  authorEmail?: string | null;
+  /**
+   * مثال: مضرب، كرة، حذاء، شنطة، جريب
+   */
   title: string;
-  body: string;
-  rating: number;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "products".
- */
-export interface Product {
-  id: number;
-  title: string;
-  brand?: string | null;
-  categories?: (number | Category)[] | null;
-  image: number | Media;
+  /**
+   * الرياضات اللي النوع ده ينفع لها
+   */
+  sportTypes?: ('padel' | 'tennis' | 'general')[] | null;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null;
   slug: string;
-  inventory?: number | null;
-  enableVariants?: boolean | null;
-  variantTypes?: (number | VariantType)[] | null;
-  variants?: {
-    docs?: (number | Variant)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  priceInUSDEnabled?: boolean | null;
-  priceInUSD?: number | null;
   /**
-   * Product price in Egyptian Pounds (primary display price).
+   * أيقونة اختيارية للنوع (SVG أو PNG)
    */
-  priceInEGP?: number | null;
+  icon?: (number | null) | Media;
   /**
-   * Original price before discount (optional). Shown as a strikethrough price when set.
+   * ترتيب العرض
    */
-  originalPriceInEGP?: number | null;
+  position?: number | null;
   /**
-   * سعر التكلفة الفعلي (للأدمن فقط) — يستخدم لحساب الربح.
+   * لو متوقف، مش هيظهر في الفلاتر
    */
-  costPriceEGP?: number | null;
-  description: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  };
-  gallery?:
-    | {
-        image: number | Media;
-        id?: string | null;
-      }[]
-    | null;
-  relatedProducts?: (number | Product)[] | null;
-  faqs?:
-    | {
-        question: string;
-        answer: string;
-        id?: string | null;
-      }[]
-    | null;
-  reviews?: {
-    docs?: (number | Review)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  /**
-   * New or used. Determines whether a grade + notes are required.
-   */
-  conditionType?: (number | null) | ConditionType;
-  conditionGrade?: (number | null) | ConditionGrade;
-  /**
-   * Required for used products — describe wear, defects, etc.
-   */
-  conditionNotes?: string | null;
-  inspectionStatus?: ('draft' | 'pending_inspection' | 'inspected' | 'approved' | 'rejected') | null;
-  /**
-   * Optional. Only .glb files are accepted (max 20MB).
-   */
-  glbModel?: (number | null) | Media3D;
-  updatedAt: string;
-  createdAt: string;
-  deletedAt?: string | null;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "variantTypes".
- */
-export interface VariantType {
-  id: number;
-  label: string;
-  name: string;
-  options?: {
-    docs?: (number | VariantOption)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  updatedAt: string;
-  createdAt: string;
-  deletedAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "variantOptions".
- */
-export interface VariantOption {
-  id: number;
-  _variantOptions_options_order?: string | null;
-  variantType: number | VariantType;
-  label: string;
-  /**
-   * should be defaulted or dynamic based on label
-   */
-  value: string;
-  updatedAt: string;
-  createdAt: string;
-  deletedAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "variants".
- */
-export interface Variant {
-  id: number;
-  /**
-   * Used for administrative purposes, not shown to customers. This is populated by default.
-   */
-  title?: string | null;
-  product: number | Product;
-  options: (number | VariantOption)[];
-  inventory?: number | null;
-  priceInUSDEnabled?: boolean | null;
-  priceInUSD?: number | null;
-  priceInEGP?: number | null;
-  originalPriceInEGP?: number | null;
-  updatedAt: string;
-  createdAt: string;
-  deletedAt?: string | null;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "condition-types".
- */
-export interface ConditionType {
-  id: number;
-  code: 'new' | 'used';
-  nameEn: string;
-  nameAr: string;
-  /**
-   * If checked, condition grade and notes are required.
-   */
-  requiresGrade?: boolean | null;
-  isActive?: boolean | null;
-  sortOrder?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "condition-grades".
- */
-export interface ConditionGrade {
-  id: number;
-  conditionType: number | ConditionType;
-  code: 'like_new' | 'excellent' | 'good' | 'fair';
-  nameEn: string;
-  nameAr: string;
-  sortOrder?: number | null;
   isActive?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -549,54 +341,318 @@ export interface SellRequest {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "audit-logs".
+ * via the `definition` "users".
  */
-export interface AuditLog {
+export interface User {
   id: number;
-  actor?: (number | null) | User;
-  actorEmail?: string | null;
-  action: string;
-  entity: string;
-  entityId: string;
-  before?:
+  /**
+   * اسم العميل الكامل
+   */
+  name?: string | null;
+  /**
+   * صلاحيات المستخدم. الأدمن يقدر يدخل /admin
+   */
+  roles?: ('admin' | 'customer')[] | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
     | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
     | null;
-  after?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  requestId?: string | null;
-  ip?: string | null;
+  password?: string | null;
+  collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "condition-types".
+ */
+export interface ConditionType {
+  id: number;
+  code: 'new' | 'used';
+  nameEn: string;
+  nameAr: string;
+  /**
+   * If checked, condition grade and notes are required.
+   */
+  requiresGrade?: boolean | null;
+  isActive?: boolean | null;
+  sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "integration-events".
+ * via the `definition` "condition-grades".
  */
-export interface IntegrationEvent {
+export interface ConditionGrade {
   id: number;
-  provider: string;
-  eventId: string;
-  eventType?: string | null;
-  resourceId?: string | null;
-  payloadHash?: string | null;
-  status?: ('received' | 'processing' | 'processed' | 'failed') | null;
-  processedAt?: string | null;
-  error?: string | null;
+  conditionType: number | ConditionType;
+  code: 'like_new' | 'excellent' | 'good' | 'fair';
+  nameEn: string;
+  nameAr: string;
+  sortOrder?: number | null;
+  isActive?: boolean | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products".
+ */
+export interface Product {
+  id: number;
+  title: string;
+  /**
+   * الماركة (Nike, Adidas, Wilson, Babolat...)
+   */
+  brand?: string | null;
+  /**
+   * نوع المنتج (مضرب، كرة، حذاء...)
+   */
+  productType?: (number | null) | ProductType;
+  /**
+   * الرياضات اللي المنتج مناسب لها
+   */
+  sportTypes?: ('padel' | 'tennis' | 'general')[] | null;
+  categories?: (number | Category)[] | null;
+  image: number | Media;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  enableVariants?: boolean | null;
+  variantTypes?: (number | VariantType)[] | null;
+  variants?: {
+    docs?: (number | Variant)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * سعر المنتج بالجنيه المصري
+   */
+  priceInEGP: number;
+  /**
+   * السعر قبل الخصم (اختياري). لو موجود، هيتعرض مشطوب.
+   */
+  originalPriceInEGP?: number | null;
+  /**
+   * سعر التكلفة (للأدمن فقط) — لحساب الربح.
+   */
+  costPriceEGP?: number | null;
+  /**
+   * الكمية المتاحة للبيع
+   */
+  inventory: number;
+  /**
+   * حالة المنتج في المتجر
+   */
+  status: 'available' | 'pending' | 'sold' | 'draft';
+  description: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  gallery?:
+    | {
+        image: number | Media;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * مواصفات اختيارية — للمضارب (وزن/أبعاد/شكل)، للشوزات (مقاسات)
+   */
+  specs?: {
+    /**
+     * الوزن بالجرام (للمضارب)
+     */
+    weight?: number | null;
+    /**
+     * التوازن: Head Light / Head Heavy / Balanced
+     */
+    balance?: string | null;
+    /**
+     * الطول بالسنتيمتر
+     */
+    length?: number | null;
+    /**
+     * العرض بالسنتيمتر
+     */
+    width?: number | null;
+    /**
+     * السمك بالمليمتر (للمضارب)
+     */
+    thickness?: number | null;
+    /**
+     * مقاس الرأس بالسنتيمتر المربع
+     */
+    headSize?: number | null;
+    /**
+     * شكل المضرب
+     */
+    shape?: ('round' | 'teardrop' | 'diamond') | null;
+  };
+  /**
+   * المقاسات المتاحة للشوزات (مثال: 38، 40، 42). اتركه فاضي لغير الشوزات.
+   */
+  availableSizes?:
+    | {
+        /**
+         * المقاس (مثال: 40 أو 40.5)
+         */
+        size: string;
+        /**
+         * الكمية المتاحة للمقاس ده
+         */
+        inventory?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  relatedProducts?: (number | Product)[] | null;
+  faqs?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
+  reviews?: {
+    docs?: (number | Review)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * جديد أو مستعمل
+   */
+  conditionType?: (number | null) | ConditionType;
+  conditionGrade?: (number | null) | ConditionGrade;
+  /**
+   * تفاصيل الحالة للمستعمل
+   */
+  conditionNotes?: string | null;
+  inspectionStatus?: ('draft' | 'pending_inspection' | 'inspected' | 'approved' | 'rejected') | null;
+  /**
+   * اختياري. ملف .glb بحجم أقصى 20MB
+   */
+  glbModel?: (number | null) | Media3D;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "variantTypes".
+ */
+export interface VariantType {
+  id: number;
+  label: string;
+  name: string;
+  options?: {
+    docs?: (number | VariantOption)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "variantOptions".
+ */
+export interface VariantOption {
+  id: number;
+  _variantOptions_options_order?: string | null;
+  variantType: number | VariantType;
+  label: string;
+  /**
+   * should be defaulted or dynamic based on label
+   */
+  value: string;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "variants".
+ */
+export interface Variant {
+  id: number;
+  /**
+   * Used for administrative purposes, not shown to customers. This is populated by default.
+   */
+  title?: string | null;
+  product: number | Product;
+  options: (number | VariantOption)[];
+  inventory?: number | null;
+  /**
+   * سعر الـvariant بالجنيه المصري
+   */
+  priceInEGP?: number | null;
+  /**
+   * السعر قبل الخصم (اختياري)
+   */
+  originalPriceInEGP?: number | null;
+  updatedAt: string;
+  createdAt: string;
+  deletedAt?: string | null;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews".
+ */
+export interface Review {
+  id: number;
+  product: number | Product;
+  authorName: string;
+  authorEmail?: string | null;
+  title: string;
+  body: string;
+  rating: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media3d".
+ */
+export interface Media3D {
+  id: number;
+  alt: string;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -643,6 +699,57 @@ export interface Order {
   merchantOrderId?: string | null;
   paymobOrderId?: string | null;
   paymobTransactionId?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-logs".
+ */
+export interface AuditLog {
+  id: number;
+  actor?: (number | null) | User;
+  actorEmail?: string | null;
+  action: string;
+  entity: string;
+  entityId: string;
+  before?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  after?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  requestId?: string | null;
+  ip?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "integration-events".
+ */
+export interface IntegrationEvent {
+  id: number;
+  provider: string;
+  eventId: string;
+  eventType?: string | null;
+  resourceId?: string | null;
+  payloadHash?: string | null;
+  status?: ('received' | 'processing' | 'processed' | 'failed') | null;
+  processedAt?: string | null;
+  error?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -792,12 +899,20 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'users';
-        value: number | User;
-      } | null)
-    | ({
         relationTo: 'category';
         value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'product-types';
+        value: number | ProductType;
+      } | null)
+    | ({
+        relationTo: 'sell-requests';
+        value: number | SellRequest;
+      } | null)
+    | ({
+        relationTo: 'return-requests';
+        value: number | ReturnRequest;
       } | null)
     | ({
         relationTo: 'media';
@@ -820,8 +935,8 @@ export interface PayloadLockedDocument {
         value: number | ConditionGrade;
       } | null)
     | ({
-        relationTo: 'sell-requests';
-        value: number | SellRequest;
+        relationTo: 'users';
+        value: number | User;
       } | null)
     | ({
         relationTo: 'audit-logs';
@@ -830,10 +945,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'integration-events';
         value: number | IntegrationEvent;
-      } | null)
-    | ({
-        relationTo: 'return-requests';
-        value: number | ReturnRequest;
       } | null)
     | ({
         relationTo: 'addresses';
@@ -911,30 +1022,6 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users_select".
- */
-export interface UsersSelect<T extends boolean = true> {
-  name?: T;
-  roles?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
-  sessions?:
-    | T
-    | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "category_select".
  */
 export interface CategorySelect<T extends boolean = true> {
@@ -955,6 +1042,70 @@ export interface CategorySelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-types_select".
+ */
+export interface ProductTypesSelect<T extends boolean = true> {
+  title?: T;
+  sportTypes?: T;
+  generateSlug?: T;
+  slug?: T;
+  icon?: T;
+  position?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sell-requests_select".
+ */
+export interface SellRequestsSelect<T extends boolean = true> {
+  customer?: T;
+  title?: T;
+  category?: T;
+  brand?: T;
+  phone?: T;
+  description?: T;
+  conditionType?: T;
+  conditionGrade?: T;
+  askingPrice?: T;
+  offeredPrice?: T;
+  acceptedPrice?: T;
+  currencyCode?: T;
+  images?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
+  status?: T;
+  adminNotes?: T;
+  resultingProduct?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "return-requests_select".
+ */
+export interface ReturnRequestsSelect<T extends boolean = true> {
+  customer?: T;
+  order?: T;
+  items?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        id?: T;
+      };
+  reason?: T;
+  status?: T;
+  adminNotes?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1036,32 +1187,27 @@ export interface ConditionGradesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "sell-requests_select".
+ * via the `definition` "users_select".
  */
-export interface SellRequestsSelect<T extends boolean = true> {
-  customer?: T;
-  title?: T;
-  category?: T;
-  brand?: T;
-  phone?: T;
-  description?: T;
-  conditionType?: T;
-  conditionGrade?: T;
-  askingPrice?: T;
-  offeredPrice?: T;
-  acceptedPrice?: T;
-  currencyCode?: T;
-  images?:
-    | T
-    | {
-        image?: T;
-        id?: T;
-      };
-  status?: T;
-  adminNotes?: T;
-  resultingProduct?: T;
+export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  roles?: T;
   updatedAt?: T;
   createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1098,26 +1244,6 @@ export interface IntegrationEventsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "return-requests_select".
- */
-export interface ReturnRequestsSelect<T extends boolean = true> {
-  customer?: T;
-  order?: T;
-  items?:
-    | T
-    | {
-        product?: T;
-        quantity?: T;
-        id?: T;
-      };
-  reason?: T;
-  status?: T;
-  adminNotes?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "addresses_select".
  */
 export interface AddressesSelect<T extends boolean = true> {
@@ -1145,8 +1271,6 @@ export interface VariantsSelect<T extends boolean = true> {
   product?: T;
   options?: T;
   inventory?: T;
-  priceInUSDEnabled?: T;
-  priceInUSD?: T;
   priceInEGP?: T;
   originalPriceInEGP?: T;
   updatedAt?: T;
@@ -1186,24 +1310,43 @@ export interface VariantOptionsSelect<T extends boolean = true> {
 export interface ProductsSelect<T extends boolean = true> {
   title?: T;
   brand?: T;
+  productType?: T;
+  sportTypes?: T;
   categories?: T;
   image?: T;
   generateSlug?: T;
   slug?: T;
-  inventory?: T;
   enableVariants?: T;
   variantTypes?: T;
   variants?: T;
-  priceInUSDEnabled?: T;
-  priceInUSD?: T;
   priceInEGP?: T;
   originalPriceInEGP?: T;
   costPriceEGP?: T;
+  inventory?: T;
+  status?: T;
   description?: T;
   gallery?:
     | T
     | {
         image?: T;
+        id?: T;
+      };
+  specs?:
+    | T
+    | {
+        weight?: T;
+        balance?: T;
+        length?: T;
+        width?: T;
+        thickness?: T;
+        headSize?: T;
+        shape?: T;
+      };
+  availableSizes?:
+    | T
+    | {
+        size?: T;
+        inventory?: T;
         id?: T;
       };
   relatedProducts?: T;

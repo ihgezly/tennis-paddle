@@ -1,7 +1,5 @@
 "use client";
 
-import { useFilters } from "@/lib/core/hooks/use-filters";
-
 import ActiveFilters from "./active-filters";
 import BrandFilter from "./brand-filter";
 import ConditionFilter from "./condition-filter";

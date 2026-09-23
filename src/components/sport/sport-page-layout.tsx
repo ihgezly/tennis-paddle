@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
-import type { Product, Media } from "@/lib/core/types/payload-types";
+import type { Product } from "@/lib/core/types/payload-types";
 import type { ProductType, SportType } from "@/lib/core/types/types";
 
 import ProductCard from "@/components/shop/product-card/product-card";
@@ -67,7 +67,7 @@ export default async function SportPageLayout({
       />
 
       <div className="container py-10">
-        {/* ✅ Filters Toolbar (mobile + sort + active chips) */}
+        {/* ✅ Filters Toolbar */}
         <FiltersToolbar
           brands={brands}
           productTypes={productTypesForFilters}

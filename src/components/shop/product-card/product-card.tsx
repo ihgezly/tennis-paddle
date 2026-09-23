@@ -15,7 +15,8 @@ export default function ProductCard({ product }: { product: Product }) {
   const priceEGP = (product as any).priceInEGP as number | undefined;
   const originalEGP = (product as any).originalPriceInEGP as number | undefined;
 
-  const displayPrice = priceEGP ?? product.priceInUSD ?? 0;
+  // ✅ EGP فقط
+  const displayPrice = priceEGP ?? 0;
   const hasDiscount =
     originalEGP != null && priceEGP != null && originalEGP > priceEGP;
   const discountPercent = hasDiscount

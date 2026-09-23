@@ -93,7 +93,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
         }
 
         // ─── اشتقاق الرياضات من نوع المنتج لو مش موجودة ───
-        // ✅ الحل المؤقت — بعد generate:types هنشيل as any
         if (data.productType && (!data.sportTypes || !data.sportTypes.length)) {
           const productTypeId =
             typeof data.productType === "object"
@@ -136,7 +135,7 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
     {
       name: "productType",
       type: "relationship",
-      relationTo: "product-types" as any, // ✅ مؤقت — بعد generate:types هنشيل as any
+      relationTo: "product-types" as any,
       admin: {
         position: "sidebar",
         description: "نوع المنتج (مضرب، كرة، حذاء...)",
@@ -179,10 +178,13 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
 
     mixedSlugField(),
 
-    // ─── حذف كل حقول USD من الـplugin ───
-    ...stripUSDFromFields(((defaultCollection.fields || []) as Field[]).filter(
-      (f) => (f as { name?: string }).name !== "layout",
-    )),
+    // ✅ حذف حقول USD من الـplugin + استثناء inventory
+    ...stripUSDFromFields(
+      ((defaultCollection.fields || []) as Field[]).filter((f) => {
+        const name = (f as { name?: string }).name;
+        return !["layout", "inventory"].includes(name ?? "");
+      }),
+    ),
 
     // ─── الأسعار (EGP فقط) ───
     {
@@ -229,10 +231,12 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
         description: "الكمية المتاحة للبيع",
       },
     },
-    // ✅ status — محدّث بـPENDING و DRAFT
+
+    // ✅ status — مع enumName مخصص لتجنب التعارض مع plugin-ecommerce
     {
       name: "status",
       type: "select",
+      enumName: "enum_product_availability_status",
       required: true,
       defaultValue: ProductStatus.AVAILABLE,
       options: [
@@ -265,7 +269,7 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       ],
     },
 
-    // ─── المواصفات (اختيارية — تظهر للمضارب والشوزات) ───
+    // ─── المواصفات ───
     {
       name: "specs",
       type: "group",

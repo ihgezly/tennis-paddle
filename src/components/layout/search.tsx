@@ -53,9 +53,8 @@ export default function Search({ products }: { products: Product[] }) {
       .map((p) => {
         const title = p.title.toLowerCase();
         const slug = p.slug.toLowerCase();
-        const price = String(
-          (p as any).priceInEGP ?? p.priceInUSD ?? "",
-        );
+        // ✅ EGP فقط
+        const price = String((p as any).priceInEGP ?? "");
 
         let score = 0;
         if (title === q) score = 100;
@@ -211,13 +210,8 @@ export default function Search({ products }: { products: Product[] }) {
                   </div>
 
                   <div className="shrink-0 text-sm font-semibold text-gold">
-                    <Price
-                      amount={
-                        (product as any).priceInEGP ??
-                        product.priceInUSD ??
-                        0
-                      }
-                    />
+                    {/* ✅ EGP فقط */}
+                    <Price amount={(product as any).priceInEGP ?? 0} />
                   </div>
                 </Link>
               ))
