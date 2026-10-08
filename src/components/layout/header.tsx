@@ -3,16 +3,9 @@
 import { PayloadAdminBar } from "@payloadcms/admin-bar";
 import { RefreshRouteOnSave } from "@payloadcms/live-preview-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import {
-  FiSun,
-  FiMoon,
-  FiMenu,
-  FiX,
-  FiUser,
-  FiLogOut,
-} from "react-icons/fi";
+import { FiMenu, FiX, FiUser, FiLogOut } from "react-icons/fi";
 
 import type { Media, User, Product } from "@/lib/core/types/payload-types";
 import type { PayloadAdminBarProps } from "@payloadcms/admin-bar";
@@ -20,11 +13,11 @@ import type { PayloadAdminBarProps } from "@payloadcms/admin-bar";
 import CartModal from "@/components/cart/cart-modal";
 import AccessibilityBar from "@/components/layout/accessibility-bar";
 import Search from "@/components/layout/search";
+import ThemeToggle from "@/components/layout/theme-toggle";
 import ImageVideo from "@/components/shared/image-video";
 import SignatureLine from "@/components/shared/signature-line";
 import appConfig from "@/lib/core/config";
 import { cn } from "@/lib/core/util";
-import { useTheme } from "@/lib/providers/theme";
 
 const LivePreviewListener = () => {
   const router = useRouter();
@@ -74,22 +67,6 @@ const AdminBar = ({
   );
 };
 
-const ThemeToggle = () => {
-  const { theme, setTheme } = useTheme();
-  const isDark = theme === "dark";
-
-  return (
-    <button
-      type="button"
-      onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="rounded-full p-2 text-foreground transition hover:bg-surface-2"
-      aria-label="تبديل الوضع"
-    >
-      {isDark ? <FiSun size={20} /> : <FiMoon size={20} />}
-    </button>
-  );
-};
-
 const NAV_ITEMS = [
   { label: "بادل", href: "/padel", sport: "padel" as const },
   { label: "تنس", href: "/tennis", sport: "tennis" as const },
@@ -111,8 +88,8 @@ const HeaderBar = ({ logo, products }: HeaderProps) => {
 
   const [user, setUser] = useState<User | null>(null);
   const [userLoaded, setUserLoaded] = useState(false);
-  const pathname = usePathname();
 
+  // ✅ fetch مرة واحدة بس — بدل كل pathname
   useEffect(() => {
     let cancelled = false;
 
@@ -133,7 +110,7 @@ const HeaderBar = ({ logo, products }: HeaderProps) => {
     return () => {
       cancelled = true;
     };
-  }, [pathname]);
+  }, []); // ← [] بدل [pathname]
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -331,7 +308,10 @@ const HeaderBar = ({ logo, products }: HeaderProps) => {
   );
 };
 
-export default function HeaderClient({ adminBarProps, ...props }: HeaderProps) {
+export default function HeaderClient({
+  adminBarProps,
+  ...props
+}: HeaderProps) {
   return (
     <>
       <AdminBar adminBarProps={adminBarProps} />

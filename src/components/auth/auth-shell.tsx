@@ -28,9 +28,7 @@ export default function AuthShell({ mode }: AuthShellProps) {
   const t = useTranslations("auth");
 
   const [isRegister, setIsRegister] = useState(mode === "register");
-  const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // ═══ حقول النموذج ═══
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -38,7 +36,7 @@ export default function AuthShell({ mode }: AuthShellProps) {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // ═══ لو المستخدم مسجل بالفعل، يوجه على طول ═══
+  // ✅ ما توقفش الصفحة — يشتغل في الخلفية، لو المستخدم مسجل → redirect
   useEffect(() => {
     let cancelled = false;
 
@@ -49,12 +47,10 @@ export default function AuthShell({ mode }: AuthShellProps) {
         if (data?.user) {
           const isAdmin = data.user.roles?.includes("admin");
           window.location.href = isAdmin ? "/admin" : "/";
-        } else {
-          setCheckingAuth(false);
         }
       })
       .catch(() => {
-        if (!cancelled) setCheckingAuth(false);
+        // تجاهل — الصفحة هتظهر عادي
       });
 
     return () => {
@@ -62,13 +58,11 @@ export default function AuthShell({ mode }: AuthShellProps) {
     };
   }, []);
 
-  // ═══ بعد النجاح: reload كامل للتأكد إن الهيدر يتحدث ═══
   const redirectAfterAuth = (roles?: string[]) => {
     const isAdmin = Array.isArray(roles) && roles.includes("admin");
     window.location.href = isAdmin ? "/admin" : "/";
   };
 
-  // ═══ تسجيل الدخول / إنشاء حساب ═══
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -94,40 +88,29 @@ export default function AuthShell({ mode }: AuthShellProps) {
         );
       }
 
-      toast.success(isRegister ? "تم إنشاء الحساب بنجاح" : "تم تسجيل الدخول");
+      toast.success(
+        isRegister ? "تم إنشاء الحساب بنجاح" : "تم تسجيل الدخول",
+      );
       redirectAfterAuth(data.user?.roles);
     } catch (error: unknown) {
-      const msg =
-        error instanceof Error ? error.message : "حدث خطأ";
+      const msg = error instanceof Error ? error.message : "حدث خطأ";
       toast.error(msg);
       setLoading(false);
     }
   };
 
-  // ═══ Google OAuth ═══
   const handleGoogleLogin = () => {
     setGoogleLoading(true);
     window.location.href = "/api/auth/google";
   };
 
-  // ═══ التبديل بين login/register ═══
   const switchMode = (toRegister: boolean) => {
     setIsRegister(toRegister);
   };
 
-  // شاشة تحميل صغيرة
-  if (checkingAuth) {
-    return (
-      <div className="flex min-h-[80vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-volt border-t-transparent" />
-      </div>
-    );
-  }
-
   return (
     <div className="container py-8">
       <div className={`auth-split-container ${isRegister ? "is-active" : ""}`}>
-        {/* ═══════════ FORM: LOGIN ═══════════ */}
         <div className="auth-split-form login">
           <form
             onSubmit={handleSubmit}
@@ -205,7 +188,6 @@ export default function AuthShell({ mode }: AuthShellProps) {
           </form>
         </div>
 
-        {/* ═══════════ FORM: REGISTER ═══════════ */}
         <div className="auth-split-form register">
           <form
             onSubmit={handleSubmit}
@@ -293,9 +275,7 @@ export default function AuthShell({ mode }: AuthShellProps) {
           </form>
         </div>
 
-        {/* ═══════════ TOGGLE OVERLAY ═══════════ */}
         <div className="auth-split-toggle">
-          {/* LEFT panel — visible during LOGIN */}
           <div className="auth-split-panel left">
             <div className="auth-racket padel">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -318,7 +298,6 @@ export default function AuthShell({ mode }: AuthShellProps) {
             </button>
           </div>
 
-          {/* RIGHT panel — visible during REGISTER */}
           <div className="auth-split-panel right">
             <div className="auth-racket tennis">
               {/* eslint-disable-next-line @next/next/no-img-element */}

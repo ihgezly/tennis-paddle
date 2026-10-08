@@ -10,151 +10,98 @@ import HeroVideo from "@/components/home/hero/hero-video";
 import DAL from "@/lib/core/dal";
 import { RoutePath } from "@/lib/core/types/types";
 
+const fmt = (n: unknown) =>
+  Number.isFinite(Number(n)) && Number(n) > 0
+    ? `${Number(n).toLocaleString("en-US")} ج.م`
+    : null;
+
 export default async function Hero() {
   const t = await getTranslations("hero");
 
-  let featured: Product[] = [];
+  let products: Product[] = [];
   try {
     const all = await DAL.queryAllProducts();
-    featured = all.slice(0, 4);
+    products = all.filter((p) => (p.image as Media)?.url).slice(0, 10);
   } catch {
-    featured = [];
+    products = [];
   }
 
-  while (featured.length < 4) {
-    featured.push(featured[0] ?? ({} as Product));
-  }
-
-  const totalProducts = featured.filter((p) => p?.id).length || 0;
+  const settings: any = await DAL.querySiteSettings().catch(() => null);
+  const bg = settings?.home?.heroBackground as Media | undefined;
 
   return (
-    <section className="relative min-h-[88vh] overflow-hidden">
-      {/* ✅ keyframes محلية للـhero */}
-      <style>{`
-        @keyframes gradient-shift {
-          0%, 100% { background-position: 0% 50%; }
-          50%      { background-position: 100% 50%; }
-        }
-      `}</style>
+    <section className="relative">
+      <HeroVideo image={bg} />
 
-      <HeroVideo />
+      <div className="container relative z-10 flex flex-col items-center gap-10 py-14 text-center lg:gap-12 lg:py-20">
+        {/* ── 1) العنوان + البحث + الأزرار ── */}
+        <div className="flex w-full flex-col items-center gap-7">
+          <h1 className="hero-title hero-rise">
+            <span className="block">العب بشكل</span>
+            <span className="mt-1 block">مختلف.</span>
+          </h1>
 
-      <div className="container relative z-10 py-12 lg:py-20">
-        <div className="flex flex-col items-center gap-12 lg:flex-row lg:items-center lg:gap-16">
-          {/* ═══════════ LEFT ═══════════ */}
-          <div className="flex-1 space-y-8 text-center lg:text-start">
-            {/* ✅ Rating badge — جديد */}
-            <div
-              className="inline-flex items-center gap-3 rounded-full border border-volt/20 bg-surface/70 px-5 py-2 text-xs text-text-secondary backdrop-blur-md"
-              style={{
-                animation: "logo-in 0.6s ease-out both",
-                boxShadow: "0 0 24px rgba(212, 255, 0, 0.15)",
-              }}
-            >
-              <div className="flex items-center gap-1">
-                <FiStar className="h-3.5 w-3.5 fill-volt text-volt" />
-                <span className="font-bold text-foreground">4.9</span>
-              </div>
-              <span className="h-3 w-px bg-border" />
-              <span className="font-medium">معدات أصلية 100%</span>
-              <span
-                className="ms-1 h-2 w-2 rounded-full bg-volt"
-                style={{
-                  boxShadow: "0 0 8px var(--volt-glow)",
-                  animation: "pulse-glow 2s ease-in-out infinite",
-                }}
-                aria-hidden="true"
-              />
-            </div>
+          <p
+            className="hero-rise max-w-xl text-lg leading-relaxed text-text-secondary"
+            style={{ "--d": "0.15s" } as React.CSSProperties}
+          >
+            {t("subtitle") ||
+              "اكتشف أحدث معدات البادل والتنس والأحذية — من أفضل الماركات العالمية، بأسعار تناسبك."}
+          </p>
 
-            {/* ✅ Title — gradient متحرك */}
-            <div className="space-y-4">
-              <h1
-                className="text-5xl font-bold leading-[1.05] tracking-tight md:text-6xl lg:text-7xl"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(135deg, var(--padel-blue) 0%, var(--volt) 45%, var(--tennis-orange) 100%)",
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  color: "transparent",
-                  WebkitTextFillColor: "transparent",
-                  backgroundSize: "200% 200%",
-                  animationName: "logo-in, gradient-shift",
-                  animationDuration: "0.8s, 6s",
-                  animationTimingFunction: "ease-out, ease-in-out",
-                  animationIterationCount: "1, infinite",
-                  animationFillMode: "both, none",
-                }}
-              >
-                <span className="block">العب بشكل</span>
-                <span className="mt-2 block">مختلف.</span>
-              </h1>
-
-              <p
-                className="mx-auto max-w-xl text-lg text-text-secondary lg:mx-0"
-                style={{ animation: "logo-in 0.8s 0.2s ease-out both" }}
-              >
-                {t("subtitle") ||
-                  "اكتشف أحدث معدات البادل والتنس والأحذية — من أفضل الماركات العالمية، بأسعار تناسبك."}
-              </p>
-            </div>
-
-            <div style={{ animation: "logo-in 0.8s 0.3s ease-out both" }}>
-              <HeroSearch />
-            </div>
-
-            {/* CTAs */}
-            <div
-              className="flex flex-col justify-center gap-3 sm:flex-row lg:justify-start"
-              style={{ animation: "logo-in 0.8s 0.4s ease-out both" }}
-            >
-              <Link
-                href="/categories"
-                className="group volt-cta inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 font-semibold"
-              >
-                تسوق الآن
-                <FiArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-
-              <Link
-                href="/sell"
-                className="inline-flex items-center justify-center rounded-full border border-border bg-surface/50 px-8 py-4 font-semibold text-foreground backdrop-blur-sm transition-all duration-300 hover:border-gold hover:text-gold"
-              >
-                بِع معداتك
-              </Link>
-            </div>
+          <div
+            className="hero-rise w-full"
+            style={{ "--d": "0.25s" } as React.CSSProperties}
+          >
+            <HeroSearch />
           </div>
 
-          {/* ═══════════ RIGHT ═══════════ */}
           <div
-            className="relative w-full flex-1 lg:max-w-[520px]"
-            style={{ animation: "logo-in 0.8s 0.3s ease-out both" }}
+            className="hero-rise flex flex-col justify-center gap-3 sm:flex-row"
+            style={{ "--d": "0.35s" } as React.CSSProperties}
           >
-            <div className="grid grid-cols-2 gap-4 pb-16">
-              <div className="space-y-4">
-                <HeroTile product={featured[0]} height="h-[200px]" />
-                <HeroTile product={featured[1]} height="h-[280px]" />
-              </div>
-              <div className="space-y-4 pt-10">
-                <HeroTile product={featured[2]} height="h-[280px]" />
-                <HeroTile product={featured[3]} height="h-[200px]" />
-              </div>
-            </div>
-
-            <div
-              className="absolute inset-x-6 -bottom-2 rounded-2xl border border-border bg-surface/95 p-5 backdrop-blur-md lg:inset-x-12"
-              style={{
-                animation: "logo-in 0.8s 0.5s ease-out both",
-                boxShadow:
-                  "0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(215,181,109,0.08)",
-              }}
+            <Link
+              href="/categories"
+              className="group volt-cta inline-flex items-center justify-center gap-2 rounded-full px-9 py-4 font-bold"
             >
-              <div className="grid grid-cols-3 gap-4">
-                <Stat value={totalProducts > 0 ? "50+" : "—"} label="منتج" />
-                <Stat value="20+" label="ماركة" />
-                <Stat value="1000+" label="عميل سعيد" />
-              </div>
-            </div>
+              تسوق الآن
+              <FiArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
+            </Link>
+            <Link
+              href="/sell"
+              className="inline-flex items-center justify-center rounded-full border border-border-strong bg-surface/60 px-9 py-4 font-semibold text-foreground backdrop-blur-sm transition hover:border-volt hover:shadow-[0_0_22px_var(--volt-glow)]"
+            >
+              بِع معداتك
+            </Link>
+          </div>
+        </div>
+
+        {/* ── 2) الصور: 4 ظاهرة وبتتحرك ── */}
+        <HeroMarquee products={products} />
+
+        {/* ── 3) التقييم + الإحصائيات ── */}
+        <div
+          className="hero-stats hero-rise"
+          style={{ "--d": "0.5s" } as React.CSSProperties}
+        >
+          <div className="hero-stats__item">
+            <span className="hero-stats__value">
+              <FiStar className="h-5 w-5 fill-volt text-foreground" />
+              4.9
+            </span>
+            <span className="hero-stats__label">تقييم العملاء</span>
+          </div>
+          <div className="hero-stats__item">
+            <span className="hero-stats__value">50+</span>
+            <span className="hero-stats__label">منتج</span>
+          </div>
+          <div className="hero-stats__item">
+            <span className="hero-stats__value">20+</span>
+            <span className="hero-stats__label">ماركة</span>
+          </div>
+          <div className="hero-stats__item">
+            <span className="hero-stats__value">1000+</span>
+            <span className="hero-stats__label">عميل سعيد</span>
           </div>
         </div>
       </div>
@@ -162,48 +109,43 @@ export default async function Hero() {
   );
 }
 
-function HeroTile({
-  product,
-  height,
-}: {
-  product: Product | undefined;
-  height: string;
-}) {
-  const media = product?.image as Media | undefined;
-  const imageUrl = media?.url || media?.thumbnailURL || "";
+function HeroMarquee({ products }: { products: Product[] }) {
+  let items = products;
+  if (!items.length) return null;
+  while (items.length < 8) items = [...items, ...items];
+  const loop = [...items, ...items]; // النصف التاني نسخة → لفّة من غير قطع
 
-  if (!imageUrl) {
-    return (
+  return (
+    <div dir="ltr" className="hero-marquee">
       <div
-        className={`${height} overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-surface to-surface-2`}
-      />
-    );
-  }
-
-  return (
-    <Link
-      href={`/${RoutePath.product}/${product!.slug}`}
-      className={`group relative block ${height} overflow-hidden rounded-2xl border border-border bg-surface`}
-      style={{ transition: "transform 0.4s ease, box-shadow 0.4s ease" }}
-    >
-      <Image
-        src={imageUrl}
-        alt={product!.title}
-        fill
-        sizes="(min-width: 1024px) 260px, 45vw"
-        className="object-cover transition-transform duration-700 group-hover:scale-105"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-    </Link>
-  );
-}
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="text-center">
-      <div className="text-lg font-bold text-gold md:text-xl">{value}</div>
-      <div className="mt-0.5 text-[11px] uppercase tracking-wider text-text-muted">
-        {label}
+        className="hero-marquee__track"
+        style={{ "--n": items.length } as React.CSSProperties}
+      >
+        {loop.map((p, i) => {
+          const m = p.image as Media;
+          const price = fmt((p as any).priceInEGP);
+          return (
+            <Link
+              key={`${p.id}-${i}`}
+              href={`/${RoutePath.product}/${p.slug}`}
+              className="hero-marquee__tile"
+              aria-hidden={i >= items.length ? true : undefined}
+              tabIndex={i >= items.length ? -1 : undefined}
+            >
+              <Image
+                src={m.url!}
+                alt={p.title}
+                fill
+                sizes="(min-width:1024px) 290px, 45vw"
+                className="hero-marquee__img"
+              />
+              <span className="hero-marquee__cap">
+                <span className="hero-marquee__name">{p.title}</span>
+                {price ? <span className="hero-marquee__price">{price}</span> : null}
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

@@ -28,7 +28,14 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
       ...(defaultCollection.admin || {}),
       group: "الطلبات",
       useAsTitle: "name",
-      defaultColumns: ["name", "phone", "email", "status", "paymentStatus", "createdAt"],
+      defaultColumns: [
+        "name",
+        "phone",
+        "email",
+        "status",
+        "paymentStatus",
+        "createdAt",
+      ],
     },
 
     access: {
@@ -37,7 +44,8 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
         if (isAdmin({ req: { user } as any })) return true;
         return { customer: { equals: user.id } };
       },
-      create: ({ req: { user } }) => Boolean(user),
+      // ✅ السماح بالـguest checkout
+      create: () => true,
       update: isAdmin,
       delete: isAdmin,
       admin: isAdmin,
@@ -51,10 +59,11 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
             (!f?.name || !["customerEmail", "transactions"].includes(f.name)),
         )
         .map((f) => {
+          // ✅ customer: required: false — للـguest checkout
           if (f?.name === "customer")
             return {
               ...f,
-              required: true,
+              required: false,
               admin: {
                 ...(f.admin || {}),
                 position: "sidebar",
@@ -117,7 +126,6 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
         ],
       },
 
-      // Payment fields
       {
         name: "paymentStatus",
         type: "select",
@@ -228,7 +236,8 @@ export const Orders: CollectionOverride = ({ defaultCollection }) => {
             );
             if (!patch) return originalItem;
             const unitPrice = Number(patch.unitPrice);
-            if (!Number.isFinite(unitPrice) || unitPrice < 0) return originalItem;
+            if (!Number.isFinite(unitPrice) || unitPrice < 0)
+              return originalItem;
             const lineTotal = unitPrice * Number(originalItem.quantity);
             return { ...originalItem, unitPrice, lineTotal };
           });

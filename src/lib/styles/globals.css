@@ -7,9 +7,25 @@
 @import "./cart.css";
 @import "./faq.css";
 @import "./gallery.css";
-@import "./3d-effects.css";  /* ✅ السطر الجديد */
+@import "./3d-effects.css";
+@import "./home-design.css";
 
 @plugin "@tailwindcss/typography";
+
+/* ═══════════════════════════════════════════════════════════════
+   CONTAINER FIX — Tailwind v4 شال center/padding من container
+   ═══════════════════════════════════════════════════════════════ */
+.container {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  padding-inline: 0;
+}
+
+html,
+body {
+  overflow-x: clip;
+}
 
 @layer utilities {
   .layout-container {
@@ -59,9 +75,9 @@
   /* Brand accents */
   --volt: #d4ff00;
   --volt-glow: rgba(212, 255, 0, 0.35);
-  --volt-text: #141a1f; /* نص على خلفية volt */
+  --volt-text: #141a1f;
 
-  --secondary-tactical: #1b2d2a; /* Forest Slate */
+  --secondary-tactical: #1b2d2a;
 
   /* Sport identities */
   --padel-blue: #00b8e6;
@@ -71,7 +87,7 @@
   --shoes-green: #2ecc71;
   --shoes-green-glow: rgba(46, 204, 113, 0.35);
 
-  /* Legacy aliases (نشيلهم لاحقًا) */
+  /* Legacy aliases */
   --gold: var(--volt);
   --gold-soft: rgba(212, 255, 0, 0.15);
 
@@ -84,7 +100,7 @@
   --warning: #f5a623;
   --error: #e74c3c;
 
-  /* Glass (Trust elements) */
+  /* Glass */
   --glass-bg: rgba(255, 255, 255, 0.55);
   --glass-border: rgba(20, 26, 31, 0.08);
 }
@@ -94,22 +110,19 @@ html[data-theme="dark"] {
   --background: #0c0e12;
   --foreground: #fafafc;
 
-  --surface: #15181e;         /* Dark Carbon Slate */
+  --surface: #15181e;
   --surface-2: #1c2028;
   --surface-elevated: #22262e;
 
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.15);
 
-  /* Volt brighter in dark mode for maximum pop */
   --volt: #e2ff00;
   --volt-glow: rgba(226, 255, 0, 0.28);
   --volt-text: #0c0e12;
 
-  /* Tactical accent (secondary) */
   --secondary-tactical: #1b2d2a;
 
-  /* Sport identities — same hues, dark-mode-tuned glows */
   --padel-blue: #29c7ff;
   --padel-blue-glow: rgba(41, 199, 255, 0.35);
   --tennis-orange: #ff7a45;
@@ -117,24 +130,19 @@ html[data-theme="dark"] {
   --shoes-green: #3ecf8e;
   --shoes-green-glow: rgba(62, 207, 142, 0.35);
 
-  /* Cyan tech glow — secondary ambient */
   --cyan-glow: #00e5ff;
   --cyan-glow-soft: rgba(0, 229, 255, 0.2);
 
-  /* Legacy aliases */
   --gold: var(--volt);
   --gold-soft: rgba(226, 255, 0, 0.12);
 
-  /* Text */
   --text-secondary: #a8b0b8;
   --text-muted: #6b7280;
 
-  /* Status */
   --success: #3ecf8e;
   --warning: #f5a623;
   --error: #ef4444;
 
-  /* Glass */
   --glass-bg: rgba(21, 24, 30, 0.6);
   --glass-border: rgba(255, 255, 255, 0.08);
 }
@@ -231,7 +239,7 @@ html[data-theme="dark"] {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SPORT CARDS — hover glow (بدون JS)
+   SPORT CARDS — hover glow
    ═══════════════════════════════════════════════════════════════ */
 
 [data-sport="padel"] {

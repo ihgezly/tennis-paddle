@@ -74,48 +74,77 @@ export async function POST(req: Request) {
   const payload = await getPayload({ config: configPromise });
 
   try {
-    const result = await payload.db.drizzle.transaction(async (tx: any) => {
-      const productResult = await tx.execute(sql`
-        SELECT id, title, price_in_e_g_p, status, inventory, _status
-        FROM products
-        WHERE id = ${numericProductId}
-        FOR UPDATE
-      `);
+    // ═══ 1) حجز ذري ═══
+    // ينجح بس لو المنتج published + available — من غير SELECT مسبق
+    const reserved: any = await payload.db.drizzle.execute(sql`
+      UPDATE products
+      SET status = ${ProductStatus.PENDING}, updated_at = NOW()
+      WHERE id = ${numericProductId}
+        AND status = ${ProductStatus.AVAILABLE}
+        AND _status = 'published'
+      RETURNING id
+    `);
 
-      const product = productResult.rows?.[0];
+    if (!reserved.rows?.[0]) {
+      // مينفعش نعرف السبب من غير ما نسأل — بنسأل بـ Payload (آمن)
+      const exists = await payload
+        .findByID({
+          collection: "products",
+          id: numericProductId,
+          depth: 0,
+          overrideAccess: true,
+        })
+        .catch(() => null);
 
-      if (!product) {
-        throw new Error("PRODUCT_NOT_FOUND");
-      }
+      return NextResponse.json(
+        { message: exists ? "المنتج مش متاح حالياً" : "المنتج غير موجود" },
+        { status: exists ? 409 : 404 },
+      );
+    }
 
-      if (product._status !== "published") {
-        throw new Error("PRODUCT_NOT_AVAILABLE");
-      }
-
-      if (product.status !== ProductStatus.AVAILABLE) {
-        throw new Error("PRODUCT_NOT_AVAILABLE");
-      }
-
-      const price = Number(product.price_in_e_g_p ?? 0);
-      if (!Number.isFinite(price) || price <= 0) {
-        throw new Error("INVALID_PRODUCT_PRICE");
-      }
-
-      const updateProduct = await tx.execute(sql`
+    // دالة تراجع — بترجع المنتج Available لو أي خطوة فشلت
+    const revert = () =>
+      payload.db.drizzle.execute(sql`
         UPDATE products
-        SET status = ${ProductStatus.PENDING},
+        SET status = ${ProductStatus.AVAILABLE},
             updated_at = NOW()
         WHERE id = ${numericProductId}
-          AND status = ${ProductStatus.AVAILABLE}
-        RETURNING id
       `);
 
-      if (!updateProduct.rows?.[0]) {
-        throw new Error("PRODUCT_RACE_CONDITION");
-      }
+    // ═══ 2) قراءة المنتج عن طريق Payload ═══
+    // (يتعامل مع localized + أسماء الأعمدة تلقائيًا)
+    const product: any = await payload
+      .findByID({
+        collection: "products",
+        id: numericProductId,
+        depth: 0,
+        overrideAccess: true,
+      })
+      .catch(() => null);
 
-      const order = await payload.create({
+    if (!product) {
+      await revert();
+      return NextResponse.json(
+        { message: "المنتج غير موجود" },
+        { status: 404 },
+      );
+    }
+
+    const price = Number(product.priceInEGP ?? 0);
+    if (!Number.isFinite(price) || price <= 0) {
+      await revert();
+      return NextResponse.json(
+        { message: "سعر المنتج غير صحيح" },
+        { status: 400 },
+      );
+    }
+
+    // ═══ 3) إنشاء الطلب ═══
+    let order: any;
+    try {
+      order = await payload.create({
         collection: "orders",
+        overrideAccess: true,
         data: {
           status: OrderStatus.NEW,
           paymentStatus: PaymentStatus.PENDING,
@@ -134,34 +163,34 @@ export async function POST(req: Request) {
             },
           ],
         } as any,
-        overrideAccess: true,
-        req: { transactionID: tx.transactionID } as any,
       });
+    } catch (createErr) {
+      // فشل إنشاء الطلب → رجّع المنتج Available
+      await revert();
+      throw createErr;
+    }
 
-      return {
-        orderId: Number(order.id),
-        productTitle: product.title,
-        amount: price,
-      };
-    });
+    const orderId = Number(order.id);
 
+    // ═══ 4) Audit Log ═══
     await logAudit({ payload } as any, {
       action: "quick_order.created",
       entity: "orders",
-      entityId: String(result.orderId),
+      entityId: String(orderId),
       after: {
         productId: numericProductId,
-        amount: result.amount,
+        amount: price,
         customerName: name,
         customerPhone: phone,
       },
     });
 
+    // ═══ 5) إشعار الأدمن (لا نحجب الرد) ═══
     notifyAdminNewOrder({
-      orderId: result.orderId,
+      orderId,
       customerName: name,
       customerPhone: phone,
-      amount: result.amount,
+      amount: price,
       itemCount: 1,
     }).catch((err) => {
       console.error("Callmebot notification failed:", err);
@@ -169,43 +198,12 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      orderId: result.orderId,
-      productTitle: result.productTitle,
-      amount: result.amount,
+      orderId,
+      productTitle: product.title,
+      amount: price,
     });
   } catch (err) {
     console.error("QUICK ORDER ERROR:", err);
-
-    const message = err instanceof Error ? err.message : "UNKNOWN";
-
-    if (message === "PRODUCT_NOT_FOUND") {
-      return NextResponse.json(
-        { message: "المنتج غير موجود" },
-        { status: 404 },
-      );
-    }
-
-    if (message === "PRODUCT_NOT_AVAILABLE") {
-      return NextResponse.json(
-        { message: "المنتج مش متاح حالياً" },
-        { status: 409 },
-      );
-    }
-
-    if (message === "PRODUCT_RACE_CONDITION") {
-      return NextResponse.json(
-        { message: "المنتج اتحجز من عميل تاني، حاول تاني" },
-        { status: 409 },
-      );
-    }
-
-    if (message === "INVALID_PRODUCT_PRICE") {
-      return NextResponse.json(
-        { message: "سعر المنتج غير صحيح" },
-        { status: 400 },
-      );
-    }
-
     return NextResponse.json(
       { message: "فشل تسجيل الطلب، حاول تاني" },
       { status: 500 },

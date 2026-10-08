@@ -46,6 +46,15 @@ type PayloadGlobalOptions = PayloadQueryOptions & {
   params: PayloadFindGlobalArgs;
 };
 
+// ✅ SORT_MAP — mapping لأسماء الـsort القادمة من الـURL
+const SORT_MAP: Record<string, string> = {
+  newest: "-createdAt",
+  oldest: "createdAt",
+  price_asc: "priceInEGP",
+  price_desc: "-priceInEGP",
+  popular: "-updatedAt",
+};
+
 export default class Queries {
   private static instance: PayloadInstance | null = null;
 
@@ -440,7 +449,8 @@ export default class Queries {
         page,
         limit,
         pagination: true,
-        sort: options.sort || "-createdAt",
+        // ✅ SORT_MAP — mapping لأسماء الـsort
+        sort: SORT_MAP[options.sort ?? ""] ?? "-createdAt",
         depth: 1,
         where,
         select: {
@@ -854,7 +864,7 @@ export default class Queries {
   // ✅ أنواع المنتجات — مؤقتًا بـ "product-types" as any
   static async queryProductTypes(): Promise<ProductType[]> {
     const result = await Queries.runPayloadFind<any>({
-      collection: "product-types" as any, // ✅ مؤقت — بعد generate:types هنشيل as any
+      collection: "product-types" as any,
       tag: AppConst.CACHE_TAG_PRODUCT_TYPES,
       params: {
         depth: 1,
@@ -949,7 +959,8 @@ export default class Queries {
         page,
         limit,
         pagination: true,
-        sort: options.sort || "-createdAt",
+        // ✅ SORT_MAP — mapping لأسماء الـsort
+        sort: SORT_MAP[options.sort ?? ""] ?? "-createdAt",
         depth: 1,
         where,
         select: {

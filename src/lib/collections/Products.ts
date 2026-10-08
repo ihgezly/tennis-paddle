@@ -52,7 +52,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       async ({ data, req }) => {
         if (!data) return data;
 
-        // ─── معالجة الجاليري ───
         const gallery = data.gallery as Product["gallery"] | undefined;
         if (gallery) {
           const filtered = gallery.filter(
@@ -63,7 +62,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
           data.image = data.gallery[0].image;
         }
 
-        // ─── التحقق من الحالة (مستعمل) ───
         if (data.conditionType) {
           const conditionTypeId =
             typeof data.conditionType === "object"
@@ -92,7 +90,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
           }
         }
 
-        // ─── اشتقاق الرياضات من نوع المنتج لو مش موجودة ───
         if (data.productType && (!data.sportTypes || !data.sportTypes.length)) {
           const productTypeId =
             typeof data.productType === "object"
@@ -109,7 +106,7 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
               data.sportTypes = pt.sportTypes;
             }
           } catch {
-            // تجاهل — الأدمن يقدر يحددها يدوي
+            // تجاهل
           }
         }
 
@@ -119,7 +116,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
   },
 
   fields: [
-    // ─── Basic ───
     { name: "title", type: "text", required: true, localized: true },
 
     {
@@ -131,7 +127,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       },
     },
 
-    // ─── Product Type (من DB) ───
     {
       name: "productType",
       type: "relationship",
@@ -142,7 +137,7 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       },
     },
 
-    // ─── Sport Types ───
+    // ✅ إضافة SportType.SHOES
     {
       name: "sportTypes",
       type: "select",
@@ -150,6 +145,7 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       options: [
         { label: "بادل", value: SportType.PADEL },
         { label: "تنس", value: SportType.TENNIS },
+        { label: "أحذية", value: SportType.SHOES }, // ✅ جديد
         { label: "عام (الاتنين)", value: SportType.GENERAL },
       ],
       admin: {
@@ -158,7 +154,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       },
     },
 
-    // ─── Categories ───
     {
       name: "categories",
       type: "relationship",
@@ -167,7 +162,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       relationTo: CollectionName.category,
     },
 
-    // ─── Image (hidden — auto from gallery) ───
     {
       name: "image",
       type: "upload",
@@ -178,7 +172,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
 
     mixedSlugField(),
 
-    // ✅ حذف حقول USD من الـplugin + استثناء inventory
     ...stripUSDFromFields(
       ((defaultCollection.fields || []) as Field[]).filter((f) => {
         const name = (f as { name?: string }).name;
@@ -186,7 +179,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       }),
     ),
 
-    // ─── الأسعار (EGP فقط) ───
     {
       name: "priceInEGP",
       type: "number",
@@ -219,7 +211,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       },
     },
 
-    // ─── المخزون والحالة ───
     {
       name: "inventory",
       type: "number",
@@ -231,8 +222,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
         description: "الكمية المتاحة للبيع",
       },
     },
-
-    // ✅ status — مع enumName مخصص لتجنب التعارض مع plugin-ecommerce
     {
       name: "status",
       type: "select",
@@ -251,10 +240,8 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       },
     },
 
-    // ─── الوصف ───
     DESCRIPTION_FIELD,
 
-    // ─── معرض الصور ───
     {
       name: "gallery",
       type: "array",
@@ -269,7 +256,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       ],
     },
 
-    // ─── المواصفات ───
     {
       name: "specs",
       type: "group",
@@ -329,7 +315,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       ],
     },
 
-    // ─── مقاسات الشوزات ───
     {
       name: "availableSizes",
       type: "array",
@@ -355,7 +340,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       ],
     },
 
-    // ─── علاقات ───
     {
       name: "relatedProducts",
       type: "relationship",
@@ -373,7 +357,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       on: "product",
     },
 
-    // ─── الحالة (جديد / مستعمل) ───
     {
       name: "conditionType",
       type: "relationship",
@@ -405,7 +388,6 @@ export const Products: CollectionOverride = ({ defaultCollection }) => ({
       admin: { position: "sidebar" },
     },
 
-    // ─── 3D Model ───
     {
       name: "glbModel",
       label: "3D Model (.glb)",

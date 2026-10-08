@@ -423,7 +423,7 @@ export interface Product {
   /**
    * الرياضات اللي المنتج مناسب لها
    */
-  sportTypes?: ('padel' | 'tennis' | 'general')[] | null;
+  sportTypes?: ('padel' | 'tennis' | 'shoes' | 'general')[] | null;
   categories?: (number | Category)[] | null;
   image: number | Media;
   /**
@@ -679,7 +679,7 @@ export interface ReturnRequest {
  */
 export interface Order {
   id: number;
-  customer: number | User;
+  customer?: (number | null) | User;
   status?: OrderStatus;
   amount?: number | null;
   name: string;
@@ -1525,6 +1525,10 @@ export interface SiteSetting {
     };
     image_meta: number | Media;
     logo?: (number | null) | Media;
+    /**
+     * اختياري — لو محطتهاش، هيستخدم gradient الافتراضي مع الوضع الحالي (نهاري/ليلي)
+     */
+    heroBackground?: (number | null) | Media;
     faqs?:
       | {
           question: string;
@@ -1561,6 +1565,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         description?: T;
         image_meta?: T;
         logo?: T;
+        heroBackground?: T;
         faqs?:
           | T
           | {

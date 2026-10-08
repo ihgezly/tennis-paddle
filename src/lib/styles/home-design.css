@@ -1,0 +1,530 @@
+/* ═══════════════════════════════════════════════════════════════
+   HOME DESIGN — container fix, hero, theme toggle, filters,
+   brands, flag orbs, CTA cards.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── 1) حل الفراغ على الشمال ───────────────────────────────────
+   Tailwind v4 شال center/padding من container، فكان بيلزق يمين
+   في RTL. الـlayout-container هو المتحكم في العرض والـpadding،
+   فـcontainer بقى ياخد عرض الأب بالكامل ومتوسّط. */
+.container {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  padding-inline: 0;
+}
+html,
+body {
+  overflow-x: clip;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════════════════════════════ */
+.hero-bg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  overflow: hidden;
+  background: var(--background);
+  z-index: 0;
+}
+.hero-bg__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, var(--surface), var(--background) 88%);
+}
+.hero-bg__veil--photo {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--background) 58%, transparent),
+    color-mix(in srgb, var(--background) 93%, transparent)
+  );
+}
+.hero-bg__court {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--foreground);
+  opacity: 0.07;
+}
+.hero-bg__glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 55% 40% at 50% 28%, var(--volt-glow), transparent 70%);
+  opacity: 0.6;
+}
+
+.hero-rise {
+  animation: logo-in 0.8s var(--d, 0s) ease-out both;
+}
+
+.hero-title {
+  font-size: clamp(2.75rem, 7.5vw, 5.75rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: var(--foreground);
+}
+.hero-title::after {
+  content: "";
+  display: block;
+  width: 72px;
+  height: 6px;
+  margin: 22px auto 0;
+  border-radius: 9999px;
+  background: var(--volt);
+  box-shadow: 0 0 22px var(--volt-glow);
+}
+
+/* ─── Marquee: 4 صور ظاهرة وبتتحرك ─── */
+.hero-marquee {
+  width: 100%;
+  overflow: hidden;
+  padding-block: 8px 36px;
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+.hero-marquee__track {
+  display: flex;
+  align-items: flex-start;
+  width: max-content;
+  animation: hero-scroll calc(var(--n) * 4.5s) linear infinite;
+}
+.hero-marquee:hover .hero-marquee__track {
+  animation-play-state: paused;
+}
+.hero-marquee__tile {
+  position: relative;
+  flex: 0 0 auto;
+  width: clamp(150px, 22vw, 290px);
+  aspect-ratio: 4 / 5;
+  margin-right: 16px;
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.35);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+}
+.hero-marquee__tile:nth-child(even) {
+  margin-top: 32px;
+}
+.hero-marquee__tile:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 26px 50px -16px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--volt);
+}
+.hero-marquee__img {
+  object-fit: cover;
+  transition: transform 1.2s ease;
+}
+.hero-marquee__tile:hover .hero-marquee__img {
+  transform: scale(1.07);
+}
+.hero-marquee__cap {
+  position: absolute;
+  inset-inline: 10px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  direction: rtl;
+}
+.hero-marquee__name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hero-marquee__price {
+  flex-shrink: 0;
+  font-family: "Space Grotesk", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: var(--volt);
+  color: var(--volt-text);
+}
+@keyframes hero-scroll {
+  to { transform: translateX(-50%); }
+}
+
+/* ─── شريط التقييم والإحصائيات ─── */
+.hero-stats {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  flex-wrap: wrap;
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  overflow: hidden;
+}
+.hero-stats__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 16px 32px;
+}
+.hero-stats__item + .hero-stats__item {
+  border-inline-start: 1px solid var(--border);
+}
+.hero-stats__value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Space Grotesk", monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+.hero-stats__label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+@media (max-width: 640px) {
+  .hero-stats__item { padding: 12px 18px; }
+  .hero-stats__value { font-size: 18px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THEME TOGGLE — شمس ↔ قمر
+   ═══════════════════════════════════════════════════════════════ */
+.theme-toggle {
+  position: relative;
+  width: 72px;
+  height: 36px;
+  padding: 0;
+  border-radius: 9999px;
+  border: 1px solid var(--border-strong);
+  background: linear-gradient(135deg, #f7f9e6, #e8eae3);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--volt);
+  outline-offset: 3px;
+}
+.theme-toggle__stars {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  background-image:
+    radial-gradient(1.2px 1.2px at 14px 10px, #fff, transparent),
+    radial-gradient(1px 1px at 26px 24px, #fff, transparent),
+    radial-gradient(1.4px 1.4px at 38px 12px, var(--volt), transparent),
+    radial-gradient(1px 1px at 22px 15px, #fff, transparent);
+}
+.theme-toggle__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--volt);
+  color: #141a1f;
+  box-shadow: 0 0 14px var(--volt-glow), 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.55s cubic-bezier(0.68, -0.4, 0.27, 1.4), background 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
+}
+.theme-toggle__icon {
+  grid-area: 1 / 1;
+  transition: transform 0.55s ease, opacity 0.3s ease;
+}
+.theme-toggle__moon { opacity: 0; transform: rotate(-120deg) scale(0.4); }
+
+.theme-toggle--dark {
+  background: #07080b;
+  border-color: var(--volt);
+  box-shadow: 0 0 20px var(--volt-glow), inset 0 0 12px rgba(226, 255, 0, 0.14);
+}
+.theme-toggle--dark .theme-toggle__stars { opacity: 1; }
+.theme-toggle--dark .theme-toggle__thumb {
+  transform: translateX(38px);
+  background: #12151a;
+  color: var(--volt);
+  box-shadow: 0 0 16px var(--volt), inset 0 0 0 1.5px var(--volt);
+}
+.theme-toggle--dark .theme-toggle__sun { opacity: 0; transform: rotate(120deg) scale(0.4); }
+.theme-toggle--dark .theme-toggle__moon { opacity: 1; transform: none; filter: drop-shadow(0 0 4px var(--volt)); }
+
+/* ═══════════════════════════════════════════════════════════════
+   FILTERS — كارت الـsidebar + صفوف تفاعلية
+   ═══════════════════════════════════════════════════════════════ */
+.filters-sidebar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 8px 20px 10px;
+  position: sticky;
+  top: 96px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  box-shadow: 0 16px 40px -28px rgba(0, 0, 0, 0.35);
+  scrollbar-width: thin;
+}
+.filters-sidebar__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+.filters-sidebar__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.filters-sidebar__clear {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-family: inherit;
+}
+.filters-sidebar__clear:hover { color: var(--error); }
+
+.filter-section__title { text-transform: none; font-size: 14px; }
+
+.checkbox-item { position: relative; }
+.checkbox-item:has(input:checked) {
+  background: color-mix(in srgb, var(--volt) 14%, transparent);
+}
+.checkbox-item:has(input:focus-visible) {
+  outline: 2px solid var(--volt);
+  outline-offset: 1px;
+}
+.checkbox-item input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* جوه الـdrawer: من غير كارت */
+.filters-drawer .filters-sidebar {
+  background: none;
+  border: 0;
+  padding: 0;
+  position: static;
+  max-height: none;
+  box-shadow: none;
+  overflow: visible;
+}
+.filters-drawer .filters-sidebar__head { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BRANDS — 3 في الصف + لوجو
+   ═══════════════════════════════════════════════════════════════ */
+.brands-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  max-width: 960px;
+  margin-inline: auto;
+}
+@media (min-width: 768px) { .brands-grid { gap: 22px; } }
+
+.brand-logo { padding: 18px 10px; border-radius: 22px; gap: 10px; }
+@media (min-width: 768px) { .brand-logo { padding: 30px 20px; gap: 14px; } }
+
+.brand-logo__plate {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-width: 150px;
+  height: 64px;
+  padding: 10px 16px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (min-width: 768px) { .brand-logo__plate { height: 84px; } }
+.brand-logo:hover .brand-logo__plate { transform: scale(1.06); }
+.brand-logo__img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.brand-logo__mono {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--brand-accent);
+  line-height: 1;
+}
+.brand-logo__name { font-size: 15px; }
+@media (min-width: 768px) { .brand-logo__name { font-size: 20px; } }
+.brand-logo__tagline { font-size: 9px; text-align: center; }
+
+/* ═══════════════════════════════════════════════════════════════
+   FLAG ORB — علم حقيقي في كرة 3D
+   ═══════════════════════════════════════════════════════════════ */
+.flag-orb-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.flag-orb {
+  position: relative;
+  width: min(230px, 62vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  box-shadow: 0 0 70px var(--flag-glow), 0 0 0 1.5px var(--flag-accent);
+  animation: orb-float 6s ease-in-out infinite;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.flag-orb-wrap:nth-child(2) .flag-orb { animation-delay: -2s; }
+.flag-orb-wrap:nth-child(3) .flag-orb { animation-delay: -4s; }
+.flag-orb:hover { transform: scale(1.07) rotate(-4deg); }
+
+.flag-orb__flag {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #222;
+}
+.flag-orb__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.45);
+  animation: flag-wave 5s ease-in-out infinite;
+}
+.flag-orb__waves {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: soft-light;
+  background-image: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(255, 255, 255, 0.5) 25%,
+    rgba(0, 0, 0, 0.55) 50%,
+    rgba(255, 255, 255, 0.5) 75%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+  background-size: 66% 100%;
+  animation: flag-ripple 3.2s linear infinite;
+}
+.flag-orb__shade {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.65), transparent 32%),
+    radial-gradient(circle at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.5) 100%),
+    radial-gradient(circle at 72% 85%, rgba(0, 0, 0, 0.5), transparent 60%);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08), inset -10px -14px 30px rgba(0, 0, 0, 0.35);
+}
+.flag-orb__floor {
+  width: 58%;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.45), transparent 70%);
+  animation: orb-shadow 6s ease-in-out infinite;
+}
+.flag-orb__country {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+@keyframes flag-wave {
+  0%, 100% { transform: scale(1.45) translateX(-4%) skewY(-2.5deg); }
+  50%      { transform: scale(1.45) translateX(4%) skewY(2.5deg); }
+}
+@keyframes flag-ripple { to { background-position-x: 66%; } }
+@keyframes orb-float  { 0%, 100% { translate: 0 0; } 50% { translate: 0 -12px; } }
+@keyframes orb-shadow { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(0.8); opacity: 0.45; } }
+
+/* ═══════════════════════════════════════════════════════════════
+   CTA CARDS — بِع معداتك / اطلب منتجك
+   ═══════════════════════════════════════════════════════════════ */
+.cta-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) { .cta-grid { grid-template-columns: 1fr 1fr; gap: 28px; } }
+
+.cta-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 12px;
+  min-height: 340px;
+  padding: 32px;
+  border-radius: 32px;
+  overflow: hidden;
+  color: #fff;
+  border: 1px solid var(--border);
+  background-color: #0c0e12;
+  background-image:
+    linear-gradient(to top, rgba(5, 6, 10, 0.92) 0%, rgba(5, 6, 10, 0.45) 55%, rgba(5, 6, 10, 0.15) 100%),
+    var(--cta-img, none),
+    var(--cta-fallback);
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+}
+.cta-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--cta-accent);
+  box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.55), 0 0 44px var(--cta-glow);
+}
+.cta-card__title { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; line-height: 1.15; color: #fff; }
+.cta-card__text { max-width: 30ch; font-size: 15px; line-height: 1.7; color: rgba(255, 255, 255, 0.78); }
+.cta-card__btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 14px;
+  background: var(--cta-accent);
+  color: #0c0e12;
+  box-shadow: 0 0 24px var(--cta-glow);
+  transition: gap 0.3s ease;
+}
+.cta-card:hover .cta-card__btn { gap: 14px; }
+.cta-card__btn svg { transition: transform 0.3s ease; }
+[dir="rtl"] .cta-card__btn svg { transform: scaleX(-1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-marquee__track,
+  .flag-orb,
+  .flag-orb__img,
+  .flag-orb__waves,
+  .flag-orb__floor { animation: none !important; }
+}

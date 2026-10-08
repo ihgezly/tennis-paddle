@@ -15,7 +15,6 @@ export const SiteSettings: GlobalConfig = {
     read: () => true,
   },
 
-  // ✅ التعديل الوحيد — group بالعربي
   admin: { group: "الإعدادات" },
   hooks: {
     beforeValidate: [
@@ -89,6 +88,17 @@ export const SiteSettings: GlobalConfig = {
                   required: true,
                 },
                 { name: "logo", type: "upload", relationTo: "media" },
+                // ✅ جديد — صورة خلفية الهيرو
+                {
+                  name: "heroBackground",
+                  type: "upload",
+                  relationTo: "media",
+                  label: "صورة خلفية الهيرو",
+                  admin: {
+                    description:
+                      "اختياري — لو محطتهاش، هيستخدم gradient الافتراضي مع الوضع الحالي (نهاري/ليلي)",
+                  },
+                },
                 FAQS_FIELD,
               ],
             },

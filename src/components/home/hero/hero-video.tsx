@@ -1,32 +1,41 @@
-export default function HeroVideo() {
+import Image from "next/image";
+
+import type { Media } from "@/lib/core/types/payload-types";
+
+/**
+ * خلفية الهيرو: full-bleed، بتتبع الـtokens (نهاري/ليلي)،
+ * وبتقبل صورة تختارها من SiteSettings.home.heroBackground.
+ */
+export default function HeroVideo({ image }: { image?: Media | null }) {
+  const src = image?.url;
+
   return (
-    <div className="absolute inset-0 overflow-hidden">
-      {/* Dark gradient base */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#05060a] via-[#0a0d12]/95 to-[#05060a]" />
+    <div className="hero-bg" aria-hidden="true">
+      {src ? (
+        <Image src={src} alt="" fill priority sizes="100vw" className="object-cover" />
+      ) : null}
 
-      {/* Radial gold glow at center */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse at 50% 40%, rgba(215, 181, 109, 0.08) 0%, transparent 60%)",
-        }}
-        aria-hidden="true"
-      />
+      <div className={src ? "hero-bg__veil hero-bg__veil--photo" : "hero-bg__veil"} />
 
-      {/* Corner glows: padel (top-left) + tennis (bottom-right) */}
-      <div
-        className="absolute -start-32 -top-32 h-96 w-96 rounded-full opacity-[0.06] blur-3xl"
-        style={{ backgroundColor: "var(--padel-blue)" }}
-        aria-hidden="true"
-      />
-      <div
-        className="absolute -bottom-32 -end-32 h-96 w-96 rounded-full opacity-[0.06] blur-3xl"
-        style={{ backgroundColor: "var(--tennis-orange)" }}
-        aria-hidden="true"
-      />
+      {/* خطوط ملعب — بصمة الموقع */}
+      <svg
+        className="hero-bg__court"
+        viewBox="0 0 1000 600"
+        preserveAspectRatio="xMidYMid slice"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <rect x="120" y="50" width="760" height="500" />
+        <rect x="190" y="50" width="620" height="500" />
+        <line x1="190" y1="190" x2="810" y2="190" />
+        <line x1="190" y1="410" x2="810" y2="410" />
+        <line x1="500" y1="190" x2="500" y2="410" />
+        <line x1="100" y1="300" x2="900" y2="300" strokeDasharray="6 8" />
+      </svg>
 
-      {/* Video layer (لما يتوفر) */}
+      <div className="hero-bg__glow" />
+
       <video
         className="absolute inset-0 h-full w-full object-cover opacity-0"
         autoPlay
@@ -35,7 +44,6 @@ export default function HeroVideo() {
         playsInline
         preload="none"
         poster="/images/hero/poster.webp"
-        aria-hidden="true"
       >
         <source src="/video/hero-loop.mp4" type="video/mp4" />
       </video>
